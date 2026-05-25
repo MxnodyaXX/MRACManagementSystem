@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission } from '../types';
+import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover } from '../types';
 import { sampleData } from '../data/sampleData';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -10,13 +10,14 @@ export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       ...sampleData,
+      handovers: [],
 
       // ── Vehicles ──────────────────────────────────────────────
       addVehicle: (v) =>
         set((s) => ({
           vehicles: [
             ...s.vehicles,
-            { ...v, id: uid(), createdAt: now(), revenue: 0 },
+            { ...v, id: uid(), createdAt: now(), revenue: 0, rentCount: 0 } as Vehicle,
           ],
         })),
 
@@ -45,16 +46,19 @@ export const useStore = create<AppState>()(
       // ── Bookings ──────────────────────────────────────────────
       addBooking: (b) => {
         const id = uid();
+        const vehicle = get().vehicles.find((v) => v.id === b.vehicleId);
+        const owner   = get().owners.find((o) => o.id === vehicle?.ownerId);
+
         const commission: Commission = {
           id: uid(),
           bookingId: id,
           vehicleId: b.vehicleId,
-          ownerId: get().vehicles.find((v) => v.id === b.vehicleId)?.ownerId ?? '',
-          leadBy: b.leadBy ?? 'Direct',
+          ownerId: vehicle?.ownerId ?? '',
+          leadBy: b.referral ?? b.leadBy ?? 'Direct',
           totalIncome: b.totalAmount,
-          commissionRate: 15,
-          commissionAmount: b.totalAmount * 0.15,
-          ownerPayout: b.totalAmount * 0.85,
+          commissionRate: owner?.commissionRate ?? 15,
+          commissionAmount: b.totalAmount * ((owner?.commissionRate ?? 15) / 100),
+          ownerPayout: b.totalAmount * (1 - (owner?.commissionRate ?? 15) / 100),
           status: 'Pending',
           createdAt: now(),
         };
@@ -62,11 +66,11 @@ export const useStore = create<AppState>()(
         set((s) => {
           const vehicles = s.vehicles.map((v) =>
             v.id === b.vehicleId
-              ? { ...v, status: 'Reserved' as const, revenue: v.revenue + b.totalAmount }
+              ? { ...v, status: 'Reserved' as const, revenue: v.revenue + b.totalAmount, rentCount: (v.rentCount ?? 0) + 1 }
               : v
           );
           return {
-            bookings: [...s.bookings, { ...b, id, createdAt: now() }],
+            bookings:    [...s.bookings, { ...b, id, createdAt: now() }],
             commissions: [...s.commissions, commission],
             vehicles,
           };
@@ -134,6 +138,12 @@ export const useStore = create<AppState>()(
           drivers: s.drivers.map((d) => (d.id === id ? { ...d, ...updates } : d)),
         })),
 
+      // ── Handovers ─────────────────────────────────────────────
+      addHandover: (h) =>
+        set((s) => ({
+          handovers: [...s.handovers, { ...h, id: uid(), createdAt: now() }],
+        })),
+
       // ── Notifications ─────────────────────────────────────────
       addNotification: (n) =>
         set((s) => ({
@@ -159,18 +169,17 @@ export const useStore = create<AppState>()(
       isVehicleAvailable: (vehicleId, startDate, endDate, excludeBookingId) => {
         const { bookings } = get();
         const start = new Date(startDate).getTime();
-        const end = new Date(endDate).getTime();
-
+        const end   = new Date(endDate).getTime();
         return !bookings.some((b) => {
           if (b.vehicleId !== vehicleId) return false;
           if (b.status === 'Cancelled') return false;
           if (excludeBookingId && b.id === excludeBookingId) return false;
           const bStart = new Date(b.startDate).getTime();
-          const bEnd = new Date(b.endDate).getTime();
+          const bEnd   = new Date(b.endDate).getTime();
           return start <= bEnd && end >= bStart;
         });
       },
     }),
-    { name: 'emrac-store-v2' }
+    { name: 'emrac-store-v3' }
   )
 );

@@ -1,13 +1,23 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Inquiry } from '../types';
 
 type IStatus = 'Pending' | 'Converted' | 'Lost';
 const TABS: ('All' | IStatus)[] = ['All', 'Pending', 'Converted', 'Lost'];
+
+const LOST_REASONS = [
+  'No vehicle available',
+  'Dates not available',
+  'Budget mismatch',
+  'Customer cancelled',
+  'Found elsewhere',
+  'Other',
+];
 
 const emptyForm = (): Omit<Inquiry, 'id' | 'createdAt'> => ({
   customerName: '',
@@ -22,11 +32,17 @@ const emptyForm = (): Omit<Inquiry, 'id' | 'createdAt'> => ({
 });
 
 export default function Inquiries() {
+  const navigate = useNavigate();
   const { inquiries, addInquiry, updateInquiry } = useStore();
   const [tab, setTab] = useState<'All' | IStatus>('All');
-  const [modal, setModal] = useState<'add' | 'view' | null>(null);
+  const [modal, setModal] = useState<'add' | 'view' | 'lost' | null>(null);
   const [selected, setSelected] = useState<Inquiry | null>(null);
   const [form, setForm] = useState(emptyForm());
+
+  // Lost reason state
+  const [lostTarget, setLostTarget] = useState<Inquiry | null>(null);
+  const [lostReason, setLostReason] = useState(LOST_REASONS[0]);
+  const [lostCustom, setLostCustom] = useState('');
 
   const filtered = tab === 'All' ? inquiries : inquiries.filter((i) => i.status === tab);
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -34,14 +50,43 @@ export default function Inquiries() {
   const set = (field: string, value: unknown) => setForm((f) => ({ ...f, [field]: value }));
 
   const handleSave = () => {
+    if (!form.customerName || !form.requestedVehicle) return;
     addInquiry(form);
     setModal(null);
     setForm(emptyForm());
   };
 
-  const changeStatus = (id: string, status: IStatus) => {
-    updateInquiry(id, { status });
-    if (selected?.id === id) setSelected((s) => s ? { ...s, status } : s);
+  const openLostModal = (inq: Inquiry) => {
+    setLostTarget(inq);
+    setLostReason(LOST_REASONS[0]);
+    setLostCustom('');
+    setModal('lost');
+  };
+
+  const confirmLost = () => {
+    if (!lostTarget) return;
+    const reason = lostReason === 'Other' ? (lostCustom.trim() || 'Other') : lostReason;
+    updateInquiry(lostTarget.id, { status: 'Lost', lostReason: reason });
+    if (selected?.id === lostTarget.id) setSelected((s) => s ? { ...s, status: 'Lost', lostReason: reason } : s);
+    setModal(null);
+    setLostTarget(null);
+  };
+
+  const convertInquiry = (inq: Inquiry) => {
+    updateInquiry(inq.id, { status: 'Converted' });
+    if (selected?.id === inq.id) setSelected((s) => s ? { ...s, status: 'Converted' } : s);
+    setModal(null);
+    navigate('/bookings', {
+      state: {
+        fromInquiry: {
+          customerName:  inq.customerName,
+          customerPhone: inq.customerPhone,
+          startDate:     inq.startDate,
+          endDate:       inq.endDate,
+          notes:         inq.requestedVehicle ? `Requested: ${inq.requestedVehicle}` : '',
+        },
+      },
+    });
   };
 
   return (
@@ -108,6 +153,13 @@ export default function Inquiries() {
               </div>
             </div>
 
+            {inq.status === 'Lost' && inq.lostReason && (
+              <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-3">
+                <AlertTriangle size={11} />
+                {inq.lostReason}
+              </div>
+            )}
+
             {inq.notes && (
               <p className="text-xs text-navy-400 bg-navy-50/60 rounded-lg px-3 py-2 mb-3 truncate">{inq.notes}</p>
             )}
@@ -116,13 +168,13 @@ export default function Inquiries() {
             {inq.status === 'Pending' && (
               <div className="flex gap-2 border-t border-navy-50 pt-3" onClick={(e) => e.stopPropagation()}>
                 <button
-                  onClick={() => changeStatus(inq.id, 'Converted')}
+                  onClick={() => convertInquiry(inq)}
                   className="flex-1 text-xs py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium transition-colors"
                 >
                   ✓ Convert
                 </button>
                 <button
-                  onClick={() => changeStatus(inq.id, 'Lost')}
+                  onClick={() => openLostModal(inq)}
                   className="flex-1 text-xs py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
                 >
                   ✕ Mark Lost
@@ -170,7 +222,7 @@ export default function Inquiries() {
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
-          <button onClick={handleSave} className="btn-primary">Save Inquiry</button>
+          <button onClick={handleSave} className="btn-primary" disabled={!form.customerName || !form.requestedVehicle}>Save Inquiry</button>
         </div>
       </Modal>
 
@@ -198,6 +250,17 @@ export default function Inquiries() {
                 </div>
               ))}
             </div>
+
+            {selected.status === 'Lost' && selected.lostReason && (
+              <div className="flex items-center gap-2 bg-red-50 rounded-xl p-3">
+                <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-red-400">Lost Reason</p>
+                  <p className="text-sm font-semibold text-red-700">{selected.lostReason}</p>
+                </div>
+              </div>
+            )}
+
             {selected.notes && (
               <div className="bg-navy-50/60 rounded-xl p-3">
                 <p className="text-xs text-navy-400 mb-1">Notes</p>
@@ -206,12 +269,68 @@ export default function Inquiries() {
             )}
             {selected.status === 'Pending' && (
               <div className="flex gap-3">
-                <button onClick={() => { changeStatus(selected.id, 'Converted'); setModal(null); }} className="flex-1 py-2 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100">✓ Convert to Booking</button>
-                <button onClick={() => { changeStatus(selected.id, 'Lost'); setModal(null); }} className="flex-1 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100">✕ Mark as Lost</button>
+                <button
+                  onClick={() => convertInquiry(selected)}
+                  className="flex-1 py-2 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                >
+                  ✓ Convert to Booking
+                </button>
+                <button
+                  onClick={() => { openLostModal(selected); }}
+                  className="flex-1 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100"
+                >
+                  ✕ Mark as Lost
+                </button>
               </div>
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Lost Reason Modal */}
+      <Modal open={modal === 'lost'} onClose={() => setModal(null)} title="Mark as Lost">
+        <div className="space-y-4">
+          <p className="text-sm text-navy-600">
+            Why was <span className="font-semibold text-navy-800">{lostTarget?.customerName}</span>'s inquiry lost?
+          </p>
+
+          <div>
+            <p className="label">Reason *</p>
+            <select
+              className="input"
+              value={lostReason}
+              onChange={(e) => { setLostReason(e.target.value); if (e.target.value !== 'Other') setLostCustom(''); }}
+            >
+              {LOST_REASONS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          {lostReason === 'Other' && (
+            <div>
+              <p className="label">Custom Reason</p>
+              <input
+                className="input"
+                value={lostCustom}
+                onChange={(e) => setLostCustom(e.target.value)}
+                placeholder="Describe why this inquiry was lost..."
+                autoFocus
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
+            <button
+              onClick={confirmLost}
+              disabled={lostReason === 'Other' && !lostCustom.trim()}
+              className="px-5 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm Lost
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

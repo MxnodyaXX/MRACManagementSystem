@@ -1,12 +1,22 @@
-import { Search, SlidersHorizontal, Bell } from 'lucide-react';
+import { Search, SlidersHorizontal, Bell, LogOut } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 
 interface Props { title: string; subtitle?: string; }
 
 export default function Header({ title, subtitle }: Props) {
-  const unread   = useStore((s) => s.notifications.filter((n) => !n.read).length);
-  const navigate = useNavigate();
+  const unread      = useStore((s) => s.notifications.filter((n) => !n.read).length);
+  const navigate    = useNavigate();
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const logout      = useAuthStore((s) => s.logout);
+
+  const initials = currentUser?.name
+    .split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() ?? 'EM';
+
+  const roleColor = currentUser?.role === 'admin'
+    ? 'bg-navy-700 text-white'
+    : 'bg-emerald-100 text-emerald-700';
 
   return (
     <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
@@ -31,7 +41,7 @@ export default function Header({ title, subtitle }: Props) {
           <SlidersHorizontal size={16} />
         </button>
 
-        {/* Bell — always visible */}
+        {/* Bell */}
         <button
           onClick={() => navigate('/notifications')}
           className="relative w-9 h-9 bg-white rounded-xl shadow-card flex items-center justify-center text-navy-400 hover:text-navy-700 transition-colors"
@@ -42,10 +52,27 @@ export default function Header({ title, subtitle }: Props) {
           )}
         </button>
 
-        {/* Avatar — always visible */}
-        <div className="w-9 h-9 rounded-xl bg-navy-700 flex items-center justify-center text-white text-xs font-semibold">
-          EM
+        {/* User info */}
+        <div className="hidden sm:flex flex-col items-end">
+          <span className="text-xs font-semibold text-navy-800 leading-none">{currentUser?.name}</span>
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full mt-0.5 ${roleColor}`}>
+            {currentUser?.role === 'admin' ? 'Admin' : 'Owner'}
+          </span>
         </div>
+
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-xl bg-navy-700 flex items-center justify-center text-white text-xs font-semibold">
+          {initials}
+        </div>
+
+        {/* Logout */}
+        <button
+          onClick={logout}
+          title="Sign out"
+          className="w-9 h-9 bg-white rounded-xl shadow-card flex items-center justify-center text-navy-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+        >
+          <LogOut size={15} />
+        </button>
       </div>
     </div>
   );

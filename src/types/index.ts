@@ -15,9 +15,12 @@ export interface Vehicle {
   year: number;
   ownerId: string;
   dailyRent: number;
+  extraKmRate?: number;      // Rs per km beyond included km
+  includedKmPerDay?: number; // free km per rental day (default 100)
   status: VehicleStatus;
   insurance: Insurance;
   revenue: number;
+  rentCount: number;
   imageUrl?: string;
   color?: string;
   seats?: number;
@@ -40,6 +43,30 @@ export interface Owner {
   createdAt: string;
 }
 
+export interface BookingQuotation {
+  startLocation: string;
+  endLocation: string;
+  stops: string[];
+  isRoundTrip: boolean;
+  totalKm: number;          // manually entered estimated km
+}
+
+export interface VehicleHandover {
+  id: string;
+  bookingId: string;
+  vehicleId: string;
+  type: 'delivery' | 'return';
+  location: string;
+  dateTime: string;
+  mileage: number;
+  fuelLevel: string;
+  notes?: string;
+  extraKm?: number;
+  extraKmCharge?: number;
+  finalAmount?: number;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   vehicleId: string;
@@ -51,14 +78,17 @@ export interface Booking {
   endDate: string;
   totalDays: number;
   totalAmount: number;
+  estimatedAmount?: number;  // from quotation calculator
   paidAmount: number;
   status: 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled';
-  leadBy?: string;
+  referral?: string;         // owner name / 'Direct'
+  leadBy?: string;           // kept for existing data
   notes?: string;
   createdAt: string;
   pickupLocation?: string;
   dropLocation?: string;
   driverId?: string;
+  quotation?: BookingQuotation;
 }
 
 export interface Inquiry {
@@ -71,6 +101,7 @@ export interface Inquiry {
   endDate: string;
   leadBy: string;
   status: 'Pending' | 'Converted' | 'Lost';
+  lostReason?: string;
   notes?: string;
   createdAt: string;
 }
@@ -137,8 +168,10 @@ export interface AppState {
   expenses: Expense[];
   drivers: Driver[];
   notifications: Notification[];
+  handovers: VehicleHandover[];
+  addHandover: (h: Omit<VehicleHandover, 'id' | 'createdAt'>) => void;
 
-  addVehicle: (v: Omit<Vehicle, 'id' | 'createdAt' | 'revenue'>) => void;
+  addVehicle: (v: Omit<Vehicle, 'id' | 'createdAt' | 'revenue' | 'rentCount'>) => void;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
   deleteVehicle: (id: string) => void;
 

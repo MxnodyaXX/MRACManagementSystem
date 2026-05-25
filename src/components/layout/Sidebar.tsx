@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Car, CalendarDays, MessageSquare,
-  Percent, Users, Receipt, UserCheck, Bell, Settings,
+  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../store/useStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const links = [
   { to: '/',              icon: LayoutDashboard, label: 'Dashboard'   },
@@ -15,15 +16,17 @@ const links = [
   { to: '/owners',        icon: Users,           label: 'Owners'      },
   { to: '/expenses',      icon: Receipt,         label: 'Expenses'    },
   { to: '/drivers',       icon: UserCheck,       label: 'Drivers'     },
+  { to: '/handovers',     icon: Truck,           label: 'Handovers'   },
   { to: '/notifications', icon: Bell,            label: 'Alerts'      },
 ];
 
+/* 5 primary links shown in the mobile pill */
 const mobileNav = [
   { to: '/',              icon: LayoutDashboard },
   { to: '/bookings',      icon: CalendarDays    },
   { to: '/vehicles',      icon: Car             },
   { to: '/notifications', icon: Bell            },
-  { to: '/owners',        icon: Users           },
+  { to: '/commissions',   icon: Percent         },
 ];
 
 function isActive(to: string, pathname: string) {
@@ -31,8 +34,13 @@ function isActive(to: string, pathname: string) {
 }
 
 export default function Sidebar() {
-  const location = useLocation();
-  const unread = useStore((s) => s.notifications.filter((n) => !n.read).length);
+  const location  = useLocation();
+  const unread    = useStore((s) => s.notifications.filter((n) => !n.read).length);
+  const isAdmin   = useAuthStore((s) => s.isAdmin);
+
+  const allLinks = isAdmin()
+    ? [...links, { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
+    : links;
 
   return (
     <>
@@ -44,7 +52,7 @@ export default function Sidebar() {
         </div>
 
         <nav className="flex flex-col gap-1 flex-1">
-          {links.map(({ to, icon: Icon, label }) => {
+          {allLinks.map(({ to, icon: Icon, label }) => {
             const active  = isActive(to, location.pathname);
             const isNotif = to === '/notifications';
             return (
@@ -65,28 +73,28 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* ── Mobile bottom navigation ── */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-navy-100 z-40 shadow-[0_-2px_12px_rgba(27,43,107,0.08)]">
-        <div className="flex w-full overflow-x-auto no-scrollbar">
-          {links.map(({ to, icon: Icon, label }) => {
+      {/* ── Mobile floating pill nav ── */}
+      <nav className="flex md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+        <div
+          className="flex items-center gap-0.5 rounded-full px-2 py-2"
+          style={{
+            background: '#0D1B45',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.25)',
+          }}
+        >
+          {mobileNav.map(({ to, icon: Icon }) => {
             const active  = isActive(to, location.pathname);
             const isNotif = to === '/notifications';
             return (
-              <NavLink key={to} to={to} className="flex-1 min-w-[48px]">
+              <NavLink key={to} to={to}>
                 <div className={clsx(
-                  'flex flex-col items-center justify-center py-2 gap-0.5 relative transition-colors',
-                  active ? 'text-navy-700' : 'text-navy-400'
+                  'w-11 h-11 flex items-center justify-center rounded-full transition-all relative',
+                  active ? 'bg-white/[0.18]' : 'hover:bg-white/[0.08]'
                 )}>
-                  {active && (
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[3px] bg-navy-700 rounded-b-full" />
+                  <Icon size={20} className={active ? 'text-white' : 'text-white/45'} />
+                  {isNotif && unread > 0 && (
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
-                  <div className="relative">
-                    <Icon size={19} />
-                    {isNotif && unread > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
-                    )}
-                  </div>
-                  <span className="text-[9px] font-medium leading-none">{label}</span>
                 </div>
               </NavLink>
             );

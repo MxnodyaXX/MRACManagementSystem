@@ -5,7 +5,16 @@
       "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process -Force -ErrorAction SilentlyContinue)",
       "Bash(npm run *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('./node_modules/react-big-calendar/package.json'\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); let c=fs.readFileSync\\('src/data/sampleData.ts','utf8'\\); const count = \\(c.match\\(/revenue: \\\\d+,/g\\)||[]\\).length; console.log\\('revenue fields:', count\\);\")",
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5174/)",
+      "Bash(Start-Process -NoNewWindow -FilePath \"npx\" -ArgumentList \"vite\",\"--port\",\"5174\")",
+      "Bash(Start-Sleep 4)",
+      "Bash(Invoke-WebRequest -Uri \"http://localhost:5174/\" -UseBasicParsing -TimeoutSec 5)",
+      "Bash(Select-Object -ExpandProperty StatusCode)"
     ]
   }
 }

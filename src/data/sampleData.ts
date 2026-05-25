@@ -65,6 +65,7 @@ export const sampleData: {
         premium: 45000,
       },
       revenue: 88000,
+      rentCount: 2,
       createdAt: '2024-01-10T00:00:00Z',
     },
     {
@@ -88,6 +89,7 @@ export const sampleData: {
         premium: 32000,
       },
       revenue: 56000,
+      rentCount: 2,
       createdAt: '2024-02-15T00:00:00Z',
     },
     {
@@ -111,6 +113,7 @@ export const sampleData: {
         premium: 38000,
       },
       revenue: 54000,
+      rentCount: 2,
       createdAt: '2024-03-05T00:00:00Z',
     },
     {
@@ -134,6 +137,7 @@ export const sampleData: {
         premium: 29000,
       },
       revenue: 67500,
+      rentCount: 2,
       createdAt: '2024-01-20T00:00:00Z',
     },
     {
@@ -157,6 +161,7 @@ export const sampleData: {
         premium: 41000,
       },
       revenue: 42000,
+      rentCount: 2,
       createdAt: '2024-04-01T00:00:00Z',
     },
     {
@@ -180,6 +185,7 @@ export const sampleData: {
         premium: 36000,
       },
       revenue: 36000,
+      rentCount: 2,
       createdAt: '2024-05-10T00:00:00Z',
     },
     {
@@ -203,6 +209,7 @@ export const sampleData: {
         premium: 31000,
       },
       revenue: 29500,
+      rentCount: 2,
       createdAt: '2024-06-01T00:00:00Z',
     },
     {
@@ -226,6 +233,7 @@ export const sampleData: {
         premium: 22000,
       },
       revenue: 24000,
+      rentCount: 2,
       createdAt: '2024-07-15T00:00:00Z',
     },
     {
@@ -249,6 +257,7 @@ export const sampleData: {
         premium: 27000,
       },
       revenue: 19500,
+      rentCount: 2,
       createdAt: '2024-08-01T00:00:00Z',
     },
     {
@@ -272,6 +281,7 @@ export const sampleData: {
         premium: 44000,
       },
       revenue: 14000,
+      rentCount: 2,
       createdAt: '2024-09-10T00:00:00Z',
     },
   ],
