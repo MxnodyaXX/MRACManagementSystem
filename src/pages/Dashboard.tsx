@@ -1,0 +1,438 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import Header from '../components/layout/Header';
+import StatusBadge from '../components/ui/StatusBadge';
+import VehicleImage from '../components/ui/VehicleImage';
+import { vehicleBodyColor } from '../components/ui/CarSVG';
+import {
+  AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
+import {
+  Car, CalendarDays, DollarSign, AlertCircle,
+  Users, CheckSquare, UserCircle, MessageSquare,
+  ArrowUpRight, Crown,
+} from 'lucide-react';
+import { Vehicle, Booking } from '../types';
+
+function useIsMobile() {
+  const [v, setV] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const fn = () => setV(window.innerWidth < 640);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return v;
+}
+
+const CHART_DATA = [
+  { month: 'Jan', revenue: 78000,  bookings: 8,  expenses: 18000 },
+  { month: 'Feb', revenue: 92000,  bookings: 10, expenses: 14000 },
+  { month: 'Mar', revenue: 85000,  bookings: 9,  expenses: 22000 },
+  { month: 'Apr', revenue: 110000, bookings: 12, expenses: 16000 },
+  { month: 'May', revenue: 134500, bookings: 14, expenses: 19500 },
+];
+
+
+/* Podium display order: 2nd · 1st · 3rd */
+const PODIUM = [
+  {
+    rank: 2, h: 88,  medal: '🥈', size: 76,
+    grad: 'linear-gradient(160deg,#9BAEC8 0%,#637D9C 100%)',
+    side: '#52708E',
+    shadow: '0 0 0 3px #CBD5E1,0 0 0 6px rgba(255,255,255,0.85),0 14px 32px rgba(0,0,0,0.22)',
+  },
+  {
+    rank: 1, h: 130, medal: '🥇', size: 96,
+    grad: 'linear-gradient(160deg,#4B7BE5 0%,#1B2B6B 100%)',
+    side: '#131E50',
+    shadow: null,
+  },
+  {
+    rank: 3, h: 68,  medal: '🥉', size: 76,
+    grad: 'linear-gradient(160deg,#7B93B8 0%,#4D6785 100%)',
+    side: '#3C5270',
+    shadow: '0 0 0 3px #FB923C,0 0 0 6px rgba(255,255,255,0.85),0 14px 32px rgba(0,0,0,0.22)',
+  },
+];
+
+/* Simple CSS cloud shape */
+function CloudShape({ x, y, scale = 1, delay = '0s', duration = '28s' }: {
+  x: number; y: number; scale?: number; delay?: string; duration?: string;
+}) {
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transformOrigin: 'left top', pointerEvents: 'none', zIndex: 1,
+    }}>
+      <div
+        className="anim-cloud-drift"
+        style={{ '--cd': duration } as React.CSSProperties & Record<string, string>}
+      >
+        <div style={{ position: 'relative', width: 140, height: 55, transform: `scale(${scale})`, transformOrigin: 'left top' }}>
+          <div style={{ position: 'absolute', width: 75, height: 75, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', left: 22, top: -30 }} />
+          <div style={{ position: 'absolute', width: 55, height: 55, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', left: 73, top: -14 }} />
+          <div style={{ position: 'absolute', width: 55, height: 55, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', left: 5,  top: -14 }} />
+          <div style={{ position: 'absolute', width: 140, height: 40, borderRadius: 22, background: 'rgba(255,255,255,0.05)', left: 0,  top: 12  }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const isMobile = useIsMobile();
+  const { vehicles, bookings, inquiries, expenses, owners, notifications } = useStore();
+  const navigate  = useNavigate();
+  const [tab,      setTab]      = useState<'weekly' | 'alltime'>('alltime');
+  const [chartTab, setChartTab] = useState<'revenue' | 'bookings' | 'expenses'>('revenue');
+
+  /* derived */
+  const byRevenue      = [...vehicles].sort((a, b) => b.revenue - a.revenue);
+  const totalRevenue   = vehicles.reduce((s, v) => s + v.revenue, 0);
+  const totalExpenses  = expenses.reduce((s, e) => s + e.amount, 0);
+  const activeBookings = bookings.filter((b) => b.status === 'Confirmed' || b.status === 'Ongoing');
+  const unread         = notifications.filter((n) => !n.read).length;
+  const available      = vehicles.filter((v) => v.status === 'Available');
+  const onRent         = vehicles.filter((v) => v.status === 'Ongoing' || v.status === 'Reserved');
+  const underRepair    = vehicles.filter((v) => v.status === 'Maintenance');
+  const completedRentals = bookings.filter((b) => b.status === 'Completed').length;
+  const uniqueCustomers  = new Set(bookings.map((b) => b.customerPhone)).size;
+
+  /* podium: 2nd · 1st · 3rd */
+  const podiumVehicles = [byRevenue[1], byRevenue[0], byRevenue[2]].filter(Boolean);
+
+
+  const kpiCards = [
+    { label: 'Total Fleet',     value: vehicles.length,                           sub: `${available.length} available`,      icon: <Car size={18}/>,          color: 'bg-navy-700',    path: '/vehicles'      },
+    { label: 'Active Bookings', value: activeBookings.length,                     sub: 'confirmed + ongoing',                icon: <CalendarDays size={18}/>, color: 'bg-blue-500',    path: '/bookings'      },
+    { label: 'Total Revenue',   value: `Rs ${(totalRevenue/1000).toFixed(0)}k`,   sub: `Net Rs ${((totalRevenue-totalExpenses)/1000).toFixed(0)}k`, icon: <DollarSign size={18}/>, color: 'bg-emerald-500', path: '/commissions' },
+    { label: 'Alerts',          value: unread,                                    sub: 'unread notifications',               icon: <AlertCircle size={18}/>,  color: 'bg-amber-500',   path: '/notifications' },
+  ];
+
+  const fleetPills = [
+    { label: 'Available',    count: available.length,   color: '#10B981', bg: 'rgba(16,185,129,0.09)',  border: 'rgba(16,185,129,0.18)' },
+    { label: 'On Rent',      count: onRent.length,      color: '#3B82F6', bg: 'rgba(59,130,246,0.09)',  border: 'rgba(59,130,246,0.18)' },
+    { label: 'Under Repair', count: underRepair.length, color: '#EF4444', bg: 'rgba(239,68,68,0.09)',   border: 'rgba(239,68,68,0.18)'  },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <Header title="Dashboard" subtitle="Fleet performance at a glance" />
+
+      {/* ── KPI Row ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map(({ label, value, sub, icon, color, path }, idx) => (
+          <div key={label} className="anim-fade-up" style={{ animationDelay: `${idx * 80}ms` }}>
+            <KpiCard label={label} value={value} sub={sub} icon={icon} color={color}
+              onClick={() => navigate(path)} />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Leaderboard ─────────────────────────────────────────── */}
+      <div className="card anim-fade-up" style={{ animationDelay: '180ms' }}>
+
+        {/* Header + tabs */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-navy-700 flex items-center justify-center">
+              <Crown size={15} className="text-amber-400" />
+            </div>
+            <p className="section-title">Leaderboard</p>
+          </div>
+          <div className="flex bg-navy-50 rounded-xl p-0.5 gap-0.5">
+            {(['weekly', 'alltime'] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`px-3 py-1 rounded-[10px] text-xs font-semibold transition-all ${
+                  tab === t ? 'bg-white text-navy-800 shadow-sm' : 'text-navy-400 hover:text-navy-600'
+                }`}
+              >
+                {t === 'weekly' ? 'Weekly' : 'All Time'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Sky arena ── */}
+        <div
+          className="relative overflow-hidden flex items-end justify-center gap-6 sm:gap-10 pt-10 pb-0"
+          style={{
+            background: 'linear-gradient(165deg,#0D1B45 0%,#1B2B6B 55%,#0F2060 100%)',
+            borderRadius: 20,
+            minHeight: 420,
+          }}
+        >
+          {/* Faint moonlit clouds */}
+          <CloudShape x={4}  y={2}  scale={1.05} duration="32s" />
+          <CloudShape x={64} y={1}  scale={1.2}  duration="26s" />
+          <CloudShape x={30} y={0}  scale={0.8}  duration="38s" />
+          <CloudShape x={14} y={26} scale={0.7}  duration="24s" />
+          <CloudShape x={58} y={24} scale={0.75} duration="30s" />
+
+          {/* Centre blue glow */}
+          <div style={{
+            position:'absolute', top:'8%', left:'50%', transform:'translateX(-50%)',
+            width:320, height:320, borderRadius:'50%',
+            background:'radial-gradient(circle,rgba(75,123,229,0.18) 0%,transparent 68%)',
+            pointerEvents:'none',
+          }} />
+
+          {/* Star dots */}
+          {[[8,14],[18,32],[82,16],[76,38],[50,7],[38,48],[66,24],[14,52],[90,42],[55,35]].map(([x,y],i) => (
+            <div key={`s${i}`} style={{
+              position:'absolute', left:`${x}%`, top:`${y}%`,
+              width: i%3===0?3:2, height: i%3===0?3:2, borderRadius:'50%',
+              background:`rgba(255,255,255,${0.18+(i%3)*0.14})`,
+              pointerEvents:'none',
+            }} />
+          ))}
+
+
+          {byRevenue.length === 0 && (
+            <p className="text-navy-500 text-sm py-16">No vehicles yet.</p>
+          )}
+
+          {/* Podium figures */}
+          {podiumVehicles.map((v, i) => {
+            const cfg       = PODIUM[i];
+            const ps        = isMobile ? 0.72 : 1;
+            const rankLabel = cfg.rank === 1 ? '1st' : cfg.rank === 2 ? '2nd' : '3rd';
+            return (
+              <div key={v.id} className="flex flex-col items-center anim-scale-pop"
+                style={{ animationDelay: `${i * 110 + 160}ms` }}
+              >
+                {/* Medal */}
+                <span className={`anim-medal-float ${isMobile ? 'text-xl' : 'text-3xl'}`}
+                  style={{ animationDelay: `${i * 0.38}s`, filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.22))', marginBottom: 10, display: 'block' }}
+                >
+                  {cfg.medal}
+                </span>
+
+                {/* Car photo */}
+                <div
+                  className={cfg.rank === 1 ? 'anim-pulse-gold' : ''}
+                  style={{
+                    width: Math.round(cfg.size * ps), height: Math.round(cfg.size * ps),
+                    borderRadius: '50%', overflow: 'hidden',
+                    marginBottom: 10, background: '#fff', flexShrink: 0,
+                    ...(cfg.shadow ? { boxShadow: cfg.shadow } : {}),
+                  }}
+                >
+                  <VehicleImage brand={v.brand} model={v.model} color={v.color}
+                    circle className="w-full h-full" />
+                </div>
+
+                {/* Name + revenue (on sky — dark text) */}
+                <div className="text-center mb-2" style={{ maxWidth: Math.round(104 * ps) }}>
+                  <p style={{ color: 'white', fontWeight: 800, fontSize: isMobile ? 10 : 13, lineHeight: 1.2, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }} className="truncate">
+                    {v.brand} {v.model}
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 600, marginTop: 1 }}>
+                    Rs {v.revenue.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* 3D Platform */}
+                <div>
+                  <div style={{
+                    width: Math.round(96 * ps), height: Math.round(cfg.h * ps),
+                    background: cfg.grad,
+                    borderRadius: '12px 12px 0 0',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 2,
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22),inset -1px 0 0 rgba(0,0,0,0.09)',
+                  }}>
+                    <span style={{ color:'rgba(255,255,255,0.42)', fontSize:9, fontWeight:700, letterSpacing:3, textTransform:'uppercase' }}>
+                      {rankLabel}
+                    </span>
+                    <span style={{ color:'white', fontWeight:900, fontSize: Math.round(40 * ps), lineHeight:1, textShadow:'0 2px 10px rgba(0,0,0,0.4)' }}>
+                      {cfg.rank}
+                    </span>
+                  </div>
+                  <div style={{ width:Math.round(96 * ps), height:10, background:cfg.side, borderRadius:'0 0 8px 8px', boxShadow:'0 10px 28px rgba(0,0,0,0.25)' }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Fleet summary pills */}
+        <div className="grid grid-cols-3 gap-3 mt-5">
+          {fleetPills.map(({ label, count, color, bg, border }, idx) => (
+            <div key={label} className="anim-fade-up" style={{ animationDelay: `${idx * 80 + 420}ms` }}>
+              <div style={{
+                background: bg, border: `1px solid ${border}`,
+                borderRadius: 16, padding: '18px 12px', textAlign: 'center',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.05),inset 0 1px 0 rgba(255,255,255,0.85)',
+              }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:color }} />
+                  <span style={{ fontSize:11, fontWeight:600, color:'#6B7FA3' }}>{label}</span>
+                </div>
+                <p style={{ fontSize:32, fontWeight:900, color:'#1B2B6B', lineHeight:1 }}>{count}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Charts Card ─────────────────────────────────────────── */}
+      <div className="card anim-fade-up" style={{ animationDelay: '320ms' }}>
+        <div className="flex items-center justify-between mb-5 gap-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {(['revenue', 'bookings', 'expenses'] as const).map((t) => (
+              <button key={t} onClick={() => setChartTab(t)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex-shrink-0 ${
+                  chartTab === t ? 'bg-navy-700 text-white' : 'bg-navy-50 text-navy-500 hover:bg-navy-100'
+                }`}
+              >
+                {t === 'revenue' ? 'Revenue' : t === 'bookings' ? 'Booking Overview' : 'Expenses'}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-navy-400 flex-shrink-0 hidden sm:block">Jan – May 2026</span>
+        </div>
+
+        <ResponsiveContainer width="100%" height={200}>
+          {chartTab === 'revenue' ? (
+            <AreaChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+              <defs>
+                <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#4B7BE5" stopOpacity={0.22}/>
+                  <stop offset="95%" stopColor="#4B7BE5" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF8" vertical={false}/>
+              <XAxis dataKey="month" tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false} tickFormatter={(v)=>`${v/1000}k`}/>
+              <Tooltip formatter={(v:number) => [`Rs ${v.toLocaleString()}`,'Revenue']} contentStyle={{ borderRadius:10,border:'none',fontSize:12 }}/>
+              <Area type="monotone" dataKey="revenue" stroke="#4B7BE5" strokeWidth={2.5} fill="url(#gRev)" dot={false}/>
+            </AreaChart>
+          ) : chartTab === 'bookings' ? (
+            <BarChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF8" vertical={false}/>
+              <XAxis dataKey="month" tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
+              <Tooltip formatter={(v:number) => [v,'Bookings']} contentStyle={{ borderRadius:10,border:'none',fontSize:12 }}/>
+              <Bar dataKey="bookings" fill="#4B7BE5" radius={[6,6,0,0]}/>
+            </BarChart>
+          ) : (
+            <AreaChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+              <defs>
+                <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#EF4444" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF8" vertical={false}/>
+              <XAxis dataKey="month" tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false} tickFormatter={(v)=>`${v/1000}k`}/>
+              <Tooltip formatter={(v:number) => [`Rs ${v.toLocaleString()}`,'Expenses']} contentStyle={{ borderRadius:10,border:'none',fontSize:12 }}/>
+              <Area type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={2.5} fill="url(#gExp)" dot={false}/>
+            </AreaChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+
+      {/* ── Fleet Section ────────────────────────────────────────── */}
+      <div className="card overflow-hidden p-0 anim-fade-up" style={{ animationDelay: '420ms' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-navy-50">
+          <FleetColumn title="Available Vehicles"           vehicles={available}   bookings={[]}            expenseMap={{}}                    accent="emerald" onViewAll={() => navigate('/vehicles')} />
+          <FleetColumn title="Vehicles On Rent"             vehicles={onRent}      bookings={activeBookings} expenseMap={{}}                    accent="blue"    onViewAll={() => navigate('/bookings')} />
+          <FleetColumn title="Under Repair / Not In Action" vehicles={underRepair} bookings={[]}            expenseMap={buildExpenseMap(expenses)} accent="red"  onViewAll={() => navigate('/expenses')} />
+        </div>
+
+        {/* Stats bar */}
+        <div className="border-t border-navy-50 grid grid-cols-2 sm:grid-cols-5 divide-x divide-navy-50 bg-navy-50/40">
+          {([
+            { icon:<UserCircle size={18}/>,   label:'Total Owners',      value:owners.length,    sub:'+1 this month'               },
+            { icon:<Car size={18}/>,           label:'Total Vehicles',    value:vehicles.length,  sub:'+5 this month'               },
+            { icon:<CheckSquare size={18}/>,   label:'Completed Rentals', value:completedRentals, sub:'+3 this month'               },
+            { icon:<Users size={18}/>,         label:'Total Customers',   value:uniqueCustomers,  sub:`+${uniqueCustomers} tracked` },
+            { icon:<MessageSquare size={18}/>, label:'Total Inquiries',   value:inquiries.length, sub:'+2 this month'               },
+          ] as const).map(({ icon, label, value, sub }) => (
+            <div key={label} className="flex items-center gap-3 px-4 py-4">
+              <div className="text-navy-300 flex-shrink-0">{icon}</div>
+              <div>
+                <p className="text-navy-800 font-black text-xl leading-tight">{value}</p>
+                <p className="text-navy-500 text-xs mt-0.5">{label}</p>
+                <p className="text-emerald-600 text-xs font-medium">{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sub-components ──────────────────────────────────────────── */
+
+function buildExpenseMap(expenses: { vehicleId:string; category:string; date:string }[]) {
+  const map: Record<string,string> = {};
+  expenses.forEach((e) => { if (!map[e.vehicleId]) map[e.vehicleId] = `${e.category} · ${e.date}`; });
+  return map;
+}
+
+function FleetColumn({ title, vehicles, bookings, expenseMap, accent, onViewAll }: {
+  title:string; vehicles:Vehicle[]; bookings:Booking[];
+  expenseMap:Record<string,string>; accent:'emerald'|'blue'|'red'; onViewAll:()=>void;
+}) {
+  const titleColor = { emerald:'text-emerald-600', blue:'text-blue-600', red:'text-red-600' }[accent];
+  return (
+    <div className="p-5">
+      <div className="flex items-center justify-between mb-4">
+        <p className={`text-xs font-bold uppercase tracking-widest ${titleColor}`}>{title}</p>
+        <button onClick={onViewAll} className="text-xs text-navy-400 hover:text-navy-700 flex items-center gap-1">
+          View All <ArrowUpRight size={11}/>
+        </button>
+      </div>
+      <div className="space-y-2.5">
+        {vehicles.slice(0,4).map((v) => {
+          const booking = bookings.find((b) => b.vehicleId === v.id);
+          const expNote = expenseMap[v.id];
+          return (
+            <div key={v.id} className="flex items-center gap-3 bg-navy-50/60 hover:bg-navy-50 rounded-xl p-3 transition-colors">
+              <div className="w-14 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-navy-50">
+                <VehicleImage brand={v.brand} model={v.model} color={v.color} bodyColor={vehicleBodyColor(v.color)} className="w-full h-full" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-navy-800 truncate">{v.brand} {v.model}</p>
+                <p className="text-xs text-navy-400 truncate">{v.vehicleNumber}</p>
+                {booking  && <p className="text-xs text-navy-500 truncate">{booking.customerName} · {booking.startDate}…</p>}
+                {!booking && expNote && <p className="text-xs text-navy-400 truncate">{expNote}</p>}
+              </div>
+              <StatusBadge status={v.status} />
+            </div>
+          );
+        })}
+        {vehicles.length === 0 && <p className="text-navy-400 text-xs text-center py-6">None at the moment.</p>}
+        {vehicles.length > 4 && (
+          <button onClick={onViewAll} className="w-full text-xs text-navy-400 hover:text-navy-600 py-1.5 text-center">
+            +{vehicles.length - 4} more
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({ label, value, sub, icon, color, onClick }: {
+  label:string; value:string|number; sub:string;
+  icon:React.ReactNode; color:string; onClick?:()=>void;
+}) {
+  return (
+    <div onClick={onClick}
+      className="card flex items-start gap-3 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${color}`}>{icon}</div>
+      <div>
+        <p className="text-xs text-navy-400 font-medium">{label}</p>
+        <p className="text-xl font-bold text-navy-800 leading-tight">{value}</p>
+        <p className="text-xs text-navy-400 mt-0.5">{sub}</p>
+      </div>
+    </div>
+  );
+}

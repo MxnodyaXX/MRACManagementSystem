@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\EMRACManagementSystem\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"c:\\\\EMRACManagementSystem\"\\)\\) { Write-Host \"Directory does not exist\" })"
+    ]
+  }
+}
