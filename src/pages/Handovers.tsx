@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { sendRentalSummary } from '../utils/email';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
+import InvoiceModal from '../components/ui/InvoiceModal';
 import {
   Truck, RotateCcw, CheckCircle2, MapPin, Gauge, Fuel,
-  CalendarDays, Clock, FileText, AlertTriangle, Car,
+  Clock, FileText, AlertTriangle, Car, CreditCard, Receipt, BookMarked,
 } from 'lucide-react';
 import { Booking, VehicleHandover } from '../types';
 
@@ -36,13 +38,15 @@ const emptyHandover = (type: 'delivery' | 'return', bookingId: string, vehicleId
 });
 
 export default function Handovers() {
-  const { bookings, vehicles, handovers, addHandover, updateBooking } = useStore();
+  const { bookings, vehicles, owners, commissions, handovers, addHandover, updateBooking, updateCommission } = useStore();
   const { currentUser, isAdmin, can } = useAuthStore();
 
-  const [tab,      setTab]      = useState<'active' | 'records'>('active');
-  const [modal,    setModal]    = useState<'delivery' | 'return' | 'view' | null>(null);
-  const [form,     setForm]     = useState(emptyHandover('delivery', '', ''));
-  const [viewItem, setViewItem] = useState<VehicleHandover | null>(null);
+  const [tab,              setTab]              = useState<'active' | 'records'>('active');
+  const [modal,            setModal]            = useState<'delivery' | 'return' | 'view' | 'payment' | null>(null);
+  const [form,             setForm]             = useState(emptyHandover('delivery', '', ''));
+  const [viewItem,         setViewItem]         = useState<VehicleHandover | null>(null);
+  const [paymentBookingId, setPaymentBookingId] = useState<string | null>(null);
+  const [invoiceBookingId, setInvoiceBookingId] = useState<string | null>(null);
 
   // Owner sees only their vehicle bookings
   const isOwnerRole   = !isAdmin() && currentUser?.role === 'owner';
@@ -84,9 +88,15 @@ export default function Handovers() {
     const booking  = bookings.find((b) => b.id === f.bookingId);
     if (!delivery || !vehicle || !booking) return f;
 
-    const extraKm     = Math.max(0, f.mileage - delivery.mileage);
-    const extraCharge = extraKm * (vehicle.extraKmRate ?? 50);
-    return { ...f, extraKm, extraKmCharge: extraCharge, finalAmount: booking.totalAmount + extraCharge };
+    // Correct formula: base + extra km charge only above the free allowance
+    const totalKmDriven = Math.max(0, f.mileage - delivery.mileage);
+    const includedKm    = (vehicle.includedKmPerDay ?? 100) * booking.totalDays;
+    const extraKm       = Math.max(0, totalKmDriven - includedKm);
+    const extraCharge   = extraKm * (vehicle.extraKmRate ?? 50);
+    const baseAmount    = vehicle.dailyRent * booking.totalDays;
+    const finalAmount   = baseAmount + extraCharge;
+
+    return { ...f, extraKm, extraKmCharge: extraCharge, finalAmount };
   };
 
   const setReturn = (field: string, value: unknown) => {
@@ -108,9 +118,9 @@ export default function Handovers() {
   const handleSaveReturn = () => {
     if (!form.location || !form.dateTime || !form.mileage) return;
     addHandover(form);
-    // Mark booking Completed on return
     updateBooking(form.bookingId, { status: 'Completed' });
-    setModal(null);
+    setPaymentBookingId(form.bookingId);
+    setModal('payment');
   };
 
   const allRecords = [...handovers]
@@ -480,41 +490,52 @@ export default function Handovers() {
                 </div>
               </div>
 
-              {/* Extra km + final amount */}
-              {form.mileage > 0 && delivery && (
-                <div className="bg-navy-50/80 rounded-xl p-4 space-y-2">
-                  <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide mb-3">Trip Summary</p>
-                  <div className="flex justify-between text-xs text-navy-600">
-                    <span>Odometer at delivery</span>
-                    <span className="font-semibold">{delivery.mileage.toLocaleString()} km</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-navy-600">
-                    <span>Odometer at return</span>
-                    <span className="font-semibold">{form.mileage.toLocaleString()} km</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-navy-600 border-t border-navy-100 pt-2">
-                    <span>Total km driven</span>
-                    <span className="font-bold text-navy-800">{(form.mileage - delivery.mileage).toLocaleString()} km</span>
-                  </div>
-                  {(form.extraKm ?? 0) > 0 ? (
-                    <>
-                      <div className="flex justify-between text-xs text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
-                        <span>Extra km (+{form.extraKm} × Rs {vehicle?.extraKmRate ?? 50}/km)</span>
-                        <span className="font-bold">Rs {form.extraKmCharge?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-navy-800 font-bold border-t border-navy-100 pt-2">
-                        <span>Final Amount</span>
-                        <span className="text-navy-700">Rs {form.finalAmount?.toLocaleString()}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5">
-                      <CheckCircle2 size={12} />
-                      Within included km — no extra charge
+              {/* Trip summary */}
+              {form.mileage > 0 && delivery && (() => {
+                const totalKmDriven = Math.max(0, form.mileage - delivery.mileage);
+                const includedKm    = (vehicle?.includedKmPerDay ?? 100) * (booking?.totalDays ?? 1);
+                const baseAmount    = (vehicle?.dailyRent ?? 0) * (booking?.totalDays ?? 1);
+                return (
+                  <div className="bg-navy-50/80 rounded-xl p-4 space-y-2 text-xs">
+                    <p className="font-semibold text-navy-600 uppercase tracking-wide mb-3">Trip Summary</p>
+                    <div className="flex justify-between text-navy-600">
+                      <span>Odometer at delivery</span>
+                      <span className="font-semibold">{delivery.mileage.toLocaleString()} km</span>
                     </div>
-                  )}
-                </div>
-              )}
+                    <div className="flex justify-between text-navy-600">
+                      <span>Odometer at return</span>
+                      <span className="font-semibold">{form.mileage.toLocaleString()} km</span>
+                    </div>
+                    <div className="flex justify-between text-navy-700 font-semibold border-t border-navy-100 pt-2">
+                      <span>Total km driven</span>
+                      <span>{totalKmDriven.toLocaleString()} km</span>
+                    </div>
+                    <div className="flex justify-between text-navy-600 border-t border-navy-100 pt-2">
+                      <span>Base ({booking?.totalDays ?? 0}d × Rs {vehicle?.dailyRent.toLocaleString()}/day)</span>
+                      <span className="font-semibold">Rs {baseAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-navy-500">
+                      <span>Included km ({vehicle?.includedKmPerDay ?? 100}/day × {booking?.totalDays ?? 0}d)</span>
+                      <span>{includedKm.toLocaleString()} km free</span>
+                    </div>
+                    {(form.extraKm ?? 0) > 0 ? (
+                      <div className="flex justify-between text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                        <span>Extra km ({(form.extraKm ?? 0).toLocaleString()} km × Rs {vehicle?.extraKmRate ?? 50}/km)</span>
+                        <span className="font-bold">+ Rs {form.extraKmCharge?.toLocaleString()}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5">
+                        <CheckCircle2 size={12} />
+                        Within included km — no extra charge
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-bold text-navy-800 border-t border-navy-100 pt-2">
+                      <span>Final Amount</span>
+                      <span>Rs {form.finalAmount?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
@@ -531,6 +552,215 @@ export default function Handovers() {
           );
         })()}
       </Modal>
+
+      {/* ── Payment Settlement Modal ── */}
+      <Modal open={modal === 'payment'} onClose={() => setModal(null)} title="Payment Settlement" width="max-w-lg">
+        {paymentBookingId && (() => {
+          const booking    = bookings.find((b) => b.id === paymentBookingId);
+          const vehicle    = vehicles.find((v) => v.id === booking?.vehicleId);
+          const delivery   = handovers.find((h) => h.bookingId === paymentBookingId && h.type === 'delivery');
+          const returnH    = handovers.find((h) => h.bookingId === paymentBookingId && h.type === 'return');
+          const commission = commissions.find((c) => c.bookingId === paymentBookingId);
+          const owner      = owners.find((o) => o.id === commission?.ownerId);
+          if (!booking || !vehicle || !commission) return null;
+
+          const finalAmount    = returnH?.finalAmount ?? booking.totalAmount;
+          const commRate       = commission.commissionRate;
+          const commAmount     = Math.round(finalAmount * commRate / 100);
+          const ownerPayout    = finalAmount - commAmount;
+          const alreadyPaid    = booking.paidAmount;
+          const balance        = finalAmount - alreadyPaid;
+          const totalKmDriven  = delivery && returnH ? returnH.mileage - delivery.mileage : 0;
+          const includedKm     = (vehicle.includedKmPerDay ?? 100) * booking.totalDays;
+          const baseAmount     = vehicle.dailyRent * booking.totalDays;
+          const extraKm        = returnH?.extraKm ?? 0;
+          const referralLabel  = booking.referral && booking.referral !== 'Direct'
+            ? `${booking.referral} (Referral)`
+            : 'EMRAC Commission';
+
+          const emailParams = {
+            toEmail:          booking.customerEmail ?? '',
+            toName:           booking.customerName,
+            invoiceNo:        `INV-${booking.id.slice(-6).toUpperCase()}`,
+            vehicleName:      `${vehicle.brand} ${vehicle.model}`,
+            vehicleReg:       vehicle.vehicleNumber,
+            startDate:        booking.startDate,
+            endDate:          booking.endDate,
+            totalDays:        booking.totalDays,
+            dailyRate:        vehicle.dailyRent,
+            baseAmount,
+            extraKm,
+            extraKmRate:      vehicle.extraKmRate ?? 50,
+            extraCharge:      returnH?.extraKmCharge ?? 0,
+            finalAmount,
+            advancePaid:      alreadyPaid,
+            balanceCollected: balance,
+            ownerName:        owner?.name ?? 'Owner',
+            ownerPayout,
+            commLabel:        referralLabel,
+            commAmount,
+            commRate,
+          };
+
+          const handleConfirmPayment = () => {
+            updateCommission(commission.id, {
+              status: 'Paid',
+              totalIncome: finalAmount,
+              commissionAmount: commAmount,
+              ownerPayout,
+            });
+            updateBooking(paymentBookingId, { paidAmount: finalAmount });
+            sendRentalSummary(emailParams).catch(console.error);
+            setModal(null);
+            setPaymentBookingId(null);
+          };
+
+          const handleMarkCredit = () => {
+            updateCommission(commission.id, {
+              status: 'Credit',
+              totalIncome: finalAmount,
+              commissionAmount: commAmount,
+              ownerPayout,
+            });
+            sendRentalSummary(emailParams).catch(console.error);
+            setModal(null);
+            setPaymentBookingId(null);
+          };
+
+          return (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="bg-navy-50/80 rounded-xl p-4 flex items-center gap-3">
+                <CreditCard size={18} className="text-navy-500 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-navy-800">{booking.customerName}</p>
+                  <p className="text-xs text-navy-500">
+                    {vehicle.brand} {vehicle.model} · {booking.totalDays} days · {booking.startDate} → {booking.endDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Amount breakdown */}
+              <div className="border border-navy-100 rounded-xl overflow-hidden">
+                <div className="bg-navy-50 px-4 py-2.5 flex items-center gap-2">
+                  <Receipt size={13} className="text-navy-500" />
+                  <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Final Amount Breakdown</p>
+                </div>
+                <div className="p-4 space-y-2 text-xs">
+                  <div className="flex justify-between text-navy-600">
+                    <span>Base ({booking.totalDays}d × Rs {vehicle.dailyRent.toLocaleString()}/day)</span>
+                    <span className="font-semibold">Rs {baseAmount.toLocaleString()}</span>
+                  </div>
+                  {totalKmDriven > 0 && (
+                    <>
+                      <div className="flex justify-between text-navy-500">
+                        <span>Total km driven</span>
+                        <span>{totalKmDriven.toLocaleString()} km</span>
+                      </div>
+                      <div className="flex justify-between text-navy-500">
+                        <span>Included km ({vehicle.includedKmPerDay ?? 100}/day × {booking.totalDays}d)</span>
+                        <span>{includedKm.toLocaleString()} km free</span>
+                      </div>
+                    </>
+                  )}
+                  {extraKm > 0 ? (
+                    <div className="flex justify-between text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                      <span>Extra km ({extraKm.toLocaleString()} km × Rs {vehicle.extraKmRate ?? 50}/km)</span>
+                      <span className="font-bold">+ Rs {(returnH?.extraKmCharge ?? 0).toLocaleString()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5">
+                      <CheckCircle2 size={12} />
+                      No extra km charge
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm font-bold text-navy-800 border-t border-navy-100 pt-2">
+                    <span>Final Total</span>
+                    <span>Rs {finalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Commission split */}
+              <div className="border border-navy-100 rounded-xl overflow-hidden">
+                <div className="bg-navy-50 px-4 py-2.5">
+                  <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Payment Split</p>
+                </div>
+                <div className="divide-y divide-navy-50">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-navy-800">{owner?.name ?? 'Owner'}</p>
+                      <p className="text-xs text-navy-400">Owner receives · {100 - commRate}% of total</p>
+                    </div>
+                    <p className="text-base font-bold text-emerald-700">Rs {ownerPayout.toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-navy-800">{referralLabel}</p>
+                      <p className="text-xs text-navy-400">Management / referral fee · {commRate}% of total</p>
+                    </div>
+                    <p className="text-base font-bold text-blue-700">Rs {commAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Balance summary */}
+              <div className={`grid gap-3 text-center ${alreadyPaid > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                <div className="bg-navy-50/60 rounded-xl p-3">
+                  <p className="text-[10px] text-navy-400 uppercase">Final Total</p>
+                  <p className="text-sm font-bold text-navy-800">Rs {finalAmount.toLocaleString()}</p>
+                </div>
+                {alreadyPaid > 0 && (
+                  <div className="bg-emerald-50 rounded-xl p-3">
+                    <p className="text-[10px] text-emerald-500 uppercase">Advance Paid</p>
+                    <p className="text-sm font-bold text-emerald-700">Rs {alreadyPaid.toLocaleString()}</p>
+                  </div>
+                )}
+                <div className={`rounded-xl p-3 ${balance > 0 ? 'bg-amber-50' : 'bg-emerald-50'}`}>
+                  <p className={`text-[10px] uppercase ${balance > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    {alreadyPaid > 0 ? 'Balance Due' : 'Amount Due'}
+                  </p>
+                  <p className={`text-sm font-bold ${balance > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    Rs {balance.toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-navy-700 rounded-xl p-3">
+                  <p className="text-[10px] text-navy-300 uppercase">Collecting Now</p>
+                  <p className="text-sm font-bold text-white">Rs {balance.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2 pt-1">
+                <button onClick={() => setModal(null)} className="btn-secondary">Skip for Now</button>
+                <button
+                  onClick={() => { setInvoiceBookingId(paymentBookingId); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-navy-50 text-navy-700 hover:bg-navy-100 transition-colors"
+                >
+                  <BookMarked size={14} />
+                  View Invoice
+                </button>
+                <button
+                  onClick={handleMarkCredit}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                >
+                  <CreditCard size={14} />
+                  Mark as Credit
+                </button>
+                <button onClick={handleConfirmPayment} className="flex items-center gap-2 btn-primary">
+                  <CheckCircle2 size={14} />
+                  Confirm &amp; Mark Paid
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
+
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        bookingId={invoiceBookingId}
+        onClose={() => setInvoiceBookingId(null)}
+      />
 
       {/* ── View Record Modal ── */}
       <Modal open={modal === 'view'} onClose={() => setModal(null)} title="Handover Record">

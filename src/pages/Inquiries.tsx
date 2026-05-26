@@ -4,8 +4,23 @@ import { useStore } from '../store/useStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import Select from '../components/ui/Select';
 import { Plus, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Inquiry } from '../types';
+
+const REFERRAL_SOURCES = [
+  { value: 'Direct',        label: 'Direct',        sub: 'Customer contacted us directly' },
+  { value: 'Walk-in',       label: 'Walk-in',        sub: 'Came in without prior contact' },
+  { value: 'Phone Call',    label: 'Phone Call',     sub: 'Inbound call' },
+  { value: 'WhatsApp',      label: 'WhatsApp',       sub: 'Via WhatsApp message' },
+  { value: 'Facebook',      label: 'Facebook',       sub: 'Facebook page or ads' },
+  { value: 'Instagram',     label: 'Instagram',      sub: 'Instagram page or ads' },
+  { value: 'TikTok',        label: 'TikTok',         sub: 'TikTok video or ads' },
+  { value: 'Google',        label: 'Google',         sub: 'Google search or Maps' },
+  { value: 'YouTube',       label: 'YouTube',        sub: 'YouTube channel or ads' },
+  { value: 'Word of Mouth', label: 'Word of Mouth',  sub: 'Referred by a past customer' },
+  { value: 'Website',       label: 'Website',        sub: 'Found us online' },
+];
 
 type IStatus = 'Pending' | 'Converted' | 'Lost';
 const TABS: ('All' | IStatus)[] = ['All', 'Pending', 'Converted', 'Lost'];
@@ -26,14 +41,14 @@ const emptyForm = (): Omit<Inquiry, 'id' | 'createdAt'> => ({
   preferredBrand: '',
   startDate: '',
   endDate: '',
-  leadBy: '',
+  referral: '',
   status: 'Pending',
   notes: '',
 });
 
 export default function Inquiries() {
   const navigate = useNavigate();
-  const { inquiries, addInquiry, updateInquiry } = useStore();
+  const { inquiries, owners, addInquiry, updateInquiry } = useStore();
   const [tab, setTab] = useState<'All' | IStatus>('All');
   const [modal, setModal] = useState<'add' | 'view' | 'lost' | null>(null);
   const [selected, setSelected] = useState<Inquiry | null>(null);
@@ -140,8 +155,8 @@ export default function Inquiries() {
                 <p className="font-medium text-navy-700">{inq.requestedVehicle}</p>
               </div>
               <div>
-                <p className="text-navy-400">Lead By</p>
-                <p className="font-medium text-navy-700">{inq.leadBy || '—'}</p>
+                <p className="text-navy-400">Referral</p>
+                <p className="font-medium text-navy-700">{inq.referral || '—'}</p>
               </div>
               <div>
                 <p className="text-navy-400">From</p>
@@ -204,8 +219,20 @@ export default function Inquiries() {
             <input className="input" value={form.requestedVehicle} onChange={(e) => set('requestedVehicle', e.target.value)} placeholder="Axio, Prius, Van..." />
           </div>
           <div>
-            <p className="label">Lead By</p>
-            <input className="input" value={form.leadBy} onChange={(e) => set('leadBy', e.target.value)} placeholder="Brother / Facebook..." />
+            <p className="label">Referral / Source</p>
+            <Select
+              value={form.referral}
+              onChange={(val) => set('referral', val)}
+              placeholder="How did they hear about us?"
+              options={[
+                ...REFERRAL_SOURCES,
+                ...owners.map((o) => ({
+                  value: o.name,
+                  label: o.name,
+                  sub: 'Owner referral',
+                })),
+              ]}
+            />
           </div>
           <div>
             <p className="label">Start Date</p>
@@ -240,7 +267,7 @@ export default function Inquiries() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 ['Requested', selected.requestedVehicle],
-                ['Lead By', selected.leadBy || '—'],
+                ['Referral', selected.referral || '—'],
                 ['Start Date', selected.startDate || '—'],
                 ['End Date', selected.endDate || '—'],
               ].map(([l, v]) => (

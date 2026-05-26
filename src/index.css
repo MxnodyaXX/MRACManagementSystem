@@ -51,6 +51,86 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── react-datepicker navy theme ───────────────────────────── */
+.emrac-datepicker {
+  border: 1px solid #E8EFF8 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(27,43,107,0.12), 0 2px 8px rgba(27,43,107,0.06) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  overflow: hidden;
+}
+.emrac-datepicker .react-datepicker__header {
+  background: #1B2B6B !important;
+  border-bottom: none !important;
+  padding: 12px 8px 8px !important;
+  border-radius: 0 !important;
+}
+.emrac-datepicker .react-datepicker__current-month,
+.emrac-datepicker .react-datepicker__day-name,
+.emrac-datepicker .react-datepicker-time__header {
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 12px;
+}
+.emrac-datepicker .react-datepicker__navigation-icon::before {
+  border-color: rgba(255,255,255,0.7) !important;
+}
+.emrac-datepicker .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #fff !important;
+}
+.emrac-datepicker .react-datepicker__month-select,
+.emrac-datepicker .react-datepicker__year-select {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+.emrac-datepicker .react-datepicker__month-select option,
+.emrac-datepicker .react-datepicker__year-select option {
+  background: #1B2B6B; color: #fff;
+}
+.emrac-datepicker .react-datepicker__day {
+  color: #1B2B6B;
+  font-size: 12px;
+  border-radius: 8px !important;
+  width: 32px; height: 32px; line-height: 32px;
+  margin: 2px !important;
+  transition: background 0.15s, color 0.15s;
+}
+.emrac-datepicker .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+  background: #E8EFF8 !important;
+  color: #1B2B6B !important;
+}
+.emrac-datepicker .react-datepicker__day--selected,
+.emrac-datepicker .react-datepicker__day--keyboard-selected {
+  background: #1B2B6B !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+.emrac-datepicker .react-datepicker__day--today {
+  font-weight: 700;
+  color: #4B7BE5;
+}
+.emrac-datepicker .react-datepicker__day--today.react-datepicker__day--selected {
+  color: #fff !important;
+}
+/* Blocked / disabled dates — red tint with strikethrough */
+.emrac-datepicker .react-datepicker__day--disabled {
+  color: #EF4444 !important;
+  background: #FEF2F2 !important;
+  text-decoration: line-through;
+  opacity: 0.75;
+  cursor: not-allowed !important;
+}
+.emrac-datepicker .react-datepicker__day--outside-month {
+  color: #C0CAD8 !important;
+  background: transparent !important;
+  text-decoration: none !important;
+}
+.emrac-datepicker .react-datepicker__triangle { display: none; }
+
 @layer base {
   body {
     background-color: #E8EFF8;

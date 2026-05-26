@@ -54,7 +54,7 @@ export const useStore = create<AppState>()(
           bookingId: id,
           vehicleId: b.vehicleId,
           ownerId: vehicle?.ownerId ?? '',
-          leadBy: b.referral ?? b.leadBy ?? 'Direct',
+          referral: b.referral ?? 'Direct',
           totalIncome: b.totalAmount,
           commissionRate: owner?.commissionRate ?? 15,
           commissionAmount: b.totalAmount * ((owner?.commissionRate ?? 15) / 100),
@@ -163,6 +163,11 @@ export const useStore = create<AppState>()(
       markAllRead: () =>
         set((s) => ({
           notifications: s.notifications.map((n) => ({ ...n, read: true })),
+        })),
+
+      updateCommission: (id, updates) =>
+        set((s) => ({
+          commissions: s.commissions.map((c) => (c.id === id ? { ...c, ...updates } : c)),
         })),
 
       // ── Helpers ───────────────────────────────────────────────

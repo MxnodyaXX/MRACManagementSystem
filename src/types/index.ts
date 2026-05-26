@@ -73,6 +73,7 @@ export interface Booking {
   customerId: string;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   customerNIC?: string;
   startDate: string;
   endDate: string;
@@ -82,7 +83,6 @@ export interface Booking {
   paidAmount: number;
   status: 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled';
   referral?: string;         // owner name / 'Direct'
-  leadBy?: string;           // kept for existing data
   notes?: string;
   createdAt: string;
   pickupLocation?: string;
@@ -99,7 +99,7 @@ export interface Inquiry {
   preferredBrand?: string;
   startDate: string;
   endDate: string;
-  leadBy: string;
+  referral: string;
   status: 'Pending' | 'Converted' | 'Lost';
   lostReason?: string;
   notes?: string;
@@ -111,13 +111,13 @@ export interface Commission {
   bookingId: string;
   vehicleId: string;
   ownerId: string;
-  leadBy: string;
+  referral: string;
   totalIncome: number;
   commissionRate: number;
   commissionAmount: number;
   ownerPayout: number;
   coordinatorFee?: number;
-  status: 'Pending' | 'Paid';
+  status: 'Pending' | 'Paid' | 'Credit';
   createdAt: string;
 }
 
@@ -196,4 +196,5 @@ export interface AppState {
   addNotification: (n: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
 
   isVehicleAvailable: (vehicleId: string, startDate: string, endDate: string, excludeBookingId?: string) => boolean;
+  updateCommission: (id: string, updates: Partial<Commission>) => void;
 }

@@ -13,6 +13,7 @@ const map: Record<string, string> = {
   Converted:   'bg-emerald-50 text-emerald-700',
   Lost:        'bg-red-50 text-red-600',
   Paid:        'bg-emerald-50 text-emerald-700',
+  Credit:      'bg-purple-50 text-purple-700',
   'On Duty':   'bg-blue-50 text-blue-700',
   Off:         'bg-slate-100 text-slate-500',
 };
@@ -29,6 +30,7 @@ const dot: Record<string, string> = {
   Converted:   'bg-emerald-500',
   Lost:        'bg-red-500',
   Paid:        'bg-emerald-500',
+  Credit:      'bg-purple-500',
   'On Duty':   'bg-blue-500',
   Off:         'bg-slate-400',
 };

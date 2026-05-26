@@ -1,20 +1,23 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import Select from '../components/ui/Select';
 import { Calendar, dateFnsLocalizer, SlotInfo } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import {
   Plus, CalendarDays, List, AlertTriangle, CheckCircle,
   XCircle, MapPin, RotateCcw, Calculator,
 } from 'lucide-react';
 import { Booking } from '../types';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, addDays, isValid } from 'date-fns';
 
 /* ── Calendar setup ─────────────────────────────────────────── */
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales: { 'en-US': enUS } });
@@ -43,6 +46,7 @@ const emptyForm = () => ({
   customerId: 'c_' + Math.random().toString(36).slice(2, 6),
   customerName: '',
   customerPhone: '',
+  customerEmail: '',
   customerNIC: '',
   startDate: '',
   endDate: '',
@@ -77,6 +81,8 @@ export default function Bookings() {
   const [form,         setForm]         = useState(emptyForm());
   const [availability, setAvailability] = useState<boolean | null>(null);
   const [error,        setError]        = useState('');
+  const [startWarn,    setStartWarn]    = useState('');
+  const [endWarn,      setEndWarn]      = useState('');
 
   // Auto-open booking form when navigated from an inquiry conversion
   useEffect(() => {
@@ -151,6 +157,42 @@ export default function Bookings() {
     f.estimatedAmount = f.totalAmount + extraCost;
   };
 
+  // Returns true if this date is NOT blocked by an existing booking for the selected vehicle
+  const isDateAvailable = (date: Date): boolean => {
+    if (!form.vehicleId) return true;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return !bookings.some(
+      (b) => b.vehicleId === form.vehicleId &&
+             b.status !== 'Cancelled' &&
+             b.status !== 'Completed' &&
+             dateStr >= b.startDate &&
+             dateStr <= b.endDate
+    );
+  };
+
+  const handleStartDate = (date: Date | null) => {
+    if (!date) return;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (!isDateAvailable(date)) {
+      setStartWarn('This date is not available — vehicle is already booked on this day.');
+    } else {
+      setStartWarn('');
+    }
+    set('startDate', dateStr);
+    setEndWarn('');
+  };
+
+  const handleEndDate = (date: Date | null) => {
+    if (!date) return;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (!isDateAvailable(date)) {
+      setEndWarn('This date is not available — vehicle is already booked on this day.');
+    } else {
+      setEndWarn('');
+    }
+    set('endDate', dateStr);
+  };
+
   const openAdd = (startDate = '') => {
     const f = emptyForm();
     if (startDate) { f.startDate = startDate; f.endDate = startDate; }
@@ -158,6 +200,8 @@ export default function Bookings() {
     setModal('add');
     setAvailability(null);
     setError('');
+    setStartWarn('');
+    setEndWarn('');
   };
 
   const handleCreate = () => {
@@ -175,6 +219,42 @@ export default function Bookings() {
     setForm(emptyForm());
     setAvailability(null);
   };
+
+  // Vehicle availability status — computed safely outside the render tree
+  const vehicleStatus = useMemo(() => {
+    if (!form.vehicleId) return null;
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const vBookings = bookings
+        .filter((b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled' && b.status !== 'Completed')
+        .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
+
+      const currentHire   = vBookings.find((b) => b.startDate && b.endDate && b.startDate <= today && b.endDate >= today);
+      const upcomingHires = vBookings.filter((b) => b.startDate && b.startDate > today);
+
+      // Chain-walk to find first truly free date
+      let nextFree = today;
+      let iterations = 0;
+      let changed = true;
+      while (changed && iterations++ < 200) {
+        changed = false;
+        for (const b of vBookings) {
+          if (b.startDate && b.endDate && b.startDate <= nextFree && b.endDate >= nextFree) {
+            const parsed = parseISO(b.endDate);
+            if (isValid(parsed)) {
+              nextFree = addDays(parsed, 1).toISOString().slice(0, 10);
+              changed = true;
+            }
+            break;
+          }
+        }
+      }
+
+      return { currentHire, upcomingHires, nextFree };
+    } catch {
+      return null;
+    }
+  }, [form.vehicleId, bookings]);
 
   // Calendar events
   const calEvents = visibleBookings
@@ -202,8 +282,6 @@ export default function Bookings() {
     const d = format(slot.start, 'yyyy-MM-dd');
     openAdd(d);
   }, [can, isAdmin]);
-
-  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <div>
@@ -389,7 +467,7 @@ export default function Bookings() {
 
                 <div className="flex items-center justify-between text-xs border-t border-navy-50 pt-2.5">
                   <span className="bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">
-                    {b.referral ?? b.leadBy ?? 'Direct'}
+                    {b.referral ?? 'Direct'}
                   </span>
                   {(b.status === 'Confirmed' || b.status === 'Ongoing') && (
                     <button
@@ -422,37 +500,177 @@ export default function Bookings() {
         )}
 
         <div className="space-y-5">
-          {/* Vehicle + dates */}
+          {/* Vehicle select */}
+          <div>
+            <p className="label">Select Vehicle *</p>
+            <Select
+              value={form.vehicleId}
+              onChange={(val) => { set('vehicleId', val); setStartWarn(''); setEndWarn(''); }}
+              placeholder="Choose a vehicle"
+              options={bookableVehicles.map((v) => ({
+                value: v.id,
+                label: `${v.brand} ${v.model} · ${v.vehicleNumber}`,
+                sub: `Rs ${v.dailyRent.toLocaleString()} / day · ${v.status}`,
+              }))}
+            />
+          </div>
+
+          {/* Vehicle status — shows immediately after vehicle is selected */}
+          {vehicleStatus && (
+            !vehicleStatus.currentHire && vehicleStatus.upcomingHires.length === 0 ? (
+              <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
+                <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                <p className="text-sm font-medium text-emerald-700">Vehicle is available — select your dates below</p>
+              </div>
+            ) : (
+              <div className="border border-red-200 rounded-xl overflow-hidden text-xs">
+                {vehicleStatus.currentHire && (
+                  <div className="bg-red-50 px-4 py-3">
+                    <p className="font-bold text-red-700 uppercase tracking-wide text-[10px] mb-2">Currently in Hire</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-red-400 mb-0.5">Customer</p>
+                        <p className="font-semibold text-red-800">{vehicleStatus.currentHire.customerName}</p>
+                      </div>
+                      <div>
+                        <p className="text-red-400 mb-0.5">Phone</p>
+                        <p className="font-semibold text-red-800">{vehicleStatus.currentHire.customerPhone || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-red-400 mb-0.5">Hire Period</p>
+                        <p className="font-semibold text-red-800">{vehicleStatus.currentHire.startDate} → {vehicleStatus.currentHire.endDate}</p>
+                      </div>
+                      <div>
+                        <p className="text-red-400 mb-0.5">Next Free</p>
+                        <p className="font-bold text-emerald-700">{vehicleStatus.nextFree}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {vehicleStatus.upcomingHires.length > 0 && (
+                  <div className={`px-4 py-3 ${vehicleStatus.currentHire ? 'border-t border-amber-200 bg-amber-50/70' : 'bg-amber-50/70'}`}>
+                    <p className="font-bold text-amber-700 uppercase tracking-wide text-[10px] mb-2">Upcoming Bookings</p>
+                    <div className="space-y-1">
+                      {vehicleStatus.upcomingHires.map((b) => (
+                        <div key={b.id} className="flex justify-between">
+                          <span className="text-amber-800 font-medium">{b.customerName}</span>
+                          <span className="text-amber-700">{b.startDate} → {b.endDate}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {!vehicleStatus.currentHire && (
+                      <p className="text-emerald-700 font-semibold mt-2">Next free: {vehicleStatus.nextFree}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          )}
+
+          {/* Date pickers — blocked dates are greyed out in the calendar */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <p className="label">Select Vehicle *</p>
-              <select className="input" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
-                <option value="">Choose a vehicle</option>
-                {bookableVehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.brand} {v.model} — {v.vehicleNumber} (Rs {v.dailyRent.toLocaleString()}/day)
-                  </option>
-                ))}
-              </select>
-            </div>
             <div>
               <p className="label">Start Date *</p>
-              <input className="input" type="date" min={today} value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
+              <DatePicker
+                selected={form.startDate ? parseISO(form.startDate) : null}
+                onChange={handleStartDate}
+                minDate={new Date()}
+                filterDate={isDateAvailable}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Select start date"
+                className={`input w-full ${startWarn ? 'border-red-400 focus:border-red-500' : ''}`}
+                calendarClassName="emrac-datepicker"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+              />
+              {startWarn && (
+                <p className="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
+                  <XCircle size={12} /> {startWarn}
+                </p>
+              )}
             </div>
             <div>
               <p className="label">End Date *</p>
-              <input className="input" type="date" min={form.startDate || today} value={form.endDate} onChange={(e) => set('endDate', e.target.value)} />
+              <DatePicker
+                selected={form.endDate ? parseISO(form.endDate) : null}
+                onChange={handleEndDate}
+                minDate={form.startDate ? parseISO(form.startDate) : new Date()}
+                filterDate={isDateAvailable}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Select end date"
+                className={`input w-full ${endWarn ? 'border-red-400 focus:border-red-500' : ''}`}
+                calendarClassName="emrac-datepicker"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+              />
+              {endWarn && (
+                <p className="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
+                  <XCircle size={12} /> {endWarn}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Availability banner */}
-          {availability !== null && form.vehicleId && form.startDate && form.endDate && (
-            <div className={`flex items-center gap-2 text-sm px-4 py-3 rounded-xl ${availability ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-              {availability ? <CheckCircle size={15} /> : <XCircle size={15} />}
-              {availability
-                ? `Available · ${form.totalDays} days · Rs ${form.totalAmount.toLocaleString()} base`
-                : 'Already reserved for these dates.'}
-            </div>
+          {/* Full date-range conflict banner — shown after both dates are picked */}
+          {form.vehicleId && form.startDate && form.endDate && availability !== null && (
+            availability ? (
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 rounded-xl">
+                <CheckCircle size={15} className="flex-shrink-0" />
+                <span>
+                  Available · <span className="font-semibold">{form.totalDays} day{form.totalDays !== 1 ? 's' : ''}</span>
+                  {' · '}Base cost: <span className="font-semibold">Rs {form.totalAmount.toLocaleString()}</span>
+                </span>
+              </div>
+            ) : (() => {
+              const conflict = bookings.find(
+                (b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled'
+                  && form.startDate <= b.endDate && form.endDate >= b.startDate
+              );
+              const allVB = bookings
+                .filter((b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled' && b.status !== 'Completed')
+                .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
+              let nextFree: string | null = null;
+              try {
+                if (conflict?.endDate) {
+                  const parsed = parseISO(conflict.endDate);
+                  if (isValid(parsed)) {
+                    nextFree = addDays(parsed, 1).toISOString().slice(0, 10);
+                    let changed = true;
+                    let iter = 0;
+                    while (changed && iter++ < 200) {
+                      changed = false;
+                      for (const b of allVB) {
+                        if (b.startDate && b.endDate && b.startDate <= nextFree! && b.endDate >= nextFree!) {
+                          const d = parseISO(b.endDate);
+                          if (isValid(d)) {
+                            nextFree = addDays(d, 1).toISOString().slice(0, 10);
+                            changed = true;
+                          }
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch { /* leave nextFree null */ }
+              return (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle size={14} className="text-red-500 flex-shrink-0" />
+                    <span className="text-sm font-bold text-red-700">Selected dates not available</span>
+                  </div>
+                  {conflict && (
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs pl-1">
+                      <span className="text-red-400">Booked by</span><span className="font-semibold text-red-800">{conflict.customerName}</span>
+                      <span className="text-red-400">Booked period</span><span className="font-semibold text-red-800">{conflict.startDate} → {conflict.endDate}</span>
+                      {nextFree && <><span className="text-red-400">Next free date</span><span className="font-bold text-emerald-700">{nextFree}</span></>}
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           )}
 
           {/* ── Trip estimator ── */}
@@ -541,6 +759,10 @@ export default function Bookings() {
               <input className="input" value={form.customerPhone} onChange={(e) => set('customerPhone', e.target.value)} placeholder="07X XXXXXXX" />
             </div>
             <div>
+              <p className="label">Email <span className="text-navy-400 font-normal">(for receipt)</span></p>
+              <input className="input" type="email" value={form.customerEmail} onChange={(e) => set('customerEmail', e.target.value)} placeholder="customer@email.com" />
+            </div>
+            <div>
               <p className="label">NIC</p>
               <input className="input" value={form.customerNIC} onChange={(e) => set('customerNIC', e.target.value)} placeholder="NIC number" />
             </div>
@@ -548,12 +770,15 @@ export default function Bookings() {
             {/* Referral dropdown */}
             <div>
               <p className="label">Referral</p>
-              <select className="input" value={form.referral} onChange={(e) => set('referral', e.target.value)}>
-                <option value="Direct">Direct</option>
-                {owners.map((o) => (
-                  <option key={o.id} value={o.name}>{o.name}</option>
-                ))}
-              </select>
+              <Select
+                value={form.referral}
+                onChange={(val) => set('referral', val || 'Direct')}
+                placeholder="Direct"
+                options={[
+                  { value: 'Direct', label: 'Direct' },
+                  ...owners.map((o) => ({ value: o.name, label: o.name })),
+                ]}
+              />
             </div>
 
             <div>
@@ -570,12 +795,18 @@ export default function Bookings() {
             </div>
             <div>
               <p className="label">Assign Driver</p>
-              <select className="input" value={form.driverId} onChange={(e) => set('driverId', e.target.value)}>
-                <option value="">No driver</option>
-                {drivers.filter((d) => d.status === 'Available').map((d) => (
-                  <option key={d.id} value={d.id}>{d.name} (Rs {d.dailyRate}/day)</option>
-                ))}
-              </select>
+              <Select
+                value={form.driverId}
+                onChange={(val) => set('driverId', val)}
+                placeholder="No driver"
+                options={drivers
+                  .filter((d) => d.status === 'Available')
+                  .map((d) => ({
+                    value: d.id,
+                    label: d.name,
+                    sub: `Rs ${d.dailyRate.toLocaleString()} / day`,
+                  }))}
+              />
             </div>
             <div className="col-span-2">
               <p className="label">Notes</p>
@@ -601,7 +832,11 @@ export default function Bookings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-lg font-bold text-navy-800">{selected.customerName}</p>
-                  <p className="text-sm text-navy-400">{selected.customerPhone} {selected.customerNIC && `· ${selected.customerNIC}`}</p>
+                  <p className="text-sm text-navy-400">
+                    {selected.customerPhone}
+                    {selected.customerNIC && ` · ${selected.customerNIC}`}
+                    {selected.customerEmail && ` · ${selected.customerEmail}`}
+                  </p>
                 </div>
                 <StatusBadge status={selected.status} size="md" />
               </div>
@@ -613,7 +848,7 @@ export default function Bookings() {
                   ['Start Date', selected.startDate],
                   ['End Date',   selected.endDate],
                   ['Duration',   `${selected.totalDays} days`],
-                  ['Referral',   selected.referral ?? selected.leadBy ?? 'Direct'],
+                  ['Referral',   selected.referral ?? 'Direct'],
                   ['Pickup',     selected.pickupLocation || '—'],
                   ['Drop',       selected.dropLocation || '—'],
                 ].map(([l, v]) => (

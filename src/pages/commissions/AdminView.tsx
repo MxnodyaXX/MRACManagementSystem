@@ -13,7 +13,7 @@ export default function AdminView() {
 
   const leadMap: Record<string, { count: number; total: number; commission: number }> = {};
   commissions.forEach((c) => {
-    const key = c.leadBy || 'Direct';
+    const key = c.referral || 'Direct';
     if (!leadMap[key]) leadMap[key] = { count: 0, total: 0, commission: 0 };
     leadMap[key].count      += 1;
     leadMap[key].total      += c.totalIncome;
@@ -57,7 +57,7 @@ export default function AdminView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Lead performance chart */}
         <div className="card">
-          <p className="section-title mb-4">Income by Lead Source</p>
+          <p className="section-title mb-4">Income by Referral</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={leadData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6B7FA3' }} axisLine={false} tickLine={false} />
@@ -115,7 +115,7 @@ export default function AdminView() {
                 <th className="table-head text-left pb-3">Booking</th>
                 <th className="table-head text-left pb-3">Vehicle</th>
                 <th className="table-head text-left pb-3">Owner</th>
-                <th className="table-head text-center pb-3">Lead By</th>
+                <th className="table-head text-center pb-3">Referral</th>
                 <th className="table-head text-right pb-3">Total</th>
                 <th className="table-head text-right pb-3">Commission</th>
                 <th className="table-head text-right pb-3">Owner Gets</th>
@@ -139,7 +139,7 @@ export default function AdminView() {
                     </td>
                     <td className="py-3 text-sm text-navy-700">{owner?.name ?? '—'}</td>
                     <td className="py-3 text-center">
-                      <span className="text-xs bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">{c.leadBy}</span>
+                      <span className="text-xs bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">{c.referral}</span>
                     </td>
                     <td className="py-3 text-right text-sm font-semibold text-navy-800">
                       Rs {c.totalIncome.toLocaleString()}
