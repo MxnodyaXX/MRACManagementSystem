@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import VehicleImage from '../components/ui/VehicleImage';
@@ -78,34 +79,49 @@ function CloudShape({ x, y, scale = 1, delay = '0s', duration = '28s' }: {
 export default function Dashboard() {
   const isMobile = useIsMobile();
   const { vehicles, bookings, inquiries, expenses, owners, notifications } = useStore();
+  const { currentUser, isAdmin } = useAuthStore();
   const navigate  = useNavigate();
   const [tab,      setTab]      = useState<'weekly' | 'alltime'>('alltime');
   const [chartTab, setChartTab] = useState<'revenue' | 'bookings' | 'expenses'>('revenue');
 
-  /* derived */
-  const byRevenue      = [...vehicles].sort((a, b) => b.revenue - a.revenue);
-  const totalRevenue   = vehicles.reduce((s, v) => s + v.revenue, 0);
-  const totalExpenses  = expenses.reduce((s, e) => s + e.amount, 0);
-  const activeBookings = bookings.filter((b) => b.status === 'Confirmed' || b.status === 'Ongoing');
+  /* scope data to owner when not admin */
+  const isOwnerRole = !isAdmin() && currentUser?.role === 'owner';
+  const myVehicleIdSet = isOwnerRole
+    ? new Set(vehicles.filter((v) => v.ownerId === currentUser?.ownerId).map((v) => v.id))
+    : null;
+  const scopedVehicles = myVehicleIdSet ? vehicles.filter((v) => myVehicleIdSet.has(v.id)) : vehicles;
+  const scopedBookings = myVehicleIdSet ? bookings.filter((b) => myVehicleIdSet.has(b.vehicleId)) : bookings;
+  const scopedExpenses = myVehicleIdSet ? expenses.filter((e) => myVehicleIdSet.has(e.vehicleId)) : expenses;
+
+  /* derived from scoped data */
+  const byRevenue      = [...scopedVehicles].sort((a, b) => b.revenue - a.revenue);
+  const totalRevenue   = scopedVehicles.reduce((s, v) => s + v.revenue, 0);
+  const totalExpenses  = scopedExpenses.reduce((s, e) => s + e.amount, 0);
+  const activeBookings = scopedBookings.filter((b) => b.status === 'Confirmed' || b.status === 'Ongoing');
   const unread         = notifications.filter((n) => !n.read).length;
+  /* vehicle availability is always company-wide (owners can see fleet status) */
   const available      = vehicles.filter((v) => v.status === 'Available');
   const onRent         = vehicles.filter((v) => v.status === 'Ongoing' || v.status === 'Reserved');
   const underRepair    = vehicles.filter((v) => v.status === 'Maintenance');
-  const completedRentals = bookings.filter((b) => b.status === 'Completed').length;
-  const uniqueCustomers  = new Set(bookings.map((b) => b.customerPhone)).size;
+  /* scoped vehicle lists for the fleet columns */
+  const scopedAvailable   = scopedVehicles.filter((v) => v.status === 'Available');
+  const scopedOnRent      = scopedVehicles.filter((v) => v.status === 'Ongoing' || v.status === 'Reserved');
+  const scopedUnderRepair = scopedVehicles.filter((v) => v.status === 'Maintenance');
+  const completedRentals = scopedBookings.filter((b) => b.status === 'Completed').length;
+  const uniqueCustomers  = new Set(scopedBookings.map((b) => b.customerPhone)).size;
 
   /* business KPIs */
   const outstandingBalance = activeBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
   const today = new Date();
-  const thisMonthRevenue = bookings
+  const thisMonthRevenue = scopedBookings
     .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
     .reduce((s, b) => s + b.totalAmount, 0);
-  const thisMonthExpenses = expenses
+  const thisMonthExpenses = scopedExpenses
     .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
     .reduce((s, e) => s + e.amount, 0);
   const monthlyProfit = thisMonthRevenue - thisMonthExpenses;
 
-  /* last-5-months chart data — computed from real bookings/expenses */
+  /* last-5-months chart data — scoped to owner when applicable */
   const chartData = useMemo(() => {
     const months = Array.from({ length: 5 }, (_, i) => {
       const d = new Date();
@@ -114,16 +130,16 @@ export default function Dashboard() {
       return { year: d.getFullYear(), month: d.getMonth(), label: format(d, 'MMM') };
     });
     return months.map(({ year, month, label }) => {
-      const rev = bookings
+      const rev = scopedBookings
         .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; })
         .reduce((s, b) => s + b.totalAmount, 0);
-      const cnt = bookings.filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; }).length;
-      const exp = expenses
+      const cnt = scopedBookings.filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; }).length;
+      const exp = scopedExpenses
         .filter((e) => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() === month; })
         .reduce((s, e) => s + e.amount, 0);
       return { month: label, revenue: rev, bookings: cnt, expenses: exp };
     });
-  }, [bookings, expenses]);
+  }, [scopedBookings, scopedExpenses]);
 
   const chartRange = (() => {
     const first = new Date(); first.setDate(1); first.setMonth(first.getMonth() - 4);
@@ -135,9 +151,9 @@ export default function Dashboard() {
 
 
   const kpiCards = [
-    { label: 'Total Fleet',     value: vehicles.length,                           sub: `${available.length} available`,      icon: <Car size={18}/>,          color: 'bg-navy-700',    path: '/vehicles'      },
+    { label: 'Total Fleet',     value: scopedVehicles.length,                     sub: `${scopedAvailable.length} available`, icon: <Car size={18}/>,          color: 'bg-navy-700',    path: '/vehicles'      },
     { label: 'Active Bookings', value: activeBookings.length,                     sub: 'confirmed + ongoing',                icon: <CalendarDays size={18}/>, color: 'bg-blue-500',    path: '/bookings'      },
-    { label: 'Total Revenue',   value: `Rs ${(totalRevenue/1000).toFixed(0)}k`,   sub: `Net Rs ${((totalRevenue-totalExpenses)/1000).toFixed(0)}k`, icon: <DollarSign size={18}/>, color: 'bg-emerald-500', path: '/commissions' },
+    { label: 'Total Revenue',   value: `Rs ${totalRevenue.toLocaleString()}`,   sub: `Net Rs ${(totalRevenue - totalExpenses).toLocaleString()}`, icon: <DollarSign size={18}/>, color: 'bg-emerald-500', path: '/commissions' },
     { label: 'Alerts',          value: unread,                                    sub: 'unread notifications',               icon: <AlertCircle size={18}/>,  color: 'bg-amber-500',   path: '/notifications' },
   ];
 
@@ -397,20 +413,20 @@ export default function Dashboard() {
       {/* ── Fleet Section ────────────────────────────────────────── */}
       <div className="card overflow-hidden p-0 anim-fade-up" style={{ animationDelay: '420ms' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-navy-50">
-          <FleetColumn title="Available Vehicles"           vehicles={available}   bookings={[]}            expenseMap={{}}                    accent="emerald" onViewAll={() => navigate('/vehicles')} />
-          <FleetColumn title="Vehicles On Rent"             vehicles={onRent}      bookings={activeBookings} expenseMap={{}}                    accent="blue"    onViewAll={() => navigate('/bookings')} />
-          <FleetColumn title="Under Repair / Not In Action" vehicles={underRepair} bookings={[]}            expenseMap={buildExpenseMap(expenses)} accent="red"  onViewAll={() => navigate('/expenses')} />
+          <FleetColumn title="Available Vehicles"           vehicles={scopedAvailable}   bookings={[]}            expenseMap={{}}                           accent="emerald" onViewAll={() => navigate('/vehicles')} />
+          <FleetColumn title="Vehicles On Rent"             vehicles={scopedOnRent}      bookings={activeBookings} expenseMap={{}}                           accent="blue"    onViewAll={() => navigate('/bookings')} />
+          <FleetColumn title="Under Repair / Not In Action" vehicles={scopedUnderRepair} bookings={[]}            expenseMap={buildExpenseMap(scopedExpenses)} accent="red"  onViewAll={() => navigate('/expenses')} />
         </div>
 
         {/* Stats bar */}
-        <div className="border-t border-navy-50 grid grid-cols-2 sm:grid-cols-5 divide-x divide-navy-50 bg-navy-50/40">
+        <div className={`border-t border-navy-50 grid grid-cols-2 ${isOwnerRole ? 'sm:grid-cols-4' : 'sm:grid-cols-5'} divide-x divide-navy-50 bg-navy-50/40`}>
           {([
-            { icon:<UserCircle size={18}/>,   label:'Total Owners',      value:owners.length,    sub:'+1 this month'               },
-            { icon:<Car size={18}/>,           label:'Total Vehicles',    value:vehicles.length,  sub:'+5 this month'               },
-            { icon:<CheckSquare size={18}/>,   label:'Completed Rentals', value:completedRentals, sub:'+3 this month'               },
-            { icon:<Users size={18}/>,         label:'Total Customers',   value:uniqueCustomers,  sub:`+${uniqueCustomers} tracked` },
-            { icon:<MessageSquare size={18}/>, label:'Total Inquiries',   value:inquiries.length, sub:'+2 this month'               },
-          ] as const).map(({ icon, label, value, sub }) => (
+            !isOwnerRole ? { icon:<UserCircle size={18}/>,   label:'Total Owners',      value:owners.length,          sub:'+1 this month'               } : null,
+            { icon:<Car size={18}/>,           label:'Total Vehicles',    value:scopedVehicles.length,  sub:`${scopedAvailable.length} available`  },
+            { icon:<CheckSquare size={18}/>,   label:'Completed Rentals', value:completedRentals,       sub:'+3 this month'               },
+            { icon:<Users size={18}/>,         label:'Total Customers',   value:uniqueCustomers,        sub:`+${uniqueCustomers} tracked` },
+            { icon:<MessageSquare size={18}/>, label:'Total Inquiries',   value:inquiries.length,       sub:'+2 this month'               },
+          ].filter(Boolean) as { icon:React.ReactNode; label:string; value:number; sub:string }[]).map(({ icon, label, value, sub }) => (
             <div key={label} className="flex items-center gap-3 px-4 py-4">
               <div className="text-navy-300 flex-shrink-0">{icon}</div>
               <div>

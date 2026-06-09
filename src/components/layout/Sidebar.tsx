@@ -41,7 +41,7 @@ export default function Sidebar() {
 
   const allLinks = isAdmin()
     ? [...links, { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
-    : links;
+    : links.filter((l) => l.to !== '/inquiries');
 
   return (
     <>

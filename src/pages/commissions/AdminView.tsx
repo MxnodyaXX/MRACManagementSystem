@@ -432,9 +432,9 @@ export default function AdminView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Income',       value: `Rs ${(totalIncome / 1000).toFixed(1)}k`,      icon: DollarSign, color: 'bg-navy-700'    },
-          { label: 'Referral Fees',      value: `Rs ${(totalReferralFee / 1000).toFixed(1)}k`, icon: Percent,    color: 'bg-amber-500'   },
-          { label: 'Owner Payouts',      value: `Rs ${(totalOwnerPayout / 1000).toFixed(1)}k`, icon: Users,      color: 'bg-emerald-500' },
+          { label: 'Total Income',       value: `Rs ${totalIncome.toLocaleString()}`,      icon: DollarSign, color: 'bg-navy-700'    },
+          { label: 'Referral Fees',      value: `Rs ${totalReferralFee.toLocaleString()}`, icon: Percent,    color: 'bg-amber-500'   },
+          { label: 'Owner Payouts',      value: `Rs ${totalOwnerPayout.toLocaleString()}`, icon: Users,      color: 'bg-emerald-500' },
           { label: 'Pending Payouts',    value: pendingCount,                                    icon: TrendingUp, color: 'bg-blue-500'    },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card flex items-start gap-3">
@@ -476,7 +476,7 @@ export default function AdminView() {
             {directOwnerBars.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide">
-                  Direct income · by vehicle owner · Rs {(directTotal / 1000).toFixed(0)}k
+                  Direct income · by vehicle owner · Rs {directTotal.toLocaleString()}
                 </p>
                 <p className="text-[10px] text-navy-300 mb-1.5">Walk-in hires on the owner&apos;s own vehicle (no referrer)</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -484,7 +484,7 @@ export default function AdminView() {
                     <div key={b.id} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
                       <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
                       <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
-                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
+                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {b.total.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -493,7 +493,7 @@ export default function AdminView() {
             {referrerBars.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide">
-                  Owner Referrals · by referrer · Rs {(referrerTotal / 1000).toFixed(0)}k
+                  Owner Referrals · by referrer · Rs {referrerTotal.toLocaleString()}
                 </p>
                 <p className="text-[10px] text-navy-300 mb-1.5">Income an owner referred onto another owner&apos;s vehicle</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -501,7 +501,7 @@ export default function AdminView() {
                     <div key={b.id} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
                       <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
                       <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
-                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
+                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {b.total.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -516,7 +516,7 @@ export default function AdminView() {
                     <div key={b.name} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
                       <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
                       <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
-                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
+                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {b.total.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>

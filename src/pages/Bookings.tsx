@@ -16,7 +16,9 @@ import 'react-datepicker/dist/react-datepicker.css';
 import {
   Plus, CalendarDays, List, AlertTriangle, CheckCircle,
   XCircle, Calculator, MessageCircle, Shield, PlayCircle,
+  ChevronDown, Search as SearchIcon,
 } from 'lucide-react';
+import AvailabilityModal from '../components/ui/AvailabilityModal';
 import { Booking } from '../types';
 import { differenceInDays, parseISO, addDays, isValid } from 'date-fns';
 
@@ -85,9 +87,11 @@ export default function Bookings() {
   const { currentUser, isAdmin, can } = useAuthStore();
   const location = useLocation();
 
-  const [tab,          setTab]          = useState<BookingStatus | 'All'>('All');
-  const [viewMode,     setViewMode]     = useState<'cards' | 'calendar'>('cards');
-  const [modal,        setModal]        = useState<'add' | 'view' | 'calculator' | null>(null);
+  const [tab,               setTab]               = useState<BookingStatus | 'All'>('All');
+  const [viewMode,          setViewMode]          = useState<'cards' | 'calendar'>('cards');
+  const [modal,             setModal]             = useState<'add' | 'view' | 'calculator' | null>(null);
+  const [completedOpen,     setCompletedOpen]     = useState(false);
+  const [availabilityOpen,  setAvailabilityOpen]  = useState(false);
   const [selected,     setSelected]     = useState<Booking | null>(null);
   const [form,         setForm]         = useState(emptyForm());
   const [availability, setAvailability] = useState<boolean | null>(null);
@@ -350,6 +354,12 @@ export default function Bookings() {
             </button>
           </div>
 
+          <button
+            onClick={() => setAvailabilityOpen(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <SearchIcon size={15} /> Check Availability
+          </button>
           {(isAdmin() || can('canBook')) && (
             <button
               onClick={() => openAdd()}
@@ -433,107 +443,142 @@ export default function Bookings() {
       )}
 
       {/* ── Cards View ── */}
-      {viewMode === 'cards' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {sorted.map((b) => {
-            const vehicle = vehicles.find((v) => v.id === b.vehicleId);
-            const owner   = owners.find((o) => o.id === vehicle?.ownerId);
-            const balance = b.totalAmount - b.paidAmount;
-            return (
+      {viewMode === 'cards' && (() => {
+        const activeList    = sorted.filter((b) => b.status !== 'Completed');
+        const completedList = sorted.filter((b) => b.status === 'Completed');
+
+        const renderCard = (b: Booking) => {
+          const vehicle = vehicles.find((v) => v.id === b.vehicleId);
+          const owner   = owners.find((o) => o.id === vehicle?.ownerId);
+          const balance = b.totalAmount - b.paidAmount;
+          return (
+            <div
+              key={b.id}
+              className="card hover:shadow-card-hover transition-shadow cursor-pointer"
+              onClick={() => { setSelected(b); setModal('view'); }}
+            >
               <div
-                key={b.id}
-                className="card hover:shadow-card-hover transition-shadow cursor-pointer"
-                onClick={() => { setSelected(b); setModal('view'); }}
-              >
-                {/* Status bar */}
-                <div
-                  className="h-1 rounded-full mb-3 -mt-1"
-                  style={{ background: STATUS_COLORS[b.status] ?? '#E8EFF8' }}
-                />
-
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-bold text-navy-800">{b.customerName}</p>
-                    <p className="text-xs text-navy-400">{b.customerPhone}</p>
-                  </div>
-                  <StatusBadge status={b.status} />
+                className="h-1 rounded-full mb-3 -mt-1"
+                style={{ background: STATUS_COLORS[b.status] ?? '#E8EFF8' }}
+              />
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-navy-800">{b.customerName}</p>
+                  <p className="text-xs text-navy-400">{b.customerPhone}</p>
                 </div>
-
-                <div className="bg-navy-50/60 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
-                  <CalendarDays size={13} className="text-navy-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold text-navy-700 truncate">
-                        {vehicle?.brand} {vehicle?.model}
-                        <span className="font-normal text-navy-400 ml-1">· {vehicle?.vehicleNumber}</span>
-                      </p>
-                      {owner && (
-                        <span className="text-[10px] text-navy-400 bg-white border border-navy-100 rounded-full px-2 py-0.5 flex-shrink-0">
-                          {owner.name}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-navy-500">{b.startDate} → {b.endDate} ({b.totalDays}d)</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="bg-navy-50/60 rounded-xl p-2 text-center">
-                    <p className="text-[10px] text-navy-400">Total</p>
-                    <p className="text-xs font-bold text-navy-800">Rs {b.totalAmount.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-emerald-50 rounded-xl p-2 text-center">
-                    <p className="text-[10px] text-emerald-500">Paid</p>
-                    <p className="text-xs font-bold text-emerald-700">Rs {b.paidAmount.toLocaleString()}</p>
-                  </div>
-                  <div className={`rounded-xl p-2 text-center ${balance > 0 ? 'bg-red-50' : 'bg-navy-50/60'}`}>
-                    <p className={`text-[10px] ${balance > 0 ? 'text-red-400' : 'text-navy-400'}`}>Balance</p>
-                    <p className={`text-xs font-bold ${balance > 0 ? 'text-red-600' : 'text-navy-600'}`}>
-                      Rs {balance.toLocaleString()}
+                <StatusBadge status={b.status} />
+              </div>
+              <div className="bg-navy-50/60 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
+                <CalendarDays size={13} className="text-navy-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-navy-700 truncate">
+                      {vehicle?.brand} {vehicle?.model}
+                      <span className="font-normal text-navy-400 ml-1">· {vehicle?.vehicleNumber}</span>
                     </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs border-t border-navy-50 pt-2.5">
-                  <span className="bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">
-                    {b.referral ?? 'Direct'}
-                  </span>
-                  <div className="flex gap-1.5">
-                    {b.status === 'Confirmed' && (
-                      <>
-                        <button
-                          className="flex items-center gap-1 text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
-                          onClick={(e) => { e.stopPropagation(); startBooking(b.id); }}
-                          title="Mark vehicle as On Rent"
-                        >
-                          <PlayCircle size={11} /> Start
-                        </button>
-                        <button
-                          className="text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors"
-                          onClick={(e) => { e.stopPropagation(); cancelBooking(b.id); }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                    {b.status === 'Ongoing' && (
-                      <button
-                        className="text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
-                        onClick={(e) => { e.stopPropagation(); completeBooking(b.id); }}
-                      >
-                        Complete
-                      </button>
+                    {owner && (
+                      <span className="text-[10px] text-navy-400 bg-white border border-navy-100 rounded-full px-2 py-0.5 flex-shrink-0">
+                        {owner.name}
+                      </span>
                     )}
                   </div>
+                  <p className="text-xs text-navy-500">{b.startDate} → {b.endDate} ({b.totalDays}d)</p>
                 </div>
               </div>
-            );
-          })}
-          {sorted.length === 0 && (
-            <div className="col-span-3 text-center py-16 text-navy-400 text-sm">No bookings found.</div>
-          )}
-        </div>
-      )}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-navy-50/60 rounded-xl p-2 text-center">
+                  <p className="text-[10px] text-navy-400">Total</p>
+                  <p className="text-xs font-bold text-navy-800">Rs {b.totalAmount.toLocaleString()}</p>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-2 text-center">
+                  <p className="text-[10px] text-emerald-500">Paid</p>
+                  <p className="text-xs font-bold text-emerald-700">Rs {b.paidAmount.toLocaleString()}</p>
+                </div>
+                <div className={`rounded-xl p-2 text-center ${balance > 0 ? 'bg-red-50' : 'bg-navy-50/60'}`}>
+                  <p className={`text-[10px] ${balance > 0 ? 'text-red-400' : 'text-navy-400'}`}>Balance</p>
+                  <p className={`text-xs font-bold ${balance > 0 ? 'text-red-600' : 'text-navy-600'}`}>
+                    Rs {balance.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs border-t border-navy-50 pt-2.5">
+                <span className="bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">
+                  {b.referral ?? 'Direct'}
+                </span>
+                <div className="flex gap-1.5">
+                  {b.status === 'Confirmed' && (
+                    <>
+                      <button
+                        className="flex items-center gap-1 text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
+                        onClick={(e) => { e.stopPropagation(); startBooking(b.id); }}
+                        title="Mark vehicle as On Rent"
+                      >
+                        <PlayCircle size={11} /> Start
+                      </button>
+                      <button
+                        className="text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors"
+                        onClick={(e) => { e.stopPropagation(); cancelBooking(b.id); }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  {b.status === 'Ongoing' && (
+                    <button
+                      className="text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
+                      onClick={(e) => { e.stopPropagation(); completeBooking(b.id); }}
+                    >
+                      Complete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <>
+            {/* Active bookings grid */}
+            {activeList.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {activeList.map(renderCard)}
+              </div>
+            )}
+            {activeList.length === 0 && completedList.length === 0 && (
+              <div className="text-center py-16 text-navy-400 text-sm">No bookings found.</div>
+            )}
+
+            {/* Completed bookings accordion */}
+            {completedList.length > 0 && (
+              <div className={activeList.length > 0 ? 'mt-4' : ''}>
+                <button
+                  onClick={() => setCompletedOpen((v) => !v)}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-navy-100 hover:bg-navy-50/60 transition-colors shadow-card"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-gray-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-navy-700 flex-1 text-left">
+                    Completed Bookings
+                  </span>
+                  <span className="text-xs text-navy-400 bg-navy-50 px-2.5 py-0.5 rounded-full">
+                    {completedList.length}
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className={`text-navy-400 transition-transform duration-300 flex-shrink-0 ${completedOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {completedOpen && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
+                    {completedList.map(renderCard)}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* ── Add Booking Modal ── */}
       <Modal open={modal === 'add'} onClose={() => setModal(null)} title="New Booking" width="max-w-2xl">
@@ -964,6 +1009,9 @@ export default function Bookings() {
           <button onClick={handleCreate} className="btn-primary">Confirm Booking</button>
         </div>
       </Modal>
+
+      {/* ── Availability Check Modal ── */}
+      <AvailabilityModal open={availabilityOpen} onClose={() => setAvailabilityOpen(false)} />
 
       {/* ── Trip Bill Calculator Modal ── */}
       <TripCalculatorModal

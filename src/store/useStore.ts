@@ -269,18 +269,8 @@ export const useStore = create<AppState>()(
       },
     }),
     {
-      name: 'emrac-store-v5',
+      name: 'emrac-store-v6',
       version: 1,
-      // One-time patch: attach the CAB-1234 photo to already-saved data (no wipe).
-      migrate: (persisted, _version) => {
-        const s = persisted as Partial<AppState> | undefined;
-        if (s?.vehicles) {
-          s.vehicles = s.vehicles.map((v) =>
-            v.vehicleNumber === 'CAB-1234' && !v.imageUrl ? { ...v, imageUrl: cab1234Img } : v
-          );
-        }
-        return s as AppState;
-      },
     }
   )
 );

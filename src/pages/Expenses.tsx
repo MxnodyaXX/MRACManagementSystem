@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import { Plus, Trash2, Receipt } from 'lucide-react';
@@ -28,23 +29,31 @@ const emptyForm = (): Omit<Expense, 'id' | 'createdAt'> => ({
 
 export default function Expenses() {
   const { expenses, vehicles, addExpense, deleteExpense } = useStore();
+  const { currentUser, isAdmin } = useAuthStore();
   const [filter, setFilter] = useState<ExpenseCategory | 'All'>('All');
   const [vehicleFilter, setVehicleFilter] = useState('');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm());
 
-  const filtered = expenses.filter((e) => {
+  const isOwnerRole = !isAdmin() && currentUser?.role === 'owner';
+  const myVehicleIds = isOwnerRole
+    ? new Set(vehicles.filter((v) => v.ownerId === currentUser?.ownerId).map((v) => v.id))
+    : null;
+  const scopedExpenses = myVehicleIds ? expenses.filter((e) => myVehicleIds.has(e.vehicleId)) : expenses;
+  const scopedVehicles = myVehicleIds ? vehicles.filter((v) => myVehicleIds.has(v.id)) : vehicles;
+
+  const filtered = scopedExpenses.filter((e) => {
     if (filter !== 'All' && e.category !== filter) return false;
     if (vehicleFilter && e.vehicleId !== vehicleFilter) return false;
     return true;
   });
   const sorted = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalExpense = scopedExpenses.reduce((s, e) => s + e.amount, 0);
 
   // Category breakdown for pie chart
   const catMap: Partial<Record<ExpenseCategory, number>> = {};
-  expenses.forEach((e) => { catMap[e.category] = (catMap[e.category] ?? 0) + e.amount; });
+  scopedExpenses.forEach((e) => { catMap[e.category] = (catMap[e.category] ?? 0) + e.amount; });
   const pieData = Object.entries(catMap).map(([name, value]) => ({ name, value }));
 
   const set = (field: string, value: unknown) => setForm((f) => ({ ...f, [field]: value }));
@@ -80,7 +89,7 @@ export default function Expenses() {
                 >
                   <div className="w-2.5 h-2.5 rounded-full mx-auto mb-1.5" style={{ background: CAT_COLORS[cat] }} />
                   <p className="text-xs font-medium text-navy-700">{cat}</p>
-                  <p className="text-xs text-navy-400 mt-0.5">Rs {(amount / 1000).toFixed(1)}k</p>
+                  <p className="text-xs text-navy-400 mt-0.5">Rs {amount.toLocaleString()}</p>
                 </button>
               );
             })}
@@ -112,7 +121,7 @@ export default function Expenses() {
             onChange={(e) => setVehicleFilter(e.target.value)}
           >
             <option value="">All Vehicles</option>
-            {vehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} · {v.vehicleNumber}</option>)}
+            {scopedVehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} · {v.vehicleNumber}</option>)}
           </select>
           {filter !== 'All' && (
             <button onClick={() => setFilter('All')} className="text-xs text-navy-400 hover:text-navy-700 px-2 py-1 rounded-lg hover:bg-navy-50">
@@ -184,7 +193,7 @@ export default function Expenses() {
             <p className="label">Vehicle *</p>
             <select className="input" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
               <option value="">Select vehicle</option>
-              {vehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} — {v.vehicleNumber}</option>)}
+              {scopedVehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} — {v.vehicleNumber}</option>)}
             </select>
           </div>
           <div>

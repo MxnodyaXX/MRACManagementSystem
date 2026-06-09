@@ -8,9 +8,9 @@ import cab1234Img from './CAB-1234.png';
 //  Reference date: 2026-06-01 (today)
 //
 //  Ownership map
-//    o1 Kamal Perera  (15%)  →  v1 Prius, v2 Axio
-//    o2 Nimal Silva   (12%)  →  v3 Vezel, v6 X-Trail
-//    o3 Suresh Fernando(18%) →  v4 Alto,  v8 Fit
+//    o1 Kasun Perera   (15%)  →  v1 Prius, v2 Axio
+//    o2 Nimesh Silva   (12%)  →  v3 Vezel, v6 X-Trail
+//    o3 Roshan Fernando(18%) →  v4 Alto,  v8 Fit
 //    o4 Priya Jayawardena(15%)→ v5 HiAce
 //    o5 Ruwan Bandara (20%)  →  v7 Montero
 //
@@ -48,8 +48,8 @@ export const sampleData: {
   // ── Owners ────────────────────────────────────────────────────────────────
   owners: [
     {
-      id: 'o1', name: 'Kamal Perera', phone: '0771234567',
-      email: 'kamal.perera@email.com', address: 'No. 45, Flower Road, Colombo 07',
+      id: 'o1', name: 'Kasun Perera', phone: '0771234567',
+      email: 'kasun.perera@email.com', address: 'No. 45, Flower Road, Colombo 07',
       bankAccount: '01234567890', commissionRate: 0,
       // Paid payouts: bk1(22500)+bk7(18000)+bk2(14000) = 54500
       totalEarnings: 54500,
@@ -58,20 +58,20 @@ export const sampleData: {
       createdAt: '2024-01-10T00:00:00Z',
     },
     {
-      id: 'o2', name: 'Nimal Silva', phone: '0779876543',
-      email: 'nimal.silva@email.com', address: '23/B, Lake Drive, Battaramulla',
+      id: 'o2', name: 'Nimesh Silva', phone: '0779876543',
+      email: 'nimesh.silva@email.com', address: '23/B, Lake Drive, Battaramulla',
       bankAccount: '09876543210', commissionRate: 0,
-      // Paid payouts: bk3(31000)+bk6(40000) = 71000  (both Kamal-referred, Rs 2,000 fee each)
+      // Paid payouts: bk3(31000)+bk6(40000) = 71000  (both Kasun-referred, Rs 2,000 fee each)
       totalEarnings: 71000,
       // Pending: bk11(38500)+bk14(33000) = 71500
       pendingPayout: 71500,
       createdAt: '2024-02-15T00:00:00Z',
     },
     {
-      id: 'o3', name: 'Suresh Fernando', phone: '0763456789',
-      email: 'suresh.fernando@email.com', address: '78, Main Street, Gampaha',
+      id: 'o3', name: 'Roshan Fernando', phone: '0763456789',
+      email: 'roshan.fernando@email.com', address: '78, Main Street, Gampaha',
       bankAccount: '05556667778', commissionRate: 0,
-      // Paid: bk4-credit not in earnings; bk9(8500, Nimal-referred Rs 500 fee) = 8500
+      // Paid: bk4-credit not in earnings; bk9(8500, Nimesh-referred Rs 500 fee) = 8500
       totalEarnings: 8500,
       // Pending: bk13(12000) = 12000
       pendingPayout: 12000,
@@ -288,7 +288,7 @@ export const sampleData: {
       customerEmail: 'thisara.m@email.com', customerNIC: '953456789V',
       startDate: '2026-05-10', endDate: '2026-05-15', totalDays: 6,
       totalAmount: 33000, paidAmount: 33000,  // 6 × 5500
-      status: 'Completed', referral: 'Kamal Perera',
+      status: 'Completed', referral: 'Kasun Perera',
       referralFeeType: 'fixed', referralFeeValue: 2000, referralFee: 2000,
       pickupLocation: 'Galle Road, Colombo 03', dropLocation: 'Galle Road, Colombo 03',
       createdAt: '2026-05-08T08:00:00Z',
@@ -310,7 +310,7 @@ export const sampleData: {
       customerEmail: 'dinesh.w@email.com', customerNIC: '856789012V',
       startDate: '2026-05-18', endDate: '2026-05-22', totalDays: 5,
       totalAmount: 40000, paidAmount: 40000,  // 5 × 8000
-      status: 'Completed', referral: 'Kamal Perera',
+      status: 'Completed', referral: 'Kasun Perera',
       referralFeeType: 'fixed', referralFeeValue: 2500, referralFee: 2500,
       pickupLocation: 'Colombo Fort', dropLocation: 'Colombo Fort',
       notes: 'Group of 12 passengers. Event transport.',
@@ -322,7 +322,7 @@ export const sampleData: {
       customerEmail: 'chamara.s@gmail.com', customerNIC: '907890123V',
       startDate: '2026-05-20', endDate: '2026-05-25', totalDays: 6,
       totalAmount: 42000, paidAmount: 42000,  // 6 × 7000
-      status: 'Completed', referral: 'Kamal Perera',
+      status: 'Completed', referral: 'Kasun Perera',
       referralFeeType: 'fixed', referralFeeValue: 2000, referralFee: 2000,
       pickupLocation: 'Rajagiriya', dropLocation: 'Rajagiriya',
       createdAt: '2026-05-18T09:00:00Z',
@@ -344,7 +344,7 @@ export const sampleData: {
       startDate: '2026-05-26', endDate: '2026-05-30', totalDays: 5,
       // base=45000; 1050km driven, 750km free, 300 extra × 70 = 21000; final=66000
       totalAmount: 45000, paidAmount: 66000,
-      status: 'Completed', referral: 'Kamal Perera',
+      status: 'Completed', referral: 'Kasun Perera',
       referralFeeType: 'fixed', referralFeeValue: 3000, referralFee: 3000,
       pickupLocation: 'Bambalapitiya', dropLocation: 'Bambalapitiya',
       notes: 'Overran included km — extra charge Rs 21,000 settled at return.',
@@ -356,7 +356,7 @@ export const sampleData: {
       customerEmail: 'sanjay.k@gmail.com', customerNIC: '882345678V',
       startDate: '2026-05-28', endDate: '2026-05-30', totalDays: 3,
       totalAmount: 9000, paidAmount: 9000,  // 3 × 3000
-      status: 'Completed', referral: 'Nimal Silva',
+      status: 'Completed', referral: 'Nimesh Silva',
       referralFeeType: 'fixed', referralFeeValue: 500, referralFee: 500,
       pickupLocation: 'Wattala', dropLocation: 'Wattala',
       createdAt: '2026-05-26T09:00:00Z',
@@ -414,7 +414,7 @@ export const sampleData: {
       customerEmail: 'sanjay.k@gmail.com', customerNIC: '882345678V',
       startDate: '2026-06-08', endDate: '2026-06-12', totalDays: 5,
       totalAmount: 35000, paidAmount: 10000,  // 5 × 7000
-      status: 'Confirmed', referral: 'Kamal Perera',
+      status: 'Confirmed', referral: 'Kasun Perera',
       referralFeeType: 'fixed', referralFeeValue: 2000, referralFee: 2000,
       pickupLocation: 'Colombo 06', dropLocation: 'Colombo 06',
       createdAt: '2026-06-01T10:00:00Z',
@@ -435,7 +435,7 @@ export const sampleData: {
       customerEmail: 'chamara.s@gmail.com', customerNIC: '907890123V',
       startDate: '2026-06-15', endDate: '2026-06-17', totalDays: 3,
       totalAmount: 27000, paidAmount: 10000,  // 3 × 9000
-      status: 'Confirmed', referral: 'Nimal Silva',
+      status: 'Confirmed', referral: 'Nimesh Silva',
       referralFeeType: 'fixed', referralFeeValue: 1500, referralFee: 1500,
       pickupLocation: 'Rajagiriya', dropLocation: 'Rajagiriya',
       createdAt: '2026-06-01T15:00:00Z',
@@ -480,30 +480,30 @@ export const sampleData: {
     { id: 'cm10', bookingId: 'bk10', vehicleId: 'v2', ownerId: 'o1', referral: 'Direct',
       totalIncome: 14000, commissionRate: 0, commissionAmount: 0, ownerPayout: 14000, status: 'Pending', createdAt: '2026-05-28T10:00:00Z' },
     // Nimal's vehicles (v3 Vezel, v6 X-Trail) — bk3, bk6, bk14 referred by Kamal
-    { id: 'cm3',  bookingId: 'bk3',  vehicleId: 'v3', ownerId: 'o2', referral: 'Kamal Perera',
+    { id: 'cm3',  bookingId: 'bk3',  vehicleId: 'v3', ownerId: 'o2', referral: 'Kasun Perera',
       totalIncome: 33000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 31000, status: 'Paid',    createdAt: '2026-05-08T08:00:00Z' },
     { id: 'cm11', bookingId: 'bk11', vehicleId: 'v3', ownerId: 'o2', referral: 'Facebook',
       totalIncome: 38500, commissionRate: 0, commissionAmount: 0, ownerPayout: 38500, status: 'Pending', createdAt: '2026-05-26T11:00:00Z' },
-    { id: 'cm6',  bookingId: 'bk6',  vehicleId: 'v6', ownerId: 'o2', referral: 'Kamal Perera',
+    { id: 'cm6',  bookingId: 'bk6',  vehicleId: 'v6', ownerId: 'o2', referral: 'Kasun Perera',
       totalIncome: 42000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 40000, status: 'Paid',    createdAt: '2026-05-18T09:00:00Z' },
-    { id: 'cm14', bookingId: 'bk14', vehicleId: 'v6', ownerId: 'o2', referral: 'Kamal Perera',
+    { id: 'cm14', bookingId: 'bk14', vehicleId: 'v6', ownerId: 'o2', referral: 'Kasun Perera',
       totalIncome: 35000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 33000, status: 'Pending', createdAt: '2026-06-01T10:00:00Z' },
     // Suresh's vehicles (v4 Alto, v8 Fit) — bk9 referred by Nimal
     { id: 'cm4',  bookingId: 'bk4',  vehicleId: 'v4', ownerId: 'o3', referral: 'Direct',
       totalIncome: 7500,  commissionRate: 0, commissionAmount: 0, ownerPayout: 7500,  status: 'Credit',  createdAt: '2026-05-10T11:00:00Z' },
-    { id: 'cm9',  bookingId: 'bk9',  vehicleId: 'v8', ownerId: 'o3', referral: 'Nimal Silva',
+    { id: 'cm9',  bookingId: 'bk9',  vehicleId: 'v8', ownerId: 'o3', referral: 'Nimesh Silva',
       totalIncome: 9000,  commissionRate: 0, commissionAmount: 0, coordinatorFee: 500, ownerPayout: 8500,  status: 'Paid',    createdAt: '2026-05-26T09:00:00Z' },
     { id: 'cm13', bookingId: 'bk13', vehicleId: 'v8', ownerId: 'o3', referral: 'Google',
       totalIncome: 12000, commissionRate: 0, commissionAmount: 0, ownerPayout: 12000, status: 'Pending', createdAt: '2026-05-31T09:00:00Z' },
     // Priya's vehicle (v5 HiAce) — bk5 referred by Kamal
-    { id: 'cm5',  bookingId: 'bk5',  vehicleId: 'v5', ownerId: 'o4', referral: 'Kamal Perera',
+    { id: 'cm5',  bookingId: 'bk5',  vehicleId: 'v5', ownerId: 'o4', referral: 'Kasun Perera',
       totalIncome: 40000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2500, ownerPayout: 37500, status: 'Paid',    createdAt: '2026-05-15T08:00:00Z' },
     { id: 'cm12', bookingId: 'bk12', vehicleId: 'v5', ownerId: 'o4', referral: 'TikTok',
       totalIncome: 40000, commissionRate: 0, commissionAmount: 0, ownerPayout: 40000, status: 'Pending', createdAt: '2026-05-29T07:00:00Z' },
     // Ruwan's vehicle (v7 Montero) — bk8 referred by Kamal, bk16 by Nimal
-    { id: 'cm8',  bookingId: 'bk8',  vehicleId: 'v7', ownerId: 'o5', referral: 'Kamal Perera',
+    { id: 'cm8',  bookingId: 'bk8',  vehicleId: 'v7', ownerId: 'o5', referral: 'Kasun Perera',
       totalIncome: 66000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 3000, ownerPayout: 63000, status: 'Paid',    createdAt: '2026-05-24T08:00:00Z' },
-    { id: 'cm16', bookingId: 'bk16', vehicleId: 'v7', ownerId: 'o5', referral: 'Nimal Silva',
+    { id: 'cm16', bookingId: 'bk16', vehicleId: 'v7', ownerId: 'o5', referral: 'Nimesh Silva',
       totalIncome: 27000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 1500, ownerPayout: 25500, status: 'Pending', createdAt: '2026-06-01T15:00:00Z' },
   ],
 
@@ -724,7 +724,7 @@ export const sampleData: {
       id: 'inq7', customerName: 'Sajith Fernando', customerPhone: '0734455667',
       requestedVehicle: 'Vezel', preferredBrand: 'Honda',
       startDate: '2026-05-29', endDate: '2026-06-04',
-      referral: 'Nimal Silva', status: 'Converted',
+      referral: 'Nimesh Silva', status: 'Converted',
       notes: 'Converted to booking — bk11.',
       createdAt: '2026-05-26T10:00:00Z',
     },
