@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
+import { useStore } from './store/useStore';
+import { setupRealtime } from './lib/realtime';
 import Sidebar from './components/layout/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -18,6 +21,12 @@ import Customers from './pages/Customers';
 export default function App() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const isAdmin     = useAuthStore((s) => s.isAdmin);
+  const loadAll     = useStore((s) => s.loadAll);
+
+  useEffect(() => {
+    loadAll();
+    return setupRealtime(loadAll);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!currentUser) return <Login />;
 

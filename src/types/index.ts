@@ -100,6 +100,10 @@ export interface Booking {
   dropLocation?: string;
   driverId?: string;
   quotation?: BookingQuotation;
+  depositAmount?: number;
+  depositReturned?: number;
+  depositDeduction?: number;
+  depositNotes?: string;
 }
 
 export interface Inquiry {
@@ -170,6 +174,17 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  nic?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface AppState {
   vehicles: Vehicle[];
   owners: Owner[];
@@ -181,6 +196,10 @@ export interface AppState {
   notifications: Notification[];
   handovers: VehicleHandover[];
   customers: Customer[];
+
+  loaded: boolean;
+  loadAll: () => Promise<void>;
+
   addHandover: (h: Omit<VehicleHandover, 'id' | 'createdAt'>) => void;
 
   addCustomer: (c: Omit<Customer, 'id' | 'createdAt'>) => void;
@@ -197,6 +216,8 @@ export interface AppState {
   addBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => string;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   cancelBooking: (id: string) => void;
+  startBooking: (id: string) => void;
+  completeBooking: (id: string) => void;
 
   addInquiry: (i: Omit<Inquiry, 'id' | 'createdAt'>) => void;
   updateInquiry: (id: string, updates: Partial<Inquiry>) => void;

@@ -2,47 +2,66 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover, Customer } from '../types';
 import { sampleData } from '../data/sampleData';
+import { supabaseEnabled } from '../lib/supabase';
+import { db, dbFetchAll } from '../lib/db';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const now = () => new Date().toISOString();
+// Supabase returns PromiseLike (not full Promise), so wrap in Promise.resolve for .catch support
+const sync = (fn: () => PromiseLike<unknown>) => {
+  if (supabaseEnabled) Promise.resolve(fn()).catch(console.error);
+};
 
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       ...sampleData,
+      handovers: [],
+      customers: [],
+      loaded: false,
 
-      // ── Vehicles ──────────────────────────────────────────────
-      addVehicle: (v) =>
-        set((s) => ({
-          vehicles: [
-            ...s.vehicles,
-            { ...v, id: uid(), createdAt: now(), revenue: 0, rentCount: 0 } as Vehicle,
-          ],
-        })),
+      // ── Supabase bootstrap ────────────────────────────────────────────────
+      loadAll: async () => {
+        if (!supabaseEnabled) { set({ loaded: true }); return; }
+        try {
+          const data = await dbFetchAll();
+          set({ ...data, loaded: true });
+        } catch (err) {
+          console.error('Supabase load failed — using local data:', err);
+          set({ loaded: true });
+        }
+      },
 
-      updateVehicle: (id, updates) =>
-        set((s) => ({
-          vehicles: s.vehicles.map((v) => (v.id === id ? { ...v, ...updates } : v)),
-        })),
+      // ── Vehicles ──────────────────────────────────────────────────────────
+      addVehicle: (v) => {
+        const newV: Vehicle = { ...v, id: uid(), createdAt: now(), revenue: 0, rentCount: 0 };
+        set((s) => ({ vehicles: [...s.vehicles, newV] }));
+        sync(() => db.insertVehicle(newV));
+      },
 
-      deleteVehicle: (id) =>
-        set((s) => ({ vehicles: s.vehicles.filter((v) => v.id !== id) })),
+      updateVehicle: (id, updates) => {
+        set((s) => ({ vehicles: s.vehicles.map((v) => (v.id === id ? { ...v, ...updates } : v)) }));
+        sync(() => db.updateVehicle(id, updates));
+      },
 
-      // ── Owners ────────────────────────────────────────────────
-      addOwner: (o) =>
-        set((s) => ({
-          owners: [
-            ...s.owners,
-            { ...o, id: uid(), createdAt: now(), totalEarnings: 0, pendingPayout: 0 },
-          ],
-        })),
+      deleteVehicle: (id) => {
+        set((s) => ({ vehicles: s.vehicles.filter((v) => v.id !== id) }));
+        sync(() => db.deleteVehicle(id));
+      },
 
-      updateOwner: (id, updates) =>
-        set((s) => ({
-          owners: s.owners.map((o) => (o.id === id ? { ...o, ...updates } : o)),
-        })),
+      // ── Owners ────────────────────────────────────────────────────────────
+      addOwner: (o) => {
+        const newO: Owner = { ...o, id: uid(), createdAt: now(), totalEarnings: 0, pendingPayout: 0 };
+        set((s) => ({ owners: [...s.owners, newO] }));
+        sync(() => db.insertOwner(newO));
+      },
 
-      // ── Bookings ──────────────────────────────────────────────
+      updateOwner: (id, updates) => {
+        set((s) => ({ owners: s.owners.map((o) => (o.id === id ? { ...o, ...updates } : o)) }));
+        sync(() => db.updateOwner(id, updates));
+      },
+
+      // ── Bookings ──────────────────────────────────────────────────────────
       addBooking: (b) => {
         const id = uid();
         const vehicle = get().vehicles.find((v) => v.id === b.vehicleId);
@@ -62,18 +81,27 @@ export const useStore = create<AppState>()(
           createdAt: now(),
         };
 
-        set((s) => {
-          const vehicles = s.vehicles.map((v) =>
-            v.id === b.vehicleId
-              ? { ...v, status: 'Reserved' as const, revenue: v.revenue + b.totalAmount, rentCount: (v.rentCount ?? 0) + 1 }
-              : v
-          );
-          return {
-            bookings:    [...s.bookings, { ...b, id, createdAt: now() }],
-            commissions: [...s.commissions, commission],
-            vehicles,
-          };
-        });
+        const newBooking: Booking = { ...b, id, createdAt: now() };
+        const vehicleUpdates = {
+          status: 'Reserved' as const,
+          revenue: (vehicle?.revenue ?? 0) + b.totalAmount,
+          rentCount: (vehicle?.rentCount ?? 0) + 1,
+        };
+
+        set((s) => ({
+          bookings: [...s.bookings, newBooking],
+          commissions: [...s.commissions, commission],
+          vehicles: s.vehicles.map((v) =>
+            v.id === b.vehicleId ? { ...v, ...vehicleUpdates } : v
+          ),
+        }));
+
+        if (supabaseEnabled) {
+          Promise.resolve(db.insertBooking(newBooking))
+            .then(() => db.insertCommission(commission))
+            .then(() => db.updateVehicle(b.vehicleId, vehicleUpdates))
+            .catch(console.error);
+        }
 
         get().addNotification({
           type: 'BookingReminder',
@@ -85,71 +113,89 @@ export const useStore = create<AppState>()(
         return id;
       },
 
-      updateBooking: (id, updates) =>
-        set((s) => ({
-          bookings: s.bookings.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-        })),
+      updateBooking: (id, updates) => {
+        set((s) => ({ bookings: s.bookings.map((b) => (b.id === id ? { ...b, ...updates } : b)) }));
+        sync(() => db.updateBooking(id, updates));
+      },
 
-      cancelBooking: (id) =>
+      startBooking: (id) => {
+        const booking = get().bookings.find((b) => b.id === id);
+        if (!booking) return;
+        set((s) => ({
+          bookings: s.bookings.map((b) => b.id === id ? { ...b, status: 'Ongoing' as const } : b),
+          vehicles: s.vehicles.map((v) => v.id === booking.vehicleId ? { ...v, status: 'Ongoing' as const } : v),
+        }));
+        if (supabaseEnabled) {
+          Promise.resolve(db.updateBooking(id, { status: 'Ongoing' })).catch(console.error);
+          Promise.resolve(db.updateVehicle(booking.vehicleId, { status: 'Ongoing' })).catch(console.error);
+        }
+      },
+
+      completeBooking: (id) => {
+        const booking = get().bookings.find((b) => b.id === id);
+        if (!booking) return;
+        set((s) => ({
+          bookings: s.bookings.map((b) => b.id === id ? { ...b, status: 'Completed' as const } : b),
+          vehicles: s.vehicles.map((v) => v.id === booking.vehicleId ? { ...v, status: 'Available' as const } : v),
+        }));
+        if (supabaseEnabled) {
+          Promise.resolve(db.updateBooking(id, { status: 'Completed' })).catch(console.error);
+          Promise.resolve(db.updateVehicle(booking.vehicleId, { status: 'Available' })).catch(console.error);
+        }
+      },
+
+      cancelBooking: (id) => {
+        const booking = get().bookings.find((b) => b.id === id);
         set((s) => {
-          const booking = s.bookings.find((b) => b.id === id);
           const vehicles = booking
-            ? s.vehicles.map((v) =>
-                v.id === booking.vehicleId ? { ...v, status: 'Available' as const } : v
-              )
+            ? s.vehicles.map((v) => (v.id === booking.vehicleId ? { ...v, status: 'Available' as const } : v))
             : s.vehicles;
           return {
-            bookings: s.bookings.map((b) =>
-              b.id === id ? { ...b, status: 'Cancelled' as const } : b
-            ),
+            bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: 'Cancelled' as const } : b)),
             vehicles,
           };
-        }),
+        });
+        if (supabaseEnabled && booking) {
+          Promise.resolve(db.updateBooking(id, { status: 'Cancelled' })).catch(console.error);
+          Promise.resolve(db.updateVehicle(booking.vehicleId, { status: 'Available' })).catch(console.error);
+        }
+      },
 
-      // ── Inquiries ─────────────────────────────────────────────
-      addInquiry: (i) =>
-        set((s) => ({
-          inquiries: [...s.inquiries, { ...i, id: uid(), createdAt: now() }],
-        })),
+      // ── Inquiries ─────────────────────────────────────────────────────────
+      addInquiry: (i) => {
+        const newI: Inquiry = { ...i, id: uid(), createdAt: now() };
+        set((s) => ({ inquiries: [...s.inquiries, newI] }));
+        sync(() => db.insertInquiry(newI));
+      },
 
-      updateInquiry: (id, updates) =>
-        set((s) => ({
-          inquiries: s.inquiries.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-        })),
+      updateInquiry: (id, updates) => {
+        set((s) => ({ inquiries: s.inquiries.map((i) => (i.id === id ? { ...i, ...updates } : i)) }));
+        sync(() => db.updateInquiry(id, updates));
+      },
 
-      // ── Expenses ──────────────────────────────────────────────
-      addExpense: (e) =>
-        set((s) => ({
-          expenses: [...s.expenses, { ...e, id: uid(), createdAt: now() }],
-        })),
+      // ── Expenses ──────────────────────────────────────────────────────────
+      addExpense: (e) => {
+        const newE: Expense = { ...e, id: uid(), createdAt: now() };
+        set((s) => ({ expenses: [...s.expenses, newE] }));
+        sync(() => db.insertExpense(newE));
+      },
 
-      deleteExpense: (id) =>
-        set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) })),
+      deleteExpense: (id) => {
+        set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }));
+        sync(() => db.deleteExpense(id));
+      },
 
-      // ── Drivers ───────────────────────────────────────────────
-      addDriver: (d) =>
-        set((s) => ({
-          drivers: [...s.drivers, { ...d, id: uid(), joinedAt: now(), totalEarnings: 0 }],
-        })),
+      // ── Drivers ───────────────────────────────────────────────────────────
+      addDriver: (d) => {
+        const newD: Driver = { ...d, id: uid(), joinedAt: now(), totalEarnings: 0 };
+        set((s) => ({ drivers: [...s.drivers, newD] }));
+        sync(() => db.insertDriver(newD));
+      },
 
-      updateDriver: (id, updates) =>
-        set((s) => ({
-          drivers: s.drivers.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-        })),
-
-      // ── Customers ─────────────────────────────────────────────
-      addCustomer: (c) =>
-        set((s) => ({
-          customers: [...s.customers, { ...c, id: uid(), createdAt: now() } as Customer],
-        })),
-
-      updateCustomer: (id, updates) =>
-        set((s) => ({
-          customers: s.customers.map((c) => (c.id === id ? { ...c, ...updates } : c)),
-        })),
-
-      deleteCustomer: (id) =>
-        set((s) => ({ customers: s.customers.filter((c) => c.id !== id) })),
+      updateDriver: (id, updates) => {
+        set((s) => ({ drivers: s.drivers.map((d) => (d.id === id ? { ...d, ...updates } : d)) }));
+        sync(() => db.updateDriver(id, updates));
+      },
 
       // ── Handovers ─────────────────────────────────────────────
       addHandover: (h) =>
@@ -157,33 +203,51 @@ export const useStore = create<AppState>()(
           handovers: [...s.handovers, { ...h, id: uid(), createdAt: now() }],
         })),
 
-      // ── Notifications ─────────────────────────────────────────
-      addNotification: (n) =>
-        set((s) => ({
-          notifications: [
-            { ...n, id: uid(), createdAt: now(), read: false },
-            ...s.notifications,
-          ],
-        })),
+      // ── Notifications ─────────────────────────────────────────────────────
+      addNotification: (n) => {
+        const newN: Notification = { ...n, id: uid(), createdAt: now(), read: false };
+        set((s) => ({ notifications: [newN, ...s.notifications] }));
+        sync(() => db.insertNotification(newN));
+      },
 
-      markNotificationRead: (id) =>
+      markNotificationRead: (id) => {
         set((s) => ({
-          notifications: s.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-          ),
-        })),
+          notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        }));
+        sync(() => db.updateNotification(id, { read: true }));
+      },
 
-      markAllRead: () =>
-        set((s) => ({
-          notifications: s.notifications.map((n) => ({ ...n, read: true })),
-        })),
+      markAllRead: () => {
+        set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) }));
+        if (supabaseEnabled) {
+          get().notifications.forEach((n) => {
+            if (!n.read) Promise.resolve(db.updateNotification(n.id, { read: true })).catch(console.error);
+          });
+        }
+      },
 
-      updateCommission: (id, updates) =>
+      updateCommission: (id, updates) => {
         set((s) => ({
           commissions: s.commissions.map((c) => (c.id === id ? { ...c, ...updates } : c)),
-        })),
+        }));
+        sync(() => db.updateCommission(id, updates));
+      },
 
-      // ── Helpers ───────────────────────────────────────────────
+      // ── Customers ─────────────────────────────────────────────────────────
+      addCustomer: (c) => {
+        const newC = { ...c, id: uid(), createdAt: now() };
+        set((s) => ({ customers: [...s.customers, newC] }));
+      },
+
+      updateCustomer: (id, updates) => {
+        set((s) => ({ customers: s.customers.map((c) => (c.id === id ? { ...c, ...updates } : c)) }));
+      },
+
+      deleteCustomer: (id) => {
+        set((s) => ({ customers: s.customers.filter((c) => c.id !== id) }));
+      },
+
+      // ── Helpers ───────────────────────────────────────────────────────────
       isVehicleAvailable: (vehicleId, startDate, endDate, excludeBookingId) => {
         const { bookings } = get();
         const start = new Date(startDate).getTime();

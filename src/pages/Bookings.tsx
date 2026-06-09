@@ -6,6 +6,7 @@ import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
+import TripCalculatorModal from '../components/ui/TripCalculatorModal';
 import { Calendar, dateFnsLocalizer, SlotInfo } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
@@ -14,7 +15,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import {
   Plus, CalendarDays, List, AlertTriangle, CheckCircle,
-  XCircle, MapPin, RotateCcw, Calculator,
+  XCircle, Calculator, MessageCircle, Shield, PlayCircle,
 } from 'lucide-react';
 import { Booking } from '../types';
 import { differenceInDays, parseISO, addDays, isValid } from 'date-fns';
@@ -60,6 +61,10 @@ const emptyForm = () => ({
   pickupLocation: '',
   dropLocation: '',
   driverId: '',
+  depositAmount: 0,
+  depositReturned: 0,
+  depositDeduction: 0,
+  depositNotes: '',
   quotation: {
     startLocation: '',
     endLocation: '',
@@ -70,21 +75,21 @@ const emptyForm = () => ({
 });
 
 export default function Bookings() {
-  const { vehicles, bookings, drivers, owners, customers, addBooking, updateBooking, cancelBooking, isVehicleAvailable } = useStore();
+  const { vehicles, bookings, drivers, owners, customers, addBooking, updateBooking, cancelBooking, startBooking, completeBooking, isVehicleAvailable } = useStore();
   const { currentUser, isAdmin, can } = useAuthStore();
   const location = useLocation();
 
-  const [tab,              setTab]              = useState<BookingStatus | 'All'>('All');
-  const [viewMode,         setViewMode]         = useState<'cards' | 'calendar'>('cards');
-  const [modal,            setModal]            = useState<'add' | 'view' | null>(null);
-  const [selected,         setSelected]         = useState<Booking | null>(null);
-  const [form,             setForm]             = useState(emptyForm());
-  const [availability,     setAvailability]     = useState<boolean | null>(null);
-  const [error,            setError]            = useState('');
-  const [customerMode,     setCustomerMode]     = useState<'new' | 'existing'>('new');
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [startWarn,    setStartWarn]    = useState('');
-  const [endWarn,      setEndWarn]      = useState('');
+  const [tab,          setTab]          = useState<BookingStatus | 'All'>('All');
+  const [viewMode,     setViewMode]     = useState<'cards' | 'calendar'>('cards');
+  const [modal,        setModal]        = useState<'add' | 'view' | 'calculator' | null>(null);
+  const [selected,     setSelected]     = useState<Booking | null>(null);
+  const [form,         setForm]         = useState(emptyForm());
+  const [availability, setAvailability] = useState<boolean | null>(null);
+  const [error,        setError]        = useState('');
+  const [startWarn,       setStartWarn]       = useState('');
+  const [endWarn,         setEndWarn]         = useState('');
+  const [customerMode,    setCustomerMode]    = useState<'new' | 'existing'>('new');
+  const [selectedCustomer, setSelectedCustomer] = useState('');
 
   // Auto-open booking form when navigated from an inquiry conversion
   useEffect(() => {
@@ -481,18 +486,33 @@ export default function Bookings() {
                   <span className="bg-navy-50 text-navy-600 px-2 py-0.5 rounded-full">
                     {b.referral ?? 'Direct'}
                   </span>
-                  {(b.status === 'Confirmed' || b.status === 'Ongoing') && (
-                    <button
-                      className="text-navy-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (b.status === 'Ongoing') updateBooking(b.id, { status: 'Completed' });
-                        else cancelBooking(b.id);
-                      }}
-                    >
-                      {b.status === 'Ongoing' ? 'Complete' : 'Cancel'}
-                    </button>
-                  )}
+                  <div className="flex gap-1.5">
+                    {b.status === 'Confirmed' && (
+                      <>
+                        <button
+                          className="flex items-center gap-1 text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
+                          onClick={(e) => { e.stopPropagation(); startBooking(b.id); }}
+                          title="Mark vehicle as On Rent"
+                        >
+                          <PlayCircle size={11} /> Start
+                        </button>
+                        <button
+                          className="text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors"
+                          onClick={(e) => { e.stopPropagation(); cancelBooking(b.id); }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                    {b.status === 'Ongoing' && (
+                      <button
+                        className="text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded-lg font-medium transition-colors"
+                        onClick={(e) => { e.stopPropagation(); completeBooking(b.id); }}
+                      >
+                        Complete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -711,81 +731,6 @@ export default function Bookings() {
             })()
           )}
 
-          {/* ── Trip estimator ── */}
-          {form.vehicleId && form.totalDays > 0 && (
-            <div className="border border-navy-100 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Calculator size={14} className="text-navy-500" />
-                <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Trip Cost Estimator</p>
-                <span className="text-[10px] text-navy-400">(optional · adds to Maps later)</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="label">Start Location</p>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-300" />
-                    <input className="input pl-8" value={form.quotation.startLocation}
-                      onChange={(e) => setQ('startLocation', e.target.value)} placeholder="Colombo" />
-                  </div>
-                </div>
-                <div>
-                  <p className="label">Destination</p>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
-                    <input className="input pl-8" value={form.quotation.endLocation}
-                      onChange={(e) => setQ('endLocation', e.target.value)} placeholder="Katharagama" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="label">Estimated km</p>
-                  <input className="input" type="number" value={form.quotation.totalKm || ''}
-                    onChange={(e) => setQ('totalKm', +e.target.value)} placeholder="520" />
-                </div>
-                <div className="flex items-end pb-0.5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <div
-                      onClick={() => setQ('isRoundTrip', !form.quotation.isRoundTrip)}
-                      className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${form.quotation.isRoundTrip ? 'bg-navy-700' : 'bg-navy-200'}`}
-                    >
-                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.quotation.isRoundTrip ? 'left-4' : 'left-0.5'}`} />
-                    </div>
-                    <span className="text-xs text-navy-600 font-medium">Round trip</span>
-                    <RotateCcw size={12} className="text-navy-400" />
-                  </label>
-                </div>
-              </div>
-
-              {/* Estimate breakdown */}
-              {form.quotation.totalKm > 0 && (() => {
-                const vehicle      = vehicles.find((v) => v.id === form.vehicleId)!;
-                const includedKm   = (vehicle.includedKmPerDay ?? 100) * form.totalDays;
-                const extraKm      = Math.max(0, form.quotation.totalKm - includedKm);
-                const extraCost    = extraKm * (vehicle.extraKmRate ?? 50);
-                const estimated    = form.totalAmount + extraCost;
-                return (
-                  <div className="bg-navy-50/80 rounded-xl p-3 text-xs space-y-1.5">
-                    <div className="flex justify-between text-navy-600">
-                      <span>Base ({form.totalDays}d × Rs {vehicle.dailyRent.toLocaleString()})</span>
-                      <span className="font-semibold">Rs {form.totalAmount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-navy-600">
-                      <span>Included: {includedKm} km · Extra: {extraKm} km × Rs {vehicle.extraKmRate ?? 50}</span>
-                      <span className="font-semibold text-amber-600">Rs {extraCost.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-navy-800 font-bold border-t border-navy-100 pt-1.5">
-                      <span>Estimated Total</span>
-                      <span>Rs {estimated.toLocaleString()}</span>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
           {/* Customer info */}
           <div className="grid grid-cols-2 gap-4">
 
@@ -893,6 +838,13 @@ export default function Bookings() {
               <p className="label">Paid Amount (Rs)</p>
               <input className="input" type="number" value={form.paidAmount} onChange={(e) => set('paidAmount', +e.target.value)} />
             </div>
+
+            {/* Security Deposit row */}
+            <div>
+              <p className="label flex items-center gap-1"><Shield size={11} className="text-amber-500" /> Security Deposit (Rs)</p>
+              <input className="input" type="number" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="0" />
+            </div>
+
             <div>
               <p className="label">Assign Driver</p>
               <Select
@@ -917,9 +869,32 @@ export default function Bookings() {
 
         <div className="flex justify-end gap-3 mt-6">
           <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
+          <button
+            onClick={() => setModal('calculator')}
+            className="btn-secondary flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <Calculator size={14} /> Calculate Total Bill
+          </button>
           <button onClick={handleCreate} className="btn-primary">Confirm Booking</button>
         </div>
       </Modal>
+
+      {/* ── Trip Bill Calculator Modal ── */}
+      <TripCalculatorModal
+        open={modal === 'calculator'}
+        onBack={() => setModal('add')}
+        onConfirm={() => { handleCreate(); }}
+        form={form}
+        vehicle={vehicles.find((v) => v.id === form.vehicleId)}
+        updateQuotation={(updates) =>
+          setForm((f) => {
+            const q = { ...f.quotation, ...updates };
+            const updated = { ...f, quotation: q };
+            recalcEstimate(updated);
+            return updated;
+          })
+        }
+      />
 
       {/* ── View Modal ── */}
       <Modal open={modal === 'view'} onClose={() => setModal(null)} title="Booking Details">
@@ -979,6 +954,60 @@ export default function Bookings() {
                 </div>
               </div>
 
+              {/* Security Deposit section */}
+              {(selected.depositAmount ?? 0) > 0 && (
+                <div className="border border-amber-200 rounded-xl p-3 space-y-2">
+                  <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5">
+                    <Shield size={12} /> Security Deposit
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-amber-50 rounded-lg p-2">
+                      <p className="text-amber-500">Collected</p>
+                      <p className="font-bold text-amber-800">Rs {(selected.depositAmount ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-2">
+                      <p className="text-emerald-500">Returned</p>
+                      <p className="font-bold text-emerald-700">Rs {(selected.depositReturned ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-2">
+                      <p className="text-red-400">Deducted</p>
+                      <p className="font-bold text-red-700">Rs {(selected.depositDeduction ?? 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {selected.depositNotes && (
+                    <p className="text-xs text-amber-600 pl-1">{selected.depositNotes}</p>
+                  )}
+                  {(selected.status === 'Completed' || selected.status === 'Ongoing') && (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <p className="label text-[11px]">Return Amount</p>
+                        <input className="input text-xs py-1" type="number"
+                          defaultValue={selected.depositReturned ?? ''}
+                          onBlur={(e) => updateBooking(selected.id, { depositReturned: +e.target.value })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <p className="label text-[11px]">Deduction</p>
+                        <input className="input text-xs py-1" type="number"
+                          defaultValue={selected.depositDeduction ?? ''}
+                          onBlur={(e) => updateBooking(selected.id, { depositDeduction: +e.target.value })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <p className="label text-[11px]">Deduction Notes</p>
+                        <input className="input text-xs py-1"
+                          defaultValue={selected.depositNotes ?? ''}
+                          onBlur={(e) => updateBooking(selected.id, { depositNotes: e.target.value })}
+                          placeholder="Damage, cleaning fee, etc."
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {driver && (
                 <div className="bg-blue-50 rounded-xl p-3">
                   <p className="text-xs text-blue-500">Assigned Driver</p>
@@ -991,6 +1020,64 @@ export default function Bookings() {
                   <p className="text-sm text-navy-700">{selected.notes}</p>
                 </div>
               )}
+
+              {/* Action footer */}
+              <div className="flex items-center gap-2 pt-2 border-t border-navy-100">
+                {/* WhatsApp button — always shown */}
+                <button
+                  className="flex items-center gap-1.5 text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  onClick={() => {
+                    const v = vehicles.find((vv) => vv.id === selected.vehicleId);
+                    const balance = selected.totalAmount - selected.paidAmount;
+                    const msg = [
+                      `Hello ${selected.customerName},`,
+                      ``,
+                      `Your booking with *MRAC* is confirmed.`,
+                      ``,
+                      `*Vehicle:* ${v?.brand ?? ''} ${v?.model ?? ''} (${v?.vehicleNumber ?? ''})`,
+                      `*Period:* ${selected.startDate} → ${selected.endDate} (${selected.totalDays} days)`,
+                      `*Total:* Rs ${selected.totalAmount.toLocaleString()}`,
+                      `*Paid:* Rs ${selected.paidAmount.toLocaleString()}`,
+                      ...(balance > 0 ? [`*Balance due:* Rs ${balance.toLocaleString()}`] : []),
+                      ...(selected.pickupLocation ? [`*Pickup:* ${selected.pickupLocation}`] : []),
+                      ``,
+                      `Thank you for choosing MRAC!`,
+                    ].join('\n');
+                    const phone = selected.customerPhone.replace(/[^0-9]/g, '');
+                    const intlPhone = phone.startsWith('0') ? '94' + phone.slice(1) : phone;
+                    window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                  }}
+                >
+                  <MessageCircle size={13} /> WhatsApp
+                </button>
+
+                <div className="flex-1" />
+
+                {selected.status === 'Confirmed' && (
+                  <>
+                    <button
+                      className="flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+                      onClick={() => { startBooking(selected.id); setModal(null); }}
+                    >
+                      <PlayCircle size={13} /> Start Trip
+                    </button>
+                    <button
+                      className="text-xs text-red-500 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors"
+                      onClick={() => { cancelBooking(selected.id); setModal(null); }}
+                    >
+                      Cancel Booking
+                    </button>
+                  </>
+                )}
+                {selected.status === 'Ongoing' && (
+                  <button
+                    className="text-xs bg-navy-700 hover:bg-navy-800 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+                    onClick={() => { completeBooking(selected.id); setModal(null); }}
+                  >
+                    Complete Trip
+                  </button>
+                )}
+              </div>
             </div>
           );
         })()}

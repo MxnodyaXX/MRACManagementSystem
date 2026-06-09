@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import Header from '../components/layout/Header';
@@ -12,7 +13,7 @@ import {
 import {
   Car, CalendarDays, DollarSign, AlertCircle,
   Users, CheckSquare, UserCircle, MessageSquare,
-  ArrowUpRight, Crown,
+  ArrowUpRight, Crown, TrendingUp, Wallet,
 } from 'lucide-react';
 import { Vehicle, Booking } from '../types';
 
@@ -26,13 +27,6 @@ function useIsMobile() {
   return v;
 }
 
-const CHART_DATA = [
-  { month: 'Jan', revenue: 78000,  bookings: 8,  expenses: 18000 },
-  { month: 'Feb', revenue: 92000,  bookings: 10, expenses: 14000 },
-  { month: 'Mar', revenue: 85000,  bookings: 9,  expenses: 22000 },
-  { month: 'Apr', revenue: 110000, bookings: 12, expenses: 16000 },
-  { month: 'May', revenue: 134500, bookings: 14, expenses: 19500 },
-];
 
 
 /* Podium display order: 2nd · 1st · 3rd */
@@ -100,6 +94,42 @@ export default function Dashboard() {
   const completedRentals = bookings.filter((b) => b.status === 'Completed').length;
   const uniqueCustomers  = new Set(bookings.map((b) => b.customerPhone)).size;
 
+  /* business KPIs */
+  const outstandingBalance = activeBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
+  const today = new Date();
+  const thisMonthRevenue = bookings
+    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .reduce((s, b) => s + b.totalAmount, 0);
+  const thisMonthExpenses = expenses
+    .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .reduce((s, e) => s + e.amount, 0);
+  const monthlyProfit = thisMonthRevenue - thisMonthExpenses;
+
+  /* last-5-months chart data — computed from real bookings/expenses */
+  const chartData = useMemo(() => {
+    const months = Array.from({ length: 5 }, (_, i) => {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - (4 - i));
+      return { year: d.getFullYear(), month: d.getMonth(), label: format(d, 'MMM') };
+    });
+    return months.map(({ year, month, label }) => {
+      const rev = bookings
+        .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; })
+        .reduce((s, b) => s + b.totalAmount, 0);
+      const cnt = bookings.filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; }).length;
+      const exp = expenses
+        .filter((e) => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() === month; })
+        .reduce((s, e) => s + e.amount, 0);
+      return { month: label, revenue: rev, bookings: cnt, expenses: exp };
+    });
+  }, [bookings, expenses]);
+
+  const chartRange = (() => {
+    const first = new Date(); first.setDate(1); first.setMonth(first.getMonth() - 4);
+    return `${format(first, 'MMM')} – ${format(today, 'MMM yyyy')}`;
+  })();
+
   /* podium: 2nd · 1st · 3rd */
   const podiumVehicles = [byRevenue[1], byRevenue[0], byRevenue[2]].filter(Boolean);
 
@@ -129,6 +159,34 @@ export default function Dashboard() {
               onClick={() => navigate(path)} />
           </div>
         ))}
+      </div>
+
+      {/* ── Business KPI Row ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="card flex items-start gap-4 anim-fade-up" style={{ animationDelay: '80ms' }}>
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 bg-red-500">
+            <Wallet size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-navy-400 font-medium">Outstanding Balances</p>
+            <p className={`text-2xl font-black leading-tight ${outstandingBalance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+              Rs {outstandingBalance.toLocaleString()}
+            </p>
+            <p className="text-xs text-navy-400 mt-0.5">across {activeBookings.filter(b => b.totalAmount > b.paidAmount).length} active bookings</p>
+          </div>
+        </div>
+        <div className="card flex items-start gap-4 anim-fade-up" style={{ animationDelay: '160ms' }}>
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${monthlyProfit >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`}>
+            <TrendingUp size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-navy-400 font-medium">This Month's Profit</p>
+            <p className={`text-2xl font-black leading-tight ${monthlyProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              Rs {monthlyProfit.toLocaleString()}
+            </p>
+            <p className="text-xs text-navy-400 mt-0.5">Revenue Rs {thisMonthRevenue.toLocaleString()} − Expenses Rs {thisMonthExpenses.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
 
       {/* ── Leaderboard ─────────────────────────────────────────── */}
@@ -292,12 +350,12 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
-          <span className="text-xs text-navy-400 flex-shrink-0 hidden sm:block">Jan – May 2026</span>
+          <span className="text-xs text-navy-400 flex-shrink-0 hidden sm:block">{chartRange}</span>
         </div>
 
         <ResponsiveContainer width="100%" height={200}>
           {chartTab === 'revenue' ? (
-            <AreaChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+            <AreaChart data={chartData} margin={{ top:0,right:0,left:-20,bottom:0 }}>
               <defs>
                 <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor="#4B7BE5" stopOpacity={0.22}/>
@@ -311,7 +369,7 @@ export default function Dashboard() {
               <Area type="monotone" dataKey="revenue" stroke="#4B7BE5" strokeWidth={2.5} fill="url(#gRev)" dot={false}/>
             </AreaChart>
           ) : chartTab === 'bookings' ? (
-            <BarChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+            <BarChart data={chartData} margin={{ top:0,right:0,left:-20,bottom:0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF8" vertical={false}/>
               <XAxis dataKey="month" tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11,fill:'#6B7FA3' }} axisLine={false} tickLine={false}/>
@@ -319,7 +377,7 @@ export default function Dashboard() {
               <Bar dataKey="bookings" fill="#4B7BE5" radius={[6,6,0,0]}/>
             </BarChart>
           ) : (
-            <AreaChart data={CHART_DATA} margin={{ top:0,right:0,left:-20,bottom:0 }}>
+            <AreaChart data={chartData} margin={{ top:0,right:0,left:-20,bottom:0 }}>
               <defs>
                 <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor="#EF4444" stopOpacity={0.2}/>

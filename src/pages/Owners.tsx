@@ -4,8 +4,10 @@ import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
-import { Plus, Users, Car, Lock } from 'lucide-react';
+import { Plus, Car, Lock, FileText, Printer } from 'lucide-react';
 import { Owner } from '../types';
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const emptyOwner = (): Omit<Owner, 'id' | 'createdAt' | 'totalEarnings' | 'pendingPayout'> => ({
   name: '',
@@ -20,9 +22,11 @@ export default function Owners() {
   const { owners, vehicles, bookings, commissions, addOwner, updateOwner } = useStore();
   const { currentUser, isAdmin } = useAuthStore();
 
-  const [modal, setModal]       = useState<'add' | 'edit' | 'view' | null>(null);
+  const [modal, setModal]       = useState<'add' | 'edit' | 'view' | 'statement' | null>(null);
   const [selected, setSelected] = useState<Owner | null>(null);
   const [form, setForm]         = useState(emptyOwner());
+  const [stmtMonth, setStmtMonth] = useState(() => new Date().getMonth() + 1);
+  const [stmtYear,  setStmtYear]  = useState(() => new Date().getFullYear());
 
   const isOwnerRole  = !isAdmin() && currentUser?.role === 'owner';
   const myOwnerId    = currentUser?.ownerId ?? '';
@@ -35,8 +39,9 @@ export default function Owners() {
     setModal(null);
   };
 
-  const openView = (o: Owner) => { setSelected(o); setModal('view'); };
-  const openEdit = (o: Owner) => { setSelected(o); setForm({ ...o }); setModal('edit'); };
+  const openView      = (o: Owner) => { setSelected(o); setModal('view'); };
+  const openEdit      = (o: Owner) => { setSelected(o); setForm({ ...o }); setModal('edit'); };
+  const openStatement = (o: Owner) => { setSelected(o); setModal('statement'); };
 
   const OwnerCard = ({ o, clickable = true }: { o: Owner; clickable?: boolean }) => {
     const ownerVehicles = vehicles.filter((v) => v.ownerId === o.id);
@@ -109,14 +114,22 @@ export default function Owners() {
           </div>
         )}
 
-        {/* Action button */}
+        {/* Action buttons */}
         {(isAdmin() || isMine) && (
-          <button
-            onClick={(e) => { e.stopPropagation(); openEdit(o); }}
-            className="mt-3 w-full text-xs py-2 rounded-xl bg-navy-50 text-navy-600 hover:bg-navy-100 font-medium transition-colors"
-          >
-            Edit Profile
-          </button>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); openEdit(o); }}
+              className="flex-1 text-xs py-2 rounded-xl bg-navy-50 text-navy-600 hover:bg-navy-100 font-medium transition-colors"
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); openStatement(o); }}
+              className="flex items-center gap-1 text-xs py-2 px-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium transition-colors flex-shrink-0"
+            >
+              <FileText size={11} /> Statement
+            </button>
+          </div>
         )}
       </div>
     );
@@ -216,6 +229,109 @@ export default function Owners() {
           <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
           <button onClick={handleSave} className="btn-primary">{modal === 'add' ? 'Add Owner' : 'Save'}</button>
         </div>
+      </Modal>
+
+      {/* Monthly Statement Modal */}
+      <Modal open={modal === 'statement'} onClose={() => setModal(null)} title="Monthly Statement" width="max-w-2xl">
+        {selected && (() => {
+          const ownerComms = commissions.filter((c) => {
+            if (c.ownerId !== selected.id) return false;
+            const d = new Date(c.createdAt);
+            return d.getFullYear() === stmtYear && d.getMonth() + 1 === stmtMonth;
+          });
+          const totalIncome     = ownerComms.reduce((s, c) => s + c.totalIncome, 0);
+          const totalCommission = ownerComms.reduce((s, c) => s + c.commissionAmount, 0);
+          const totalPayout     = ownerComms.reduce((s, c) => s + c.ownerPayout, 0);
+          const yearOptions = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i);
+
+          return (
+            <div className="space-y-4">
+              {/* Owner header */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-navy-700 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {selected.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                </div>
+                <div>
+                  <p className="font-bold text-navy-800">{selected.name}</p>
+                  <p className="text-xs text-navy-400">{selected.commissionRate}% commission rate</p>
+                </div>
+              </div>
+
+              {/* Month / Year selector */}
+              <div className="flex gap-3 items-center">
+                <select className="input flex-1 text-sm" value={stmtMonth} onChange={(e) => setStmtMonth(+e.target.value)}>
+                  {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                </select>
+                <select className="input w-28 text-sm" value={stmtYear} onChange={(e) => setStmtYear(+e.target.value)}>
+                  {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+                <button
+                  className="flex items-center gap-1.5 text-xs bg-navy-700 text-white px-3 py-2 rounded-xl hover:bg-navy-800 transition-colors flex-shrink-0"
+                  onClick={() => window.print()}
+                >
+                  <Printer size={13} /> Print
+                </button>
+              </div>
+
+              {/* Commission table */}
+              {ownerComms.length === 0 ? (
+                <div className="text-center text-navy-400 text-sm py-8">No bookings in {MONTHS[stmtMonth - 1]} {stmtYear}.</div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-navy-100">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-navy-50 text-navy-500 uppercase tracking-wide text-[10px]">
+                        <th className="text-left px-4 py-2.5">Vehicle</th>
+                        <th className="text-left px-4 py-2.5">Referral</th>
+                        <th className="text-right px-4 py-2.5">Total Income</th>
+                        <th className="text-right px-4 py-2.5">MRAC ({selected.commissionRate}%)</th>
+                        <th className="text-right px-4 py-2.5">Owner Payout</th>
+                        <th className="text-center px-4 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-navy-50">
+                      {ownerComms.map((c) => {
+                        const v = vehicles.find((vv) => vv.id === c.vehicleId);
+                        return (
+                          <tr key={c.id} className="hover:bg-navy-50/40">
+                            <td className="px-4 py-2.5 font-medium text-navy-800">{v ? `${v.brand} ${v.model}` : '—'}</td>
+                            <td className="px-4 py-2.5 text-navy-500">{c.referral}</td>
+                            <td className="px-4 py-2.5 text-right text-navy-700">Rs {c.totalIncome.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right text-red-600">Rs {c.commissionAmount.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">Rs {c.ownerPayout.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${c.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                {c.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Totals */}
+              {ownerComms.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 pt-1">
+                  <div className="bg-navy-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-navy-400">Total Income</p>
+                    <p className="text-base font-bold text-navy-800">Rs {totalIncome.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-red-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-red-400">MRAC Commission</p>
+                    <p className="text-base font-bold text-red-700">Rs {totalCommission.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-emerald-500">Owner Payout</p>
+                    <p className="text-base font-bold text-emerald-700">Rs {totalPayout.toLocaleString()}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </Modal>
 
       {/* View Modal — only shown to admin or own profile */}
