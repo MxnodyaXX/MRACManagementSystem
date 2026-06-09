@@ -47,6 +47,18 @@
 .anim-bar-grow    { animation: bar-grow   1.2s cubic-bezier(0.16,1,0.3,1) both; transform-origin: left; }
 .anim-pulse-gold  { animation: pulse-gold 2.5s ease-in-out infinite; }
 
+@keyframes fade-in    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes panel-in   { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes acc-in     { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.anim-fade-in   { animation: fade-in  0.25s ease both; }
+.anim-panel-in  { animation: panel-in 0.34s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-acc-in    { animation: acc-in   0.30s ease both; }
+
+/* Accordion height reveal — animates from 0fr to 1fr (auto) smoothly */
+.acc-grid       { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s cubic-bezier(0.16,1,0.3,1); }
+.acc-grid.open  { grid-template-rows: 1fr; }
+.acc-grid > div { overflow: hidden; }
+
 /* Hide scrollbar but keep scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

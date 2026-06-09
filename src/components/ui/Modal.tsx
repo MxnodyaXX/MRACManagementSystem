@@ -17,10 +17,10 @@ export default function Modal({ open, onClose, title, children, width = 'max-w-l
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-navy-900/30 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-navy-900/30 backdrop-blur-sm anim-fade-in" />
       <div
         className={`relative bg-white w-full ${width} max-h-[92vh] overflow-y-auto
-          rounded-t-2xl sm:rounded-xl3 shadow-xl`}
+          rounded-t-2xl sm:rounded-xl3 shadow-xl anim-panel-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle on mobile */}

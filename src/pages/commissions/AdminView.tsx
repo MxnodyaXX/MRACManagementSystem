@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Select from '../../components/ui/Select';
+import Modal from '../../components/ui/Modal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, DollarSign, Users, Percent, Search, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Percent, Search, X, FileSpreadsheet, FileText, Maximize2, ChevronDown } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export default function AdminView() {
@@ -33,40 +34,61 @@ export default function AdminView() {
     bucket.total += c.totalIncome;
   });
 
-  const REFERRAL_COLOR = '#F59E0B';
-  const SOURCE_COLORS  = ['#10B981', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#64748B'];
-  const OWNER_COLORS   = ['#4B7BE5', '#2563EB', '#1D4ED8', '#3B82F6', '#60A5FA', '#0EA5E9'];
+  const SOURCE_COLORS   = ['#10B981', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#64748B'];
+  const OWNER_COLORS    = ['#4B7BE5', '#2563EB', '#1D4ED8', '#3B82F6', '#60A5FA', '#0EA5E9'];
+  const REFERRER_COLORS = ['#F59E0B', '#D97706', '#FB923C', '#EA580C', '#FBBF24', '#B45309'];
 
-  // Direct = a single bar made of stacked owner segments (sub-bars).
+  // Direct = one bar of stacked owner segments (which owner got the walk-in).
   const directOwnerBars = Object.entries(directByOwner).map(([oid, d], i) => ({
-    id: oid,
-    key: `ow_${oid}`,
-    name: ownerNameById(oid),
-    color: OWNER_COLORS[i % OWNER_COLORS.length],
-    total: d.total,
-    count: d.count,
+    id: oid, key: `ow_${oid}`, name: ownerNameById(oid),
+    color: OWNER_COLORS[i % OWNER_COLORS.length], total: d.total, count: d.count,
   }));
   const directTotal = directOwnerBars.reduce((s, b) => s + b.total, 0);
   const directCount = directOwnerBars.reduce((s, b) => s + b.count, 0);
 
-  // Referrers + marketing sources each render as one bar (the "other" stack slot).
-  const otherBars = [
-    ...Object.entries(referralMap).map(([n, d]) => ({ name: n, fullName: `${n} (referral)`, group: 'Referral' as const, color: REFERRAL_COLOR, ...d })),
-    ...Object.entries(sourceMap).map(([n, d], i) => ({ name: n, fullName: n, group: 'Source' as const, color: SOURCE_COLORS[i % SOURCE_COLORS.length], ...d })),
-  ];
-  const otherColorByName: Record<string, string> = Object.fromEntries(otherBars.map((b) => [b.name, b.color]));
+  // Owner Referrals = one bar of stacked referrer segments (which owner referred it).
+  const referrerBars = Object.entries(referralMap).map(([n, d], i) => ({
+    id: n, key: `rf_${i}`, name: n,
+    color: REFERRER_COLORS[i % REFERRER_COLORS.length], total: d.total, count: d.count,
+  }));
+  const referrerTotal = referrerBars.reduce((s, b) => s + b.total, 0);
+  const referrerCount = referrerBars.reduce((s, b) => s + b.count, 0);
 
-  // One chart row per x-category. Direct row carries each owner's value; other
-  // rows carry a single "other" value (owner keys zeroed so the stack lines up).
-  const directRow: Record<string, string | number> = { name: 'Direct', other: 0 };
+  // Marketing sources stay as one bar each.
+  const sourceBars = Object.entries(sourceMap).map(([n, d], i) => ({
+    name: n, color: SOURCE_COLORS[i % SOURCE_COLORS.length], total: d.total, count: d.count,
+  }));
+  const otherColorByName: Record<string, string> = Object.fromEntries(sourceBars.map((b) => [b.name, b.color]));
+
+  // Detailed entries (each with its underlying bookings) for the expanded view.
+  const directEntries = directOwnerBars.map((b) => ({
+    key: `d:${b.id}`, name: b.name, color: b.color, total: b.total, count: b.count,
+    rows: commissions.filter((c) => (c.referral || 'Direct') === 'Direct' && c.ownerId === b.id),
+  }));
+  const referrerEntries = referrerBars.map((b) => ({
+    key: `r:${b.name}`, name: b.name, color: b.color, total: b.total, count: b.count,
+    rows: commissions.filter((c) => c.referral === b.name),
+  }));
+  const sourceEntries = sourceBars.map((b) => ({
+    key: `s:${b.name}`, name: b.name, color: b.color, total: b.total, count: b.count,
+    rows: commissions.filter((c) => c.referral === b.name),
+  }));
+
+  // One chart row per x-category. Direct & Owner Referrals carry their stacked
+  // segment keys; source rows carry a single "other" value (other keys zeroed).
+  const zeroKeys = (keys: string[]) => Object.fromEntries(keys.map((k) => [k, 0]));
+  const ownerKeys = directOwnerBars.map((b) => b.key);
+  const refKeys   = referrerBars.map((b) => b.key);
+
+  const directRow: Record<string, string | number> = { name: 'Direct', other: 0, ...zeroKeys(refKeys) };
   directOwnerBars.forEach((b) => { directRow[b.key] = b.total; });
+  const referralRow: Record<string, string | number> = { name: 'Owner Referrals', other: 0, ...zeroKeys(ownerKeys) };
+  referrerBars.forEach((b) => { referralRow[b.key] = b.total; });
+
   const chartRows: Record<string, string | number>[] = [
-    directRow,
-    ...otherBars.map((b) => {
-      const row: Record<string, string | number> = { name: b.name, other: b.total };
-      directOwnerBars.forEach((ob) => { row[ob.key] = 0; });
-      return row;
-    }),
+    ...(directOwnerBars.length ? [directRow] : []),
+    ...(referrerBars.length ? [referralRow] : []),
+    ...sourceBars.map((b) => ({ name: b.name, other: b.total, ...zeroKeys(ownerKeys), ...zeroKeys(refKeys) })),
   ];
 
   // Hover Direct → total + each owner's slice; hover any other bar → that referral.
@@ -75,10 +97,11 @@ export default function AdminView() {
     if (label === 'Direct') {
       return (
         <div className="bg-white rounded-xl shadow-card border border-navy-100 px-3 py-2 text-xs">
-          <p className="font-bold text-navy-800 mb-1.5">
+          <p className="font-bold text-navy-800">
             Direct · Rs {directTotal.toLocaleString()}
             <span className="font-normal text-navy-400"> · {directCount} booking{directCount !== 1 ? 's' : ''}</span>
           </p>
+          <p className="font-normal text-navy-400 mb-1.5 text-[10px]">Income by the vehicle&apos;s owner (no referrer)</p>
           {directOwnerBars.filter((b) => b.total > 0).map((b) => (
             <div key={b.id} className="flex items-center justify-between gap-5">
               <span className="flex items-center gap-1.5 text-navy-600">
@@ -90,12 +113,31 @@ export default function AdminView() {
         </div>
       );
     }
-    const ob = otherBars.find((b) => b.name === label);
-    if (!ob) return null;
+    if (label === 'Owner Referrals') {
+      return (
+        <div className="bg-white rounded-xl shadow-card border border-navy-100 px-3 py-2 text-xs">
+          <p className="font-bold text-navy-800">
+            Owner Referrals · Rs {referrerTotal.toLocaleString()}
+            <span className="font-normal text-navy-400"> · {referrerCount} booking{referrerCount !== 1 ? 's' : ''}</span>
+          </p>
+          <p className="font-normal text-navy-400 mb-1.5 text-[10px]">Income owners referred onto other vehicles</p>
+          {referrerBars.filter((b) => b.total > 0).map((b) => (
+            <div key={b.id} className="flex items-center justify-between gap-5">
+              <span className="flex items-center gap-1.5 text-navy-600">
+                <span className="w-2 h-2 rounded-full" style={{ background: b.color }} />{b.name}
+              </span>
+              <span className="font-semibold text-navy-800">Rs {b.total.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    const sb = sourceBars.find((b) => b.name === label);
+    if (!sb) return null;
     return (
       <div className="bg-white rounded-xl shadow-card border border-navy-100 px-3 py-2 text-xs">
-        <p className="font-semibold text-navy-800">{ob.fullName}</p>
-        <p className="text-navy-600 mt-0.5">Rs {ob.total.toLocaleString()} · {ob.count} booking{ob.count !== 1 ? 's' : ''}</p>
+        <p className="font-semibold text-navy-800">{sb.name}</p>
+        <p className="text-navy-600 mt-0.5">Rs {sb.total.toLocaleString()} · {sb.count} booking{sb.count !== 1 ? 's' : ''}</p>
       </div>
     );
   };
@@ -109,6 +151,9 @@ export default function AdminView() {
   const [period, setPeriod]       = useState<'all' | 'week' | 'month' | 'year' | 'custom'>('all');
   const [dateFrom, setDateFrom]   = useState('');
   const [dateTo, setDateTo]       = useState('');
+  const [expanded, setExpanded]   = useState(false);
+  const [openRows, setOpenRows]   = useState<Record<string, boolean>>({});
+  const toggleRow = (k: string) => setOpenRows((m) => ({ ...m, [k]: !m[k] }));
 
   const referralOptions = Array.from(new Set(commissions.map((c) => c.referral || 'Direct'))).sort();
   const vehiclesInUse   = vehicles.filter((v) => commissions.some((c) => c.vehicleId === v.id));
@@ -295,6 +340,93 @@ export default function AdminView() {
     };
   });
 
+  // The bar chart, reused in the card and the expanded modal.
+  const renderChart = (height: number) => (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={chartRows} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+        <XAxis dataKey="name" interval={0} tick={{ fontSize: 10, fill: '#6B7FA3' }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: '#6B7FA3' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
+        <Tooltip cursor={{ fill: 'rgba(75,123,229,0.06)' }} content={renderReferralTooltip} />
+        {directOwnerBars.map((b) => (
+          <Bar key={b.key} dataKey={b.key} stackId="ref" fill={b.color} stroke="#fff" strokeWidth={1}
+            isAnimationActive animationDuration={750} animationEasing="ease-out" />
+        ))}
+        {referrerBars.map((b) => (
+          <Bar key={b.key} dataKey={b.key} stackId="ref" fill={b.color} stroke="#fff" strokeWidth={1}
+            isAnimationActive animationDuration={750} animationEasing="ease-out" />
+        ))}
+        <Bar dataKey="other" stackId="ref" radius={[6, 6, 0, 0]}
+          isAnimationActive animationDuration={750} animationEasing="ease-out" animationBegin={120}>
+          {chartRows.map((r, i) => <Cell key={i} fill={otherColorByName[r.name as string] ?? '#CBD5E1'} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+
+  // A detail section: horizontal accordion cards that expand to show bookings.
+  type Entry = { key: string; name: string; color: string; total: number; count: number; rows: typeof commissions };
+  const renderDetailSection = (title: string, hint: string, entries: Entry[]) => {
+    if (entries.length === 0) return null;
+    return (
+      <div>
+        <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide">{title}</p>
+        <p className="text-[11px] text-navy-300 mb-2">{hint}</p>
+        <div className="space-y-2">
+          {entries.map((e, i) => {
+            const isOpen = !!openRows[e.key];
+            return (
+              <div key={e.key} className="border border-navy-100 rounded-xl overflow-hidden anim-fade-up" style={{ animationDelay: `${i * 45}ms` }}>
+                <button onClick={() => toggleRow(e.key)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-navy-50/60 transition-colors">
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: e.color }} />
+                  <span className="text-sm font-semibold text-navy-800 flex-1 text-left truncate">{e.name}</span>
+                  <span className="text-xs text-navy-400 flex-shrink-0">{e.count} booking{e.count !== 1 ? 's' : ''}</span>
+                  <span className="text-sm font-bold text-navy-800 w-28 text-right flex-shrink-0">Rs {e.total.toLocaleString()}</span>
+                  <ChevronDown size={16} className={`text-navy-400 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`acc-grid ${isOpen ? 'open' : ''}`}>
+                  <div>
+                    <div className={`border-t border-navy-50 bg-navy-50/30 px-4 py-3 overflow-x-auto transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                      <table className="w-full min-w-[600px] text-xs">
+                        <thead>
+                          <tr className="text-navy-400">
+                            <th className="text-left font-medium pb-2">Customer</th>
+                            <th className="text-left font-medium pb-2">Vehicle</th>
+                            <th className="text-left font-medium pb-2">Dates</th>
+                            <th className="text-right font-medium pb-2">Total</th>
+                            <th className="text-right font-medium pb-2">Ref. Fee</th>
+                            <th className="text-right font-medium pb-2">Owner Gets</th>
+                            <th className="text-center font-medium pb-2">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {e.rows.map((c) => {
+                            const bk = bookings.find((b) => b.id === c.bookingId);
+                            const v  = vehicles.find((vv) => vv.id === c.vehicleId);
+                            return (
+                              <tr key={c.id} className="border-t border-navy-100/60">
+                                <td className="py-2 text-navy-800 font-medium">{bk?.customerName ?? '—'}</td>
+                                <td className="py-2 text-navy-600">{v ? `${v.brand} ${v.model}` : '—'}<span className="text-navy-400"> · {v?.vehicleNumber ?? ''}</span></td>
+                                <td className="py-2 text-navy-500">{bk?.startDate} → {bk?.endDate}</td>
+                                <td className="py-2 text-right font-semibold text-navy-800">Rs {c.totalIncome.toLocaleString()}</td>
+                                <td className="py-2 text-right text-amber-700">{(c.coordinatorFee ?? 0) > 0 ? `Rs ${(c.coordinatorFee ?? 0).toLocaleString()}` : '—'}</td>
+                                <td className="py-2 text-right text-emerald-700 font-semibold">Rs {c.ownerPayout.toLocaleString()}</td>
+                                <td className="py-2 text-center"><StatusBadge status={c.status} /></td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {/* KPI row */}
@@ -320,40 +452,36 @@ export default function AdminView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Income by referral — Direct split per owner, then referrers & sources */}
         <div className="card">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-3">
             <p className="section-title">Income by Referral</p>
-            <div className="flex items-center gap-3 text-[10px] text-navy-400">
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ background: OWNER_COLORS[0] }} /> Direct</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ background: REFERRAL_COLOR }} /> Referral</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-navy-300" /> Source</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3 text-[10px] text-navy-400">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ background: OWNER_COLORS[0] }} /> Direct (by owner)</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ background: REFERRER_COLORS[0] }} /> Owner referral</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-navy-300" /> Source</span>
+              </div>
+              <button
+                onClick={() => setExpanded(true)}
+                title="Expand to full screen"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-navy-400 hover:bg-navy-50 hover:text-navy-700 transition-colors flex-shrink-0"
+              >
+                <Maximize2 size={15} />
+              </button>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <BarChart data={chartRows} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
-              <XAxis dataKey="name" interval={0} tick={{ fontSize: 10, fill: '#6B7FA3' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#6B7FA3' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip cursor={{ fill: 'rgba(75,123,229,0.06)' }} content={renderReferralTooltip} />
-              {/* Direct = stacked owner segments (sub-bars) */}
-              {directOwnerBars.map((b) => (
-                <Bar key={b.key} dataKey={b.key} stackId="ref" fill={b.color} stroke="#fff" strokeWidth={1} />
-              ))}
-              {/* Referrers + sources = single bars sharing the same stack slot */}
-              <Bar dataKey="other" stackId="ref" radius={[6, 6, 0, 0]}>
-                {chartRows.map((r, i) => <Cell key={i} fill={otherColorByName[r.name as string] ?? '#CBD5E1'} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {renderChart(210)}
 
           {/* Grouped breakdown */}
           <div className="space-y-3 mt-3">
             {directOwnerBars.length > 0 && (
               <div>
-                <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide mb-1.5">
-                  Direct (by owner) · Rs {(directTotal / 1000).toFixed(0)}k
+                <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide">
+                  Direct income · by vehicle owner · Rs {(directTotal / 1000).toFixed(0)}k
                 </p>
+                <p className="text-[10px] text-navy-300 mb-1.5">Walk-in hires on the owner&apos;s own vehicle (no referrer)</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {directOwnerBars.map((b) => (
-                    <div key={b.id} className="bg-navy-50/60 rounded-xl p-2 text-center">
+                  {directOwnerBars.map((b, i) => (
+                    <div key={b.id} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
                       <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
                       <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
                       <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
@@ -362,24 +490,38 @@ export default function AdminView() {
                 </div>
               </div>
             )}
-            {([['Owner Referrals', 'Referral'], ['Marketing Sources', 'Source']] as const).map(([title, grp]) => {
-              const items = otherBars.filter((b) => b.group === grp);
-              if (items.length === 0) return null;
-              return (
-                <div key={grp}>
-                  <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide mb-1.5">{title}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {items.map((b) => (
-                      <div key={b.name} className="bg-navy-50/60 rounded-xl p-2 text-center">
-                        <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
-                        <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
-                        <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
-                      </div>
-                    ))}
-                  </div>
+            {referrerBars.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide">
+                  Owner Referrals · by referrer · Rs {(referrerTotal / 1000).toFixed(0)}k
+                </p>
+                <p className="text-[10px] text-navy-300 mb-1.5">Income an owner referred onto another owner&apos;s vehicle</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {referrerBars.map((b, i) => (
+                    <div key={b.id} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
+                      <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
+                      <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
+                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            )}
+            {sourceBars.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide">Marketing Sources</p>
+                <p className="text-[10px] text-navy-300 mb-1.5">Hires that came through a marketing channel</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {sourceBars.map((b, i) => (
+                    <div key={b.name} className="bg-navy-50/60 rounded-xl p-2 text-center anim-fade-up hover:bg-navy-50 transition-colors" style={{ animationDelay: `${i * 45}ms` }}>
+                      <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ background: b.color }} />
+                      <p className="text-xs font-medium text-navy-700 truncate">{b.name}</p>
+                      <p className="text-xs text-navy-400">{b.count} booking{b.count !== 1 ? 's' : ''} · Rs {(b.total / 1000).toFixed(0)}k</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -558,6 +700,18 @@ export default function AdminView() {
           </table>
         </div>
       </div>
+
+      {/* ── Expanded full-screen detail view ── */}
+      <Modal open={expanded} onClose={() => setExpanded(false)} title="Income by Referral — Detailed" width="max-w-[92vw]">
+        <div className="space-y-6">
+          <div className="bg-navy-50/40 rounded-2xl p-4">
+            {renderChart(320)}
+          </div>
+          {renderDetailSection('Direct income · by vehicle owner', "Walk-in hires on the owner's own vehicle (no referrer)", directEntries)}
+          {renderDetailSection('Owner Referrals · by referrer', "Income an owner referred onto another owner's vehicle", referrerEntries)}
+          {renderDetailSection('Marketing Sources', 'Hires that came through a marketing channel', sourceEntries)}
+        </div>
+      </Modal>
     </>
   );
 }
