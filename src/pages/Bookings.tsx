@@ -70,17 +70,19 @@ const emptyForm = () => ({
 });
 
 export default function Bookings() {
-  const { vehicles, bookings, drivers, owners, addBooking, updateBooking, cancelBooking, isVehicleAvailable } = useStore();
+  const { vehicles, bookings, drivers, owners, customers, addBooking, updateBooking, cancelBooking, isVehicleAvailable } = useStore();
   const { currentUser, isAdmin, can } = useAuthStore();
   const location = useLocation();
 
-  const [tab,          setTab]          = useState<BookingStatus | 'All'>('All');
-  const [viewMode,     setViewMode]     = useState<'cards' | 'calendar'>('cards');
-  const [modal,        setModal]        = useState<'add' | 'view' | null>(null);
-  const [selected,     setSelected]     = useState<Booking | null>(null);
-  const [form,         setForm]         = useState(emptyForm());
-  const [availability, setAvailability] = useState<boolean | null>(null);
-  const [error,        setError]        = useState('');
+  const [tab,              setTab]              = useState<BookingStatus | 'All'>('All');
+  const [viewMode,         setViewMode]         = useState<'cards' | 'calendar'>('cards');
+  const [modal,            setModal]            = useState<'add' | 'view' | null>(null);
+  const [selected,         setSelected]         = useState<Booking | null>(null);
+  const [form,             setForm]             = useState(emptyForm());
+  const [availability,     setAvailability]     = useState<boolean | null>(null);
+  const [error,            setError]            = useState('');
+  const [customerMode,     setCustomerMode]     = useState<'new' | 'existing'>('new');
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [startWarn,    setStartWarn]    = useState('');
   const [endWarn,      setEndWarn]      = useState('');
 
@@ -202,6 +204,8 @@ export default function Bookings() {
     setError('');
     setStartWarn('');
     setEndWarn('');
+    setCustomerMode('new');
+    setSelectedCustomer('');
   };
 
   const handleCreate = () => {
@@ -416,6 +420,7 @@ export default function Bookings() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {sorted.map((b) => {
             const vehicle = vehicles.find((v) => v.id === b.vehicleId);
+            const owner   = owners.find((o) => o.id === vehicle?.ownerId);
             const balance = b.totalAmount - b.paidAmount;
             return (
               <div
@@ -439,11 +444,18 @@ export default function Bookings() {
 
                 <div className="bg-navy-50/60 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
                   <CalendarDays size={13} className="text-navy-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-navy-700">
-                      {vehicle?.brand} {vehicle?.model}
-                      <span className="font-normal text-navy-400 ml-1">· {vehicle?.vehicleNumber}</span>
-                    </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-navy-700 truncate">
+                        {vehicle?.brand} {vehicle?.model}
+                        <span className="font-normal text-navy-400 ml-1">· {vehicle?.vehicleNumber}</span>
+                      </p>
+                      {owner && (
+                        <span className="text-[10px] text-navy-400 bg-white border border-navy-100 rounded-full px-2 py-0.5 flex-shrink-0">
+                          {owner.name}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-navy-500">{b.startDate} → {b.endDate} ({b.totalDays}d)</p>
                   </div>
                 </div>
@@ -500,6 +512,32 @@ export default function Bookings() {
         )}
 
         <div className="space-y-5">
+          {/* Customer mode toggle */}
+          <div className="flex gap-2 p-1 bg-navy-50 rounded-xl">
+            <button
+              type="button"
+              onClick={() => { setCustomerMode('new'); setSelectedCustomer(''); setForm((f) => ({ ...f, customerName: '', customerPhone: '', customerEmail: '', customerNIC: '' })); }}
+              className={`flex-1 py-2 rounded-[10px] text-xs font-semibold transition-all ${
+                customerMode === 'new'
+                  ? 'bg-navy-700 text-white shadow-sm'
+                  : 'text-navy-500 hover:text-navy-700'
+              }`}
+            >
+              New Customer
+            </button>
+            <button
+              type="button"
+              onClick={() => { setCustomerMode('existing'); setSelectedCustomer(''); }}
+              className={`flex-1 py-2 rounded-[10px] text-xs font-semibold transition-all ${
+                customerMode === 'existing'
+                  ? 'bg-navy-700 text-white shadow-sm'
+                  : 'text-navy-500 hover:text-navy-700'
+              }`}
+            >
+              Existing Customer
+            </button>
+          </div>
+
           {/* Vehicle select */}
           <div>
             <p className="label">Select Vehicle *</p>
@@ -750,22 +788,84 @@ export default function Bookings() {
 
           {/* Customer info */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="label">Customer Name *</p>
-              <input className="input" value={form.customerName} onChange={(e) => set('customerName', e.target.value)} placeholder="Full name" />
-            </div>
-            <div>
-              <p className="label">Phone</p>
-              <input className="input" value={form.customerPhone} onChange={(e) => set('customerPhone', e.target.value)} placeholder="07X XXXXXXX" />
-            </div>
-            <div>
-              <p className="label">Email <span className="text-navy-400 font-normal">(for receipt)</span></p>
-              <input className="input" type="email" value={form.customerEmail} onChange={(e) => set('customerEmail', e.target.value)} placeholder="customer@email.com" />
-            </div>
-            <div>
-              <p className="label">NIC</p>
-              <input className="input" value={form.customerNIC} onChange={(e) => set('customerNIC', e.target.value)} placeholder="NIC number" />
-            </div>
+
+            {/* ── Existing customer picker ── */}
+            {customerMode === 'existing' ? (
+              <div className="col-span-2">
+                <p className="label">Select Customer *</p>
+                <Select
+                  value={selectedCustomer}
+                  onChange={(id) => {
+                    const c = customers.find((x) => x.id === id);
+                    if (!c) return;
+                    setSelectedCustomer(id);
+                    setForm((f) => ({
+                      ...f,
+                      customerName:  c.name,
+                      customerPhone: c.phone,
+                      customerEmail: c.email  ?? '',
+                      customerNIC:   c.nic    ?? '',
+                    }));
+                  }}
+                  placeholder="Search and select a customer…"
+                  options={customers.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    sub:   c.phone + (c.nic ? ` · ${c.nic}` : ''),
+                  }))}
+                />
+                {selectedCustomer && (() => {
+                  const c = customers.find((x) => x.id === selectedCustomer);
+                  if (!c) return null;
+                  return (
+                    <div className="mt-2 bg-navy-50/70 border border-navy-100 rounded-xl px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
+                      <div>
+                        <p className="text-navy-400">Phone</p>
+                        <p className="font-semibold text-navy-800">{c.phone}</p>
+                      </div>
+                      {c.email && (
+                        <div>
+                          <p className="text-navy-400">Email</p>
+                          <p className="font-semibold text-navy-800">{c.email}</p>
+                        </div>
+                      )}
+                      {c.nic && (
+                        <div>
+                          <p className="text-navy-400">NIC</p>
+                          <p className="font-semibold text-navy-800">{c.nic}</p>
+                        </div>
+                      )}
+                      {c.address && (
+                        <div>
+                          <p className="text-navy-400">Address</p>
+                          <p className="font-semibold text-navy-800">{c.address}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              /* ── New customer fields ── */
+              <>
+                <div>
+                  <p className="label">Customer Name *</p>
+                  <input className="input" value={form.customerName} onChange={(e) => set('customerName', e.target.value)} placeholder="Full name" />
+                </div>
+                <div>
+                  <p className="label">Phone</p>
+                  <input className="input" value={form.customerPhone} onChange={(e) => set('customerPhone', e.target.value)} placeholder="07X XXXXXXX" />
+                </div>
+                <div>
+                  <p className="label">Email <span className="text-navy-400 font-normal">(for receipt)</span></p>
+                  <input className="input" type="email" value={form.customerEmail} onChange={(e) => set('customerEmail', e.target.value)} placeholder="customer@email.com" />
+                </div>
+                <div>
+                  <p className="label">NIC</p>
+                  <input className="input" value={form.customerNIC} onChange={(e) => set('customerNIC', e.target.value)} placeholder="NIC number" />
+                </div>
+              </>
+            )}
 
             {/* Referral dropdown */}
             <div>
@@ -825,6 +925,7 @@ export default function Bookings() {
       <Modal open={modal === 'view'} onClose={() => setModal(null)} title="Booking Details">
         {selected && (() => {
           const vehicle = vehicles.find((v) => v.id === selected.vehicleId);
+          const owner   = owners.find((o) => o.id === vehicle?.ownerId);
           const driver  = drivers.find((d) => d.id === selected.driverId);
           const balance = selected.totalAmount - selected.paidAmount;
           return (
@@ -845,6 +946,8 @@ export default function Bookings() {
                 {[
                   ['Vehicle',    `${vehicle?.brand} ${vehicle?.model}`],
                   ['Reg. No.',   vehicle?.vehicleNumber ?? '—'],
+                  ['Owner',      owner?.name ?? '—'],
+                  ['Owner Phone',owner?.phone ?? '—'],
                   ['Start Date', selected.startDate],
                   ['End Date',   selected.endDate],
                   ['Duration',   `${selected.totalDays} days`],

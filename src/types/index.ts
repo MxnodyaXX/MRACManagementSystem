@@ -1,5 +1,16 @@
 export type VehicleStatus = 'Available' | 'Reserved' | 'Ongoing' | 'Maintenance';
 
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  nic?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Insurance {
   provider: string;
   policyNumber: string;
@@ -169,7 +180,12 @@ export interface AppState {
   drivers: Driver[];
   notifications: Notification[];
   handovers: VehicleHandover[];
+  customers: Customer[];
   addHandover: (h: Omit<VehicleHandover, 'id' | 'createdAt'>) => void;
+
+  addCustomer: (c: Omit<Customer, 'id' | 'createdAt'>) => void;
+  updateCustomer: (id: string, updates: Partial<Customer>) => void;
+  deleteCustomer: (id: string) => void;
 
   addVehicle: (v: Omit<Vehicle, 'id' | 'createdAt' | 'revenue' | 'rentCount'>) => void;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;

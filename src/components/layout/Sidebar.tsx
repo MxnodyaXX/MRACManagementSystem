@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Car, CalendarDays, MessageSquare,
-  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck,
+  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../store/useStore';
@@ -17,6 +17,7 @@ const links = [
   { to: '/expenses',      icon: Receipt,         label: 'Expenses'    },
   { to: '/drivers',       icon: UserCheck,       label: 'Drivers'     },
   { to: '/handovers',     icon: Truck,           label: 'Handovers'   },
+  { to: '/customers',     icon: Contact,         label: 'Customers'   },
   { to: '/notifications', icon: Bell,            label: 'Alerts'      },
 ];
 

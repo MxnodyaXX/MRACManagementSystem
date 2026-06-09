@@ -13,6 +13,7 @@ import Drivers from './pages/Drivers';
 import Notifications from './pages/Notifications';
 import Permissions from './pages/Permissions';
 import Handovers from './pages/Handovers';
+import Customers from './pages/Customers';
 
 export default function App() {
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/drivers"       element={<Drivers />}       />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/handovers"     element={<Handovers />}     />
+          <Route path="/customers"     element={<Customers />}     />
           {isAdmin() && (
             <Route path="/permissions" element={<Permissions />} />
           )}

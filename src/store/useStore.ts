@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover } from '../types';
+import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover, Customer } from '../types';
 import { sampleData } from '../data/sampleData';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -10,7 +10,6 @@ export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       ...sampleData,
-      handovers: [],
 
       // ── Vehicles ──────────────────────────────────────────────
       addVehicle: (v) =>
@@ -138,6 +137,20 @@ export const useStore = create<AppState>()(
           drivers: s.drivers.map((d) => (d.id === id ? { ...d, ...updates } : d)),
         })),
 
+      // ── Customers ─────────────────────────────────────────────
+      addCustomer: (c) =>
+        set((s) => ({
+          customers: [...s.customers, { ...c, id: uid(), createdAt: now() } as Customer],
+        })),
+
+      updateCustomer: (id, updates) =>
+        set((s) => ({
+          customers: s.customers.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+        })),
+
+      deleteCustomer: (id) =>
+        set((s) => ({ customers: s.customers.filter((c) => c.id !== id) })),
+
       // ── Handovers ─────────────────────────────────────────────
       addHandover: (h) =>
         set((s) => ({
@@ -185,6 +198,6 @@ export const useStore = create<AppState>()(
         });
       },
     }),
-    { name: 'emrac-store-v3' }
+    { name: 'emrac-store-v4' }
   )
 );
