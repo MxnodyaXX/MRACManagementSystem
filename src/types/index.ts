@@ -93,7 +93,10 @@ export interface Booking {
   estimatedAmount?: number;  // from quotation calculator
   paidAmount: number;
   status: 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled';
-  referral?: string;         // owner name / 'Direct'
+  referral?: string;         // owner name / third-party name / 'Direct'
+  referralFeeType?: 'fixed' | 'percent'; // how the referral fee is entered
+  referralFeeValue?: number; // raw input: rupees (fixed) or percent (percent)
+  referralFee?: number;      // resolved rupee amount paid to the referrer
   notes?: string;
   createdAt: string;
   pickupLocation?: string;

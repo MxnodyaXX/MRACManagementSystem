@@ -4,6 +4,8 @@ import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notificati
 import { sampleData } from '../data/sampleData';
 import { supabaseEnabled } from '../lib/supabase';
 import { db, dbFetchAll } from '../lib/db';
+import { resolveReferralFee } from '../lib/referral';
+import cab1234Img from '../data/CAB-1234.png';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const now = () => new Date().toISOString();
@@ -65,7 +67,10 @@ export const useStore = create<AppState>()(
       addBooking: (b) => {
         const id = uid();
         const vehicle = get().vehicles.find((v) => v.id === b.vehicleId);
-        const owner   = get().owners.find((o) => o.id === vehicle?.ownerId);
+
+        // The referrer's fee is the only deduction — the owner keeps the rest of the total.
+        const referralFee = resolveReferralFee(b.referralFeeType, b.referralFeeValue, b.totalAmount);
+        const ownerPayout = Math.max(0, b.totalAmount - referralFee);
 
         const commission: Commission = {
           id: uid(),
@@ -74,14 +79,15 @@ export const useStore = create<AppState>()(
           ownerId: vehicle?.ownerId ?? '',
           referral: b.referral ?? 'Direct',
           totalIncome: b.totalAmount,
-          commissionRate: owner?.commissionRate ?? 15,
-          commissionAmount: b.totalAmount * ((owner?.commissionRate ?? 15) / 100),
-          ownerPayout: b.totalAmount * (1 - (owner?.commissionRate ?? 15) / 100),
+          commissionRate: 0,
+          commissionAmount: 0,
+          ownerPayout,
+          coordinatorFee: referralFee,
           status: 'Pending',
           createdAt: now(),
         };
 
-        const newBooking: Booking = { ...b, id, createdAt: now() };
+        const newBooking: Booking = { ...b, id, referralFee, createdAt: now() };
         const vehicleUpdates = {
           status: 'Reserved' as const,
           revenue: (vehicle?.revenue ?? 0) + b.totalAmount,
@@ -262,6 +268,19 @@ export const useStore = create<AppState>()(
         });
       },
     }),
-    { name: 'emrac-store-v4' }
+    {
+      name: 'emrac-store-v5',
+      version: 1,
+      // One-time patch: attach the CAB-1234 photo to already-saved data (no wipe).
+      migrate: (persisted, _version) => {
+        const s = persisted as Partial<AppState> | undefined;
+        if (s?.vehicles) {
+          s.vehicles = s.vehicles.map((v) =>
+            v.vehicleNumber === 'CAB-1234' && !v.imageUrl ? { ...v, imageUrl: cab1234Img } : v
+          );
+        }
+        return s as AppState;
+      },
+    }
   )
 );

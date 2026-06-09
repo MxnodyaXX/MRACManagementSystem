@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { sendRentalSummary } from '../utils/email';
+import { resolveReferralFee } from '../lib/referral';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -565,9 +566,8 @@ export default function Handovers() {
           if (!booking || !vehicle || !commission) return null;
 
           const finalAmount    = returnH?.finalAmount ?? booking.totalAmount;
-          const commRate       = commission.commissionRate;
-          const commAmount     = Math.round(finalAmount * commRate / 100);
-          const ownerPayout    = finalAmount - commAmount;
+          const referralFee    = resolveReferralFee(booking.referralFeeType, booking.referralFeeValue, finalAmount);
+          const ownerPayout    = Math.max(0, finalAmount - referralFee);
           const alreadyPaid    = booking.paidAmount;
           const balance        = finalAmount - alreadyPaid;
           const totalKmDriven  = delivery && returnH ? returnH.mileage - delivery.mileage : 0;
@@ -575,8 +575,8 @@ export default function Handovers() {
           const baseAmount     = vehicle.dailyRent * booking.totalDays;
           const extraKm        = returnH?.extraKm ?? 0;
           const referralLabel  = booking.referral && booking.referral !== 'Direct'
-            ? `${booking.referral} (Referral)`
-            : 'EMRAC Commission';
+            ? booking.referral
+            : null;
 
           const emailParams = {
             toEmail:          booking.customerEmail ?? '',
@@ -597,16 +597,16 @@ export default function Handovers() {
             balanceCollected: balance,
             ownerName:        owner?.name ?? 'Owner',
             ownerPayout,
-            commLabel:        referralLabel,
-            commAmount,
-            commRate,
+            referralLabel,
+            referralFee,
           };
 
           const handleConfirmPayment = () => {
             updateCommission(commission.id, {
               status: 'Paid',
               totalIncome: finalAmount,
-              commissionAmount: commAmount,
+              commissionAmount: 0,
+              coordinatorFee: referralFee,
               ownerPayout,
             });
             updateBooking(paymentBookingId, { paidAmount: finalAmount });
@@ -619,7 +619,8 @@ export default function Handovers() {
             updateCommission(commission.id, {
               status: 'Credit',
               totalIncome: finalAmount,
-              commissionAmount: commAmount,
+              commissionAmount: 0,
+              coordinatorFee: referralFee,
               ownerPayout,
             });
             sendRentalSummary(emailParams).catch(console.error);
@@ -681,7 +682,7 @@ export default function Handovers() {
                 </div>
               </div>
 
-              {/* Commission split */}
+              {/* Payment split */}
               <div className="border border-navy-100 rounded-xl overflow-hidden">
                 <div className="bg-navy-50 px-4 py-2.5">
                   <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Payment Split</p>
@@ -690,17 +691,19 @@ export default function Handovers() {
                   <div className="flex items-center justify-between px-4 py-3">
                     <div>
                       <p className="text-sm font-semibold text-navy-800">{owner?.name ?? 'Owner'}</p>
-                      <p className="text-xs text-navy-400">Owner receives · {100 - commRate}% of total</p>
+                      <p className="text-xs text-navy-400">Owner receives{referralFee > 0 ? ' · total minus referral' : ' · full amount'}</p>
                     </div>
                     <p className="text-base font-bold text-emerald-700">Rs {ownerPayout.toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-semibold text-navy-800">{referralLabel}</p>
-                      <p className="text-xs text-navy-400">Management / referral fee · {commRate}% of total</p>
+                  {referralLabel && referralFee > 0 && (
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-navy-800">{referralLabel}</p>
+                        <p className="text-xs text-navy-400">Referral fee</p>
+                      </div>
+                      <p className="text-base font-bold text-amber-700">Rs {referralFee.toLocaleString()}</p>
                     </div>
-                    <p className="text-base font-bold text-blue-700">Rs {commAmount.toLocaleString()}</p>
-                  </div>
+                  )}
                 </div>
               </div>
 

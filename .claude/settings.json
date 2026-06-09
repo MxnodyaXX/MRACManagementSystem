@@ -14,7 +14,17 @@
       "Bash(Start-Process -NoNewWindow -FilePath \"npx\" -ArgumentList \"vite\",\"--port\",\"5174\")",
       "Bash(Start-Sleep 4)",
       "Bash(Invoke-WebRequest -Uri \"http://localhost:5174/\" -UseBasicParsing -TimeoutSec 5)",
-      "Bash(Select-Object -ExpandProperty StatusCode)"
+      "Bash(Select-Object -ExpandProperty StatusCode)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"const b=require\\('fs'\\).readFileSync\\('C:/EMRACManagementSystem/src/data/CAB-1234.png'\\);const ct=b[25];const types={0:'Grayscale',2:'RGB \\(no alpha\\)',3:'Palette',4:'Grayscale+Alpha',6:'RGBA \\(has alpha\\)'};console.log\\('PNG color type byte:',ct,'=>',types[ct]||'unknown'\\);console.log\\('width',b.readUInt32BE\\(16\\),'height',b.readUInt32BE\\(20\\)\\);\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory"
     ]
   }
 }

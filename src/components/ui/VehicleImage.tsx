@@ -38,14 +38,17 @@ interface Props {
   className?: string;
   /** Clips to a circle (for leaderboard avatars) */
   circle?: boolean;
+  /** A specific uploaded/known photo for this vehicle — takes priority over the Wikipedia lookup */
+  imageUrl?: string;
 }
 
 export default function VehicleImage({
-  brand, model, color, bodyColor, className = '', circle = false,
+  brand, model, color, bodyColor, className = '', circle = false, imageUrl,
 }: Props) {
   const key      = `${brand} ${model}`.toLowerCase().replace(/\s+/g, ' ').trim();
   const title    = WIKI_TITLES[key] ?? `${brand} ${model}`;
   const shape    = circle ? 'rounded-full' : 'rounded-xl';
+  const [customFailed, setCustomFailed] = useState(false);
 
   const [src,     setSrc]     = useState<string | null>(
     imgCache[key] && imgCache[key] !== 'failed' ? imgCache[key] as string : null
@@ -54,6 +57,7 @@ export default function VehicleImage({
   const [failed,  setFailed]  = useState(imgCache[key] === 'failed');
 
   useEffect(() => {
+    if (imageUrl && !customFailed) return; // using the supplied photo — no lookup needed
     if (key in imgCache) return;
 
     const controller = new AbortController();
@@ -84,7 +88,19 @@ export default function VehicleImage({
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [key, title]);
+  }, [key, title, imageUrl, customFailed]);
+
+  /* Supplied photo — highest priority */
+  if (imageUrl && !customFailed) {
+    return (
+      <img
+        src={imageUrl}
+        alt={`${brand} ${model}`}
+        className={`object-cover ${shape} ${className}`}
+        onError={() => setCustomFailed(true)}
+      />
+    );
+  }
 
   /* Loading skeleton */
   if (loading) {

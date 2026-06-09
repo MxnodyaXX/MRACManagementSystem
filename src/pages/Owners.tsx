@@ -15,7 +15,7 @@ const emptyOwner = (): Omit<Owner, 'id' | 'createdAt' | 'totalEarnings' | 'pendi
   email: '',
   address: '',
   bankAccount: '',
-  commissionRate: 15,
+  commissionRate: 0,
 });
 
 export default function Owners() {
@@ -66,15 +66,11 @@ export default function Owners() {
             <p className="text-xs text-navy-400">{isMine || isAdmin() ? o.phone : '••••••••••'}</p>
             {(isMine || isAdmin()) && o.email && <p className="text-xs text-navy-400 truncate">{o.email}</p>}
           </div>
-          <div className="flex-shrink-0">
-            {isAdmin() || isMine ? (
-              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                {o.commissionRate}% commission
-              </span>
-            ) : (
+          {!(isMine || isAdmin()) && (
+            <div className="flex-shrink-0">
               <Lock size={14} className="text-navy-300" />
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Stats */}
@@ -214,16 +210,10 @@ export default function Owners() {
             <p className="label">Address</p>
             <input className="input" value={form.address ?? ''} onChange={(e) => set('address', e.target.value)} />
           </div>
-          <div>
+          <div className="col-span-2">
             <p className="label">Bank Account</p>
             <input className="input" value={form.bankAccount ?? ''} onChange={(e) => set('bankAccount', e.target.value)} />
           </div>
-          {isAdmin() && (
-            <div>
-              <p className="label">Commission Rate (%)</p>
-              <input className="input" type="number" min={0} max={100} value={form.commissionRate} onChange={(e) => set('commissionRate', +e.target.value)} />
-            </div>
-          )}
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
@@ -240,7 +230,7 @@ export default function Owners() {
             return d.getFullYear() === stmtYear && d.getMonth() + 1 === stmtMonth;
           });
           const totalIncome     = ownerComms.reduce((s, c) => s + c.totalIncome, 0);
-          const totalCommission = ownerComms.reduce((s, c) => s + c.commissionAmount, 0);
+          const totalReferral   = ownerComms.reduce((s, c) => s + (c.coordinatorFee ?? 0), 0);
           const totalPayout     = ownerComms.reduce((s, c) => s + c.ownerPayout, 0);
           const yearOptions = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i);
 
@@ -253,7 +243,7 @@ export default function Owners() {
                 </div>
                 <div>
                   <p className="font-bold text-navy-800">{selected.name}</p>
-                  <p className="text-xs text-navy-400">{selected.commissionRate}% commission rate</p>
+                  <p className="text-xs text-navy-400">Monthly payout statement</p>
                 </div>
               </div>
 
@@ -284,7 +274,7 @@ export default function Owners() {
                         <th className="text-left px-4 py-2.5">Vehicle</th>
                         <th className="text-left px-4 py-2.5">Referral</th>
                         <th className="text-right px-4 py-2.5">Total Income</th>
-                        <th className="text-right px-4 py-2.5">MRAC ({selected.commissionRate}%)</th>
+                        <th className="text-right px-4 py-2.5">Referral Fee</th>
                         <th className="text-right px-4 py-2.5">Owner Payout</th>
                         <th className="text-center px-4 py-2.5">Status</th>
                       </tr>
@@ -297,7 +287,7 @@ export default function Owners() {
                             <td className="px-4 py-2.5 font-medium text-navy-800">{v ? `${v.brand} ${v.model}` : '—'}</td>
                             <td className="px-4 py-2.5 text-navy-500">{c.referral}</td>
                             <td className="px-4 py-2.5 text-right text-navy-700">Rs {c.totalIncome.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-right text-red-600">Rs {c.commissionAmount.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right text-amber-600">{(c.coordinatorFee ?? 0) > 0 ? `Rs ${(c.coordinatorFee ?? 0).toLocaleString()}` : '—'}</td>
                             <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">Rs {c.ownerPayout.toLocaleString()}</td>
                             <td className="px-4 py-2.5 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${c.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -319,9 +309,9 @@ export default function Owners() {
                     <p className="text-xs text-navy-400">Total Income</p>
                     <p className="text-base font-bold text-navy-800">Rs {totalIncome.toLocaleString()}</p>
                   </div>
-                  <div className="bg-red-50 rounded-xl p-3 text-center">
-                    <p className="text-xs text-red-400">MRAC Commission</p>
-                    <p className="text-base font-bold text-red-700">Rs {totalCommission.toLocaleString()}</p>
+                  <div className="bg-amber-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-amber-500">Referral Fees</p>
+                    <p className="text-base font-bold text-amber-700">Rs {totalReferral.toLocaleString()}</p>
                   </div>
                   <div className="bg-emerald-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-emerald-500">Owner Payout</p>

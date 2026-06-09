@@ -21,7 +21,7 @@ export default function OwnerView() {
   const pendingPayouts   = myCommissions.filter((c) => c.status === 'Pending');
 
   const totalRevenue     = myCommissions.reduce((s, c) => s + c.totalIncome, 0);
-  const totalCommission  = myCommissions.reduce((s, c) => s + c.commissionAmount, 0);
+  const totalReferralFee = myCommissions.reduce((s, c) => s + (c.coordinatorFee ?? 0), 0);
   const totalEarnings    = myCommissions.reduce((s, c) => s + c.ownerPayout, 0);
   const pendingAmount    = pendingPayouts.reduce((s, c) => s + c.ownerPayout, 0);
 
@@ -52,9 +52,9 @@ export default function OwnerView() {
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Revenue',     value: `Rs ${(totalRevenue / 1000).toFixed(1)}k`,    icon: DollarSign, color: 'bg-navy-700'    },
-          { label: 'Commission Paid',   value: `Rs ${(totalCommission / 1000).toFixed(1)}k`, icon: Percent,    color: 'bg-blue-500'    },
-          { label: 'Your Earnings',     value: `Rs ${(totalEarnings / 1000).toFixed(1)}k`,   icon: TrendingUp, color: 'bg-emerald-500' },
+          { label: 'Total Revenue',     value: `Rs ${(totalRevenue / 1000).toFixed(1)}k`,     icon: DollarSign, color: 'bg-navy-700'    },
+          { label: 'Referral Fees',     value: `Rs ${(totalReferralFee / 1000).toFixed(1)}k`, icon: Percent,    color: 'bg-amber-500'   },
+          { label: 'Your Earnings',     value: `Rs ${(totalEarnings / 1000).toFixed(1)}k`,    icon: TrendingUp, color: 'bg-emerald-500' },
           { label: 'Pending Payout',    value: `Rs ${(pendingAmount / 1000).toFixed(1)}k`,   icon: Bell,       color: pendingAmount > 0 ? 'bg-amber-500' : 'bg-navy-300' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card flex items-start gap-3">
@@ -214,7 +214,10 @@ export default function OwnerView() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-bold text-emerald-700">Rs {c.ownerPayout.toLocaleString()}</p>
-                    <p className="text-xs text-navy-400">{c.commissionRate}% fee · Rs {c.commissionAmount.toLocaleString()}</p>
+                    <p className="text-xs text-navy-400">of Rs {c.totalIncome.toLocaleString()}</p>
+                    {(c.coordinatorFee ?? 0) > 0 && (
+                      <p className="text-xs text-amber-600">− Rs {(c.coordinatorFee ?? 0).toLocaleString()} referral ({c.referral})</p>
+                    )}
                   </div>
                   <StatusBadge status={c.status} />
                 </div>

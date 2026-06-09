@@ -23,9 +23,8 @@ export interface RentalSummaryParams {
   balanceCollected: number;
   ownerName: string;
   ownerPayout: number;
-  commLabel: string;
-  commAmount: number;
-  commRate: number;
+  referralLabel?: string | null;
+  referralFee: number;
 }
 
 export async function sendRentalSummary(p: RentalSummaryParams): Promise<void> {
@@ -178,17 +177,18 @@ function buildHTML(p: RentalSummaryParams): string {
           <tr>
             <td style="padding:10px 16px;color:#334155">
               ${p.ownerName}
-              <div style="font-size:11px;color:#94a3b8">${100 - p.commRate}% owner share</div>
+              <div style="font-size:11px;color:#94a3b8">Owner share</div>
             </td>
             <td style="padding:10px 16px;text-align:right;font-weight:700;color:#059669">${fmt(p.ownerPayout)}</td>
           </tr>
+          ${p.referralLabel && p.referralFee > 0 ? `
           <tr style="border-top:1px solid #f1f5f9">
             <td style="padding:10px 16px;color:#334155">
-              ${p.commLabel}
-              <div style="font-size:11px;color:#94a3b8">${p.commRate}% management fee</div>
+              ${p.referralLabel}
+              <div style="font-size:11px;color:#94a3b8">Referral fee</div>
             </td>
-            <td style="padding:10px 16px;text-align:right;font-weight:700;color:#2563eb">${fmt(p.commAmount)}</td>
-          </tr>
+            <td style="padding:10px 16px;text-align:right;font-weight:700;color:#d97706">${fmt(p.referralFee)}</td>
+          </tr>` : ''}
         </table>
       </td>
     </tr>

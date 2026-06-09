@@ -84,18 +84,40 @@ export default function Vehicles() {
         onClick={() => clickable && openView(v)}
       >
         {/* Vehicle image */}
-        <div className="w-full h-32 rounded-xl overflow-hidden bg-navy-50 mb-3 relative">
-          <VehicleImage brand={v.brand} model={v.model} color={v.color}
-            bodyColor={vehicleBodyColor(v.color ?? '')} className="w-full h-full object-cover" />
-          <div className="absolute top-2 right-2">
-            <StatusBadge status={v.status} />
+        {v.imageUrl ? (
+          /* Cutout photo — car pops out of a recessed platform for a 3D feel */
+          <div className="relative mb-3 pt-4">
+            <div className="h-20 rounded-2xl bg-gradient-to-b from-navy-50 to-navy-100/70 ring-1 ring-navy-100"
+              style={{ boxShadow: 'inset 0 6px 16px rgba(27,43,107,0.20), inset 0 -2px 6px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.7)' }} />
+            {/* ground shadow at the wheel contact line */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-1 w-2/3 h-2.5 rounded-[50%] bg-navy-900/30 blur-md" />
+            <img src={v.imageUrl} alt={`${v.brand} ${v.model}`}
+              className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[94%] max-w-[420px] pointer-events-none select-none"
+              style={{ filter: 'drop-shadow(0 10px 9px rgba(27,43,107,0.25))' }} />
+            <div className="absolute top-5 right-2 z-10"><StatusBadge status={v.status} /></div>
+            {!mine && (
+              <div className="absolute top-5 left-2 z-10">
+                <span className="text-[10px] bg-navy-700/70 text-white px-2 py-0.5 rounded-full">View only</span>
+              </div>
+            )}
           </div>
-          {!mine && (
-            <div className="absolute top-2 left-2">
-              <span className="text-[10px] bg-navy-700/70 text-white px-2 py-0.5 rounded-full">View only</span>
+        ) : (
+          /* No custom photo — keep the illustration contained in a recessed box */
+          <div className="w-full h-32 rounded-2xl overflow-hidden mb-3 relative bg-gradient-to-b from-white to-navy-100/60 ring-1 ring-navy-100">
+            <VehicleImage brand={v.brand} model={v.model} color={v.color}
+              bodyColor={vehicleBodyColor(v.color ?? '')} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{ boxShadow: 'inset 0 4px 12px rgba(27,43,107,0.22), inset 0 -2px 6px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.6)' }} />
+            <div className="absolute top-2 right-2">
+              <StatusBadge status={v.status} />
             </div>
-          )}
-        </div>
+            {!mine && (
+              <div className="absolute top-2 left-2">
+                <span className="text-[10px] bg-navy-700/70 text-white px-2 py-0.5 rounded-full">View only</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -356,10 +378,23 @@ export default function Vehicles() {
           const owner = owners.find((o) => o.id === selected.ownerId);
           return (
             <div className="space-y-4">
-              <div className="w-full h-40 rounded-xl overflow-hidden bg-navy-50">
-                <VehicleImage brand={selected.brand} model={selected.model} color={selected.color}
-                  bodyColor={vehicleBodyColor(selected.color ?? '')} className="w-full h-full object-cover" />
-              </div>
+              {selected.imageUrl ? (
+                <div className="relative pt-6">
+                  <div className="h-28 rounded-2xl bg-gradient-to-b from-navy-50 to-navy-100/70 ring-1 ring-navy-100"
+                    style={{ boxShadow: 'inset 0 7px 20px rgba(27,43,107,0.20), inset 0 -2px 8px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.7)' }} />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-1.5 w-2/3 h-3 rounded-[50%] bg-navy-900/30 blur-lg" />
+                  <img src={selected.imageUrl} alt={`${selected.brand} ${selected.model}`}
+                    className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[86%] pointer-events-none select-none"
+                    style={{ filter: 'drop-shadow(0 14px 12px rgba(27,43,107,0.28))' }} />
+                </div>
+              ) : (
+                <div className="w-full h-40 rounded-2xl overflow-hidden relative bg-gradient-to-b from-white to-navy-100/60 ring-1 ring-navy-100">
+                  <VehicleImage brand={selected.brand} model={selected.model} color={selected.color}
+                    bodyColor={vehicleBodyColor(selected.color ?? '')} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 rounded-2xl pointer-events-none"
+                    style={{ boxShadow: 'inset 0 5px 16px rgba(27,43,107,0.22), inset 0 -2px 8px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.6)' }} />
+                </div>
+              )}
 
               <div className="flex items-center gap-4">
                 <div className="flex-1 min-w-0">

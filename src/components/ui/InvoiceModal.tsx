@@ -1,4 +1,5 @@
 import { useStore } from '../../store/useStore';
+import { resolveReferralFee } from '../../lib/referral';
 import Modal from './Modal';
 
 interface Props {
@@ -20,9 +21,8 @@ export default function InvoiceModal({ bookingId, onClose }: Props) {
   if (!booking || !vehicle) return null;
 
   const finalAmount   = returnH?.finalAmount ?? booking.totalAmount;
-  const commRate      = commission?.commissionRate ?? 15;
-  const commAmount    = Math.round(finalAmount * commRate / 100);
-  const ownerPayout   = finalAmount - commAmount;
+  const referralFee   = resolveReferralFee(booking.referralFeeType, booking.referralFeeValue, finalAmount);
+  const ownerPayout   = Math.max(0, finalAmount - referralFee);
   const extraKm       = returnH?.extraKm ?? 0;
   const extraCharge   = returnH?.extraKmCharge ?? 0;
   const baseAmount    = vehicle.dailyRent * booking.totalDays;
@@ -37,7 +37,7 @@ export default function InvoiceModal({ bookingId, onClose }: Props) {
     const html = buildInvoiceHTML({
       invoiceNo, issueDate, booking, vehicle, owner, commission,
       delivery, returnH, baseAmount, extraKm, extraCharge, finalAmount,
-      commRate, commAmount, ownerPayout, referralLabel,
+      referralFee, ownerPayout, referralLabel,
     });
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) return;
@@ -145,13 +145,15 @@ export default function InvoiceModal({ bookingId, onClose }: Props) {
             <div className="bg-navy-50/60 rounded-xl p-4">
               <p className="text-[10px] font-semibold text-navy-400 uppercase tracking-wide mb-3">Payment Distribution</p>
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-navy-600">{owner?.name ?? 'Owner'} <span className="text-navy-400">({100 - commRate}%)</span></span>
+                <span className="text-navy-600">{owner?.name ?? 'Owner'} <span className="text-navy-400">(owner)</span></span>
                 <span className="font-bold text-emerald-700">Rs {ownerPayout.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-navy-600">{referralLabel ? `${referralLabel} Referral` : 'EMRAC Commission'} <span className="text-navy-400">({commRate}%)</span></span>
-                <span className="font-bold text-blue-700">Rs {commAmount.toLocaleString()}</span>
-              </div>
+              {referralLabel && referralFee > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-navy-600">{referralLabel} <span className="text-navy-400">(referral)</span></span>
+                  <span className="font-bold text-amber-700">Rs {referralFee.toLocaleString()}</span>
+                </div>
+              )}
             </div>
 
             <p className="text-[10px] text-navy-300 text-center">
@@ -181,11 +183,11 @@ function buildInvoiceHTML(p: {
   booking: any; vehicle: any; owner: any; commission: any;
   delivery: any; returnH: any;
   baseAmount: number; extraKm: number; extraCharge: number; finalAmount: number;
-  commRate: number; commAmount: number; ownerPayout: number;
+  referralFee: number; ownerPayout: number;
   referralLabel: string | null;
 }) {
   const { invoiceNo, issueDate, booking, vehicle, owner, delivery, returnH,
-    baseAmount, extraKm, extraCharge, finalAmount, commRate, commAmount,
+    baseAmount, extraKm, extraCharge, finalAmount, referralFee,
     ownerPayout, referralLabel } = p;
 
   const extraRow = extraKm > 0 ? `
@@ -298,13 +300,14 @@ function buildInvoiceHTML(p: {
     <div class="split-box">
       <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Payment Distribution</div>
       <div class="split-row">
-        <span style="color:#475569">${owner?.name ?? 'Owner'} <span style="color:#94a3b8">(${100 - commRate}%)</span></span>
+        <span style="color:#475569">${owner?.name ?? 'Owner'} <span style="color:#94a3b8">(owner)</span></span>
         <span style="font-weight:700;color:#059669">Rs ${ownerPayout.toLocaleString()}</span>
       </div>
+      ${referralLabel && referralFee > 0 ? `
       <div class="split-row">
-        <span style="color:#475569">${referralLabel ? referralLabel + ' Referral' : 'EMRAC Commission'} <span style="color:#94a3b8">(${commRate}%)</span></span>
-        <span style="font-weight:700;color:#2563eb">Rs ${commAmount.toLocaleString()}</span>
-      </div>
+        <span style="color:#475569">${referralLabel} <span style="color:#94a3b8">(referral)</span></span>
+        <span style="font-weight:700;color:#d97706">Rs ${referralFee.toLocaleString()}</span>
+      </div>` : ''}
     </div>
   </div>
 

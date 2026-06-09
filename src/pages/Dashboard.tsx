@@ -278,7 +278,7 @@ export default function Dashboard() {
                     ...(cfg.shadow ? { boxShadow: cfg.shadow } : {}),
                   }}
                 >
-                  <VehicleImage brand={v.brand} model={v.model} color={v.color}
+                  <VehicleImage brand={v.brand} model={v.model} color={v.color} imageUrl={v.imageUrl}
                     circle className="w-full h-full" />
                 </div>
 
@@ -454,7 +454,7 @@ function FleetColumn({ title, vehicles, bookings, expenseMap, accent, onViewAll 
           return (
             <div key={v.id} className="flex items-center gap-3 bg-navy-50/60 hover:bg-navy-50 rounded-xl p-3 transition-colors">
               <div className="w-14 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-navy-50">
-                <VehicleImage brand={v.brand} model={v.model} color={v.color} bodyColor={vehicleBodyColor(v.color)} className="w-full h-full" />
+                <VehicleImage brand={v.brand} model={v.model} color={v.color} imageUrl={v.imageUrl} bodyColor={vehicleBodyColor(v.color)} className="w-full h-full" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-navy-800 truncate">{v.brand} {v.model}</p>

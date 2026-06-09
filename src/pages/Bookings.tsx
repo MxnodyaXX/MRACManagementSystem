@@ -42,6 +42,10 @@ const LOST_REASONS = [
   'Other',
 ];
 
+// Marketing channels the customer can come through — these do NOT earn a referral fee.
+// Only owner referrals or a named third party are paid a fee.
+const REFERRAL_SOURCES = ['WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'Google', 'Word of Mouth'];
+
 const emptyForm = () => ({
   vehicleId: '',
   customerId: 'c_' + Math.random().toString(36).slice(2, 6),
@@ -57,6 +61,8 @@ const emptyForm = () => ({
   paidAmount: 0,
   status: 'Confirmed' as BookingStatus,
   referral: 'Direct',
+  referralFeeType: 'fixed' as 'fixed' | 'percent',
+  referralFeeValue: 0,
   notes: '',
   pickupLocation: '',
   dropLocation: '',
@@ -90,6 +96,7 @@ export default function Bookings() {
   const [endWarn,         setEndWarn]         = useState('');
   const [customerMode,    setCustomerMode]    = useState<'new' | 'existing'>('new');
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [referralCustom,   setReferralCustom]   = useState(false);
 
   // Auto-open booking form when navigated from an inquiry conversion
   useEffect(() => {
@@ -125,6 +132,10 @@ export default function Bookings() {
   const bookableVehicles = myVehicleIds
     ? vehicles.filter((v) => myVehicleIds.includes(v.id))
     : vehicles;
+
+  // Only an owner referral or a named third party earns a fee — not Direct or a marketing source.
+  const isPersonReferral =
+    !!form.referral && form.referral !== 'Direct' && !REFERRAL_SOURCES.includes(form.referral);
 
   const set = (field: string, value: unknown) => {
     setForm((f) => {
@@ -211,6 +222,7 @@ export default function Bookings() {
     setEndWarn('');
     setCustomerMode('new');
     setSelectedCustomer('');
+    setReferralCustom(false);
   };
 
   const handleCreate = () => {
@@ -812,19 +824,93 @@ export default function Bookings() {
               </>
             )}
 
-            {/* Referral dropdown */}
-            <div>
-              <p className="label">Referral</p>
-              <Select
-                value={form.referral}
-                onChange={(val) => set('referral', val || 'Direct')}
-                placeholder="Direct"
-                options={[
-                  { value: 'Direct', label: 'Direct' },
-                  ...owners.map((o) => ({ value: o.name, label: o.name })),
-                ]}
-              />
+            {/* Referral — pick a registered owner, or enter a third party */}
+            <div className="col-span-2">
+              <p className="label">Referral <span className="text-navy-400 font-normal">(who sent this hire)</span></p>
+              {referralCustom ? (
+                <div className="flex gap-2">
+                  <input
+                    className="input flex-1"
+                    value={form.referral === 'Direct' ? '' : form.referral}
+                    onChange={(e) => set('referral', e.target.value || 'Direct')}
+                    placeholder="Third-party name (e.g. a friend not in the system)"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setReferralCustom(false); set('referral', 'Direct'); }}
+                    className="btn-secondary flex-shrink-0 text-xs"
+                  >
+                    Pick from list
+                  </button>
+                </div>
+              ) : (
+                <Select
+                  value={form.referral}
+                  onChange={(val) => {
+                    if (val === '__custom__') { setReferralCustom(true); setForm((f) => ({ ...f, referral: '', referralFeeValue: 0 })); return; }
+                    // Marketing sources & Direct never carry a fee — clear any entered fee.
+                    const isSource = REFERRAL_SOURCES.includes(val);
+                    setForm((f) => ({
+                      ...f,
+                      referral: val || 'Direct',
+                      ...((val === 'Direct' || val === '' || isSource) ? { referralFeeValue: 0 } : {}),
+                    }));
+                  }}
+                  placeholder="Direct"
+                  options={[
+                    { value: 'Direct', label: 'Direct' },
+                    ...owners.map((o) => ({ value: o.name, label: o.name, sub: 'Owner referral · earns a fee' })),
+                    ...REFERRAL_SOURCES.map((s) => ({ value: s, label: s, sub: 'Marketing source' })),
+                    { value: '__custom__', label: 'Other / third party…', sub: 'Type a name · earns a fee' },
+                  ]}
+                />
+              )}
             </div>
+
+            {/* Referral fee — only owner / third-party referrals are paid; deducted from the owner payout */}
+            {isPersonReferral && (
+              <div className="col-span-2 bg-navy-50/60 rounded-xl p-3">
+                <p className="label">Referral Fee for {form.referral}</p>
+                <div className="flex gap-2 items-center">
+                  <div className="flex bg-white rounded-xl p-0.5 gap-0.5 border border-navy-100 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => set('referralFeeType', 'fixed')}
+                      className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${form.referralFeeType === 'fixed' ? 'bg-navy-700 text-white' : 'text-navy-500'}`}
+                    >
+                      Rs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => set('referralFeeType', 'percent')}
+                      className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${form.referralFeeType === 'percent' ? 'bg-navy-700 text-white' : 'text-navy-500'}`}
+                    >
+                      %
+                    </button>
+                  </div>
+                  <input
+                    className="input flex-1"
+                    type="number"
+                    min={0}
+                    value={form.referralFeeValue || ''}
+                    onChange={(e) => set('referralFeeValue', +e.target.value)}
+                    placeholder={form.referralFeeType === 'percent' ? 'e.g. 5' : 'e.g. 2000'}
+                  />
+                </div>
+                {form.referralFeeValue > 0 && (
+                  <p className="text-xs text-navy-500 mt-2">
+                    Referrer gets <span className="font-semibold text-navy-800">Rs {(
+                      form.referralFeeType === 'percent'
+                        ? Math.round(form.totalAmount * (form.referralFeeValue / 100))
+                        : Math.round(form.referralFeeValue)
+                    ).toLocaleString()}</span>
+                    {form.referralFeeType === 'percent' && ` (${form.referralFeeValue}% of Rs ${form.totalAmount.toLocaleString()})`}
+                    {' · '}deducted from owner payout
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <p className="label">Pickup Location</p>
@@ -927,6 +1013,9 @@ export default function Bookings() {
                   ['End Date',   selected.endDate],
                   ['Duration',   `${selected.totalDays} days`],
                   ['Referral',   selected.referral ?? 'Direct'],
+                  ...((selected.referralFee ?? 0) > 0
+                    ? [['Referral Fee', `Rs ${(selected.referralFee ?? 0).toLocaleString()}`] as [string, string]]
+                    : []),
                   ['Pickup',     selected.pickupLocation || '—'],
                   ['Drop',       selected.dropLocation || '—'],
                 ].map(([l, v]) => (
