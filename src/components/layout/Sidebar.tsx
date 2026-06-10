@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Car, CalendarDays, MessageSquare,
-  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact,
+  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact, HandCoins,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../store/useStore';
@@ -13,6 +13,7 @@ const links = [
   { to: '/bookings',      icon: CalendarDays,    label: 'Bookings'    },
   { to: '/inquiries',     icon: MessageSquare,   label: 'Inquiries'   },
   { to: '/commissions',   icon: Percent,         label: 'Commissions' },
+  { to: '/referrals',     icon: HandCoins,       label: 'Referrals'   },
   { to: '/owners',        icon: Users,           label: 'Owners'      },
   { to: '/expenses',      icon: Receipt,         label: 'Expenses'    },
   { to: '/drivers',       icon: UserCheck,       label: 'Drivers'     },
@@ -35,9 +36,14 @@ function isActive(to: string, pathname: string) {
 }
 
 export default function Sidebar() {
-  const location  = useLocation();
-  const unread    = useStore((s) => s.notifications.filter((n) => !n.read).length);
-  const isAdmin   = useAuthStore((s) => s.isAdmin);
+  const location    = useLocation();
+  const isAdmin     = useAuthStore((s) => s.isAdmin);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const unread      = useStore((s) =>
+    s.notifications.filter((n) =>
+      !n.read && (isAdmin() || !n.ownerId || n.ownerId === currentUser?.ownerId),
+    ).length,
+  );
 
   const allLinks = isAdmin()
     ? [...links, { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]

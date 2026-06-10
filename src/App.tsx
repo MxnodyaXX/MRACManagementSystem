@@ -15,6 +15,7 @@ import Expenses from './pages/Expenses';
 import Drivers from './pages/Drivers';
 import Notifications from './pages/Notifications';
 import Permissions from './pages/Permissions';
+import Referrals from './pages/Referrals';
 import Handovers from './pages/Handovers';
 import Customers from './pages/Customers';
 
@@ -49,6 +50,7 @@ export default function App() {
           {isAdmin() && (
             <Route path="/permissions" element={<Permissions />} />
           )}
+          <Route path="/referrals" element={<Referrals />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
+import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import VehicleImage from '../components/ui/VehicleImage';
 import { vehicleBodyColor } from '../components/ui/CarSVG';
@@ -83,6 +84,7 @@ export default function Dashboard() {
   const navigate  = useNavigate();
   const [tab,      setTab]      = useState<'weekly' | 'alltime'>('alltime');
   const [chartTab, setChartTab] = useState<'revenue' | 'bookings' | 'expenses'>('revenue');
+  const [infoModal, setInfoModal] = useState<'outstanding' | 'profit' | null>(null);
 
   /* scope data to owner when not admin */
   const isOwnerRole = !isAdmin() && currentUser?.role === 'owner';
@@ -110,8 +112,12 @@ export default function Dashboard() {
   const completedRentals = scopedBookings.filter((b) => b.status === 'Completed').length;
   const uniqueCustomers  = new Set(scopedBookings.map((b) => b.customerPhone)).size;
 
-  /* business KPIs */
-  const outstandingBalance = activeBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
+  /* business KPIs
+     Outstanding = money actually owed: vehicle is out (Ongoing) or rental finished (Completed)
+     and still unpaid. Confirmed bookings haven't started, so their balance is expected future
+     income, not outstanding. */
+  const receivableBookings = scopedBookings.filter((b) => b.status === 'Ongoing' || b.status === 'Completed');
+  const outstandingBalance = receivableBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
   const today = new Date();
   const thisMonthRevenue = scopedBookings
     .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
@@ -120,6 +126,22 @@ export default function Dashboard() {
     .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
     .reduce((s, e) => s + e.amount, 0);
   const monthlyProfit = thisMonthRevenue - thisMonthExpenses;
+
+  /* breakdown rows for the info popups */
+  const outstandingRows = receivableBookings
+    .filter((b) => b.totalAmount > b.paidAmount)
+    .map((b) => ({ ...b, balance: b.totalAmount - b.paidAmount }))
+    .sort((a, b) => b.balance - a.balance);
+  const monthRevenueRows = scopedBookings
+    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+  const monthExpenseRows = scopedExpenses
+    .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .sort((a, b) => b.amount - a.amount);
+  const vehicleLabel = (vehicleId: string) => {
+    const v = vehicles.find((x) => x.id === vehicleId);
+    return v ? `${v.brand} ${v.model} · ${v.vehicleNumber}` : '—';
+  };
 
   /* last-5-months chart data — scoped to owner when applicable */
   const chartData = useMemo(() => {
@@ -179,30 +201,46 @@ export default function Dashboard() {
 
       {/* ── Business KPI Row ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="card flex items-start gap-4 anim-fade-up" style={{ animationDelay: '80ms' }}>
+        <button
+          type="button"
+          onClick={() => setInfoModal('outstanding')}
+          className="card flex items-start gap-4 anim-fade-up text-left w-full hover:shadow-card-hover transition-shadow cursor-pointer"
+          style={{ animationDelay: '80ms' }}
+        >
           <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 bg-red-500">
             <Wallet size={20} />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-navy-400 font-medium">Outstanding Balances</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-navy-400 font-medium">Outstanding Balances</p>
+              <ArrowUpRight size={14} className="text-navy-300" />
+            </div>
             <p className={`text-2xl font-black leading-tight ${outstandingBalance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
               Rs {outstandingBalance.toLocaleString()}
             </p>
-            <p className="text-xs text-navy-400 mt-0.5">across {activeBookings.filter(b => b.totalAmount > b.paidAmount).length} active bookings</p>
+            <p className="text-xs text-navy-400 mt-0.5">across {outstandingRows.length} unpaid bookings</p>
           </div>
-        </div>
-        <div className="card flex items-start gap-4 anim-fade-up" style={{ animationDelay: '160ms' }}>
+        </button>
+        <button
+          type="button"
+          onClick={() => setInfoModal('profit')}
+          className="card flex items-start gap-4 anim-fade-up text-left w-full hover:shadow-card-hover transition-shadow cursor-pointer"
+          style={{ animationDelay: '160ms' }}
+        >
           <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${monthlyProfit >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`}>
             <TrendingUp size={20} />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-navy-400 font-medium">This Month's Profit</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-navy-400 font-medium">This Month's Profit</p>
+              <ArrowUpRight size={14} className="text-navy-300" />
+            </div>
             <p className={`text-2xl font-black leading-tight ${monthlyProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               Rs {monthlyProfit.toLocaleString()}
             </p>
             <p className="text-xs text-navy-400 mt-0.5">Revenue Rs {thisMonthRevenue.toLocaleString()} − Expenses Rs {thisMonthExpenses.toLocaleString()}</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* ── Leaderboard ─────────────────────────────────────────── */}
@@ -438,6 +476,91 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* ── Outstanding Balances breakdown ── */}
+      <Modal open={infoModal === 'outstanding'} onClose={() => setInfoModal(null)} title="Outstanding Balances" width="max-w-lg">
+        <p className="text-xs text-navy-500 mb-4">
+          Money actually owed: <span className="font-semibold text-navy-700">Total − Paid</span> for bookings that are
+          <span className="font-semibold text-navy-700"> ongoing</span> (vehicle is out) or <span className="font-semibold text-navy-700">completed</span> (rental finished).
+          Confirmed bookings haven't started yet, so their balance is upcoming income — not outstanding.
+        </p>
+        {outstandingRows.length === 0 ? (
+          <div className="text-center py-8 text-navy-400 text-sm">No outstanding balances. Every ongoing and completed rental is fully paid.</div>
+        ) : (
+          <div className="space-y-2">
+            {outstandingRows.map((b) => (
+              <div key={b.id} className="flex items-center gap-3 bg-navy-50/60 rounded-xl px-3 py-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-navy-800 truncate">{b.customerName}</p>
+                  <p className="text-[11px] text-navy-400 truncate">{vehicleLabel(b.vehicleId)}</p>
+                  <p className="text-[11px] text-navy-400">Total Rs {b.totalAmount.toLocaleString()} · Paid Rs {b.paidAmount.toLocaleString()}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-red-600">Rs {b.balance.toLocaleString()}</p>
+                  <StatusBadge status={b.status} />
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between border-t border-navy-100 pt-3 mt-3">
+              <span className="text-sm font-semibold text-navy-700">Total Outstanding</span>
+              <span className="text-base font-black text-red-600">Rs {outstandingBalance.toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── This Month's Profit breakdown ── */}
+      <Modal open={infoModal === 'profit'} onClose={() => setInfoModal(null)} title={`This Month's Profit · ${format(today, 'MMMM yyyy')}`} width="max-w-lg">
+        <p className="text-xs text-navy-500 mb-4">
+          <span className="font-semibold text-navy-700">Revenue − Expenses</span> for bookings created and expenses dated in {format(today, 'MMMM yyyy')}. Cancelled bookings are excluded.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-emerald-50 rounded-xl p-3 text-center">
+            <p className="text-[11px] text-emerald-500 font-medium">Revenue</p>
+            <p className="text-lg font-black text-emerald-700">Rs {thisMonthRevenue.toLocaleString()}</p>
+            <p className="text-[10px] text-emerald-500">{monthRevenueRows.length} bookings</p>
+          </div>
+          <div className="bg-red-50 rounded-xl p-3 text-center">
+            <p className="text-[11px] text-red-400 font-medium">Expenses</p>
+            <p className="text-lg font-black text-red-600">Rs {thisMonthExpenses.toLocaleString()}</p>
+            <p className="text-[10px] text-red-400">{monthExpenseRows.length} entries</p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between bg-navy-50/60 rounded-xl px-4 py-3 mb-4">
+          <span className="text-sm font-semibold text-navy-700">Net Profit</span>
+          <span className={`text-base font-black ${monthlyProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Rs {monthlyProfit.toLocaleString()}</span>
+        </div>
+
+        {monthRevenueRows.length > 0 && (
+          <>
+            <p className="text-xs font-semibold text-navy-600 mb-2">Revenue — bookings</p>
+            <div className="space-y-1.5 mb-4">
+              {monthRevenueRows.map((b) => (
+                <div key={b.id} className="flex items-center justify-between gap-3 text-xs px-3 py-2 bg-navy-50/60 rounded-lg">
+                  <span className="text-navy-700 truncate">{b.customerName} <span className="text-navy-400">· {vehicleLabel(b.vehicleId)}</span></span>
+                  <span className="font-semibold text-emerald-700 flex-shrink-0">Rs {b.totalAmount.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {monthExpenseRows.length > 0 && (
+          <>
+            <p className="text-xs font-semibold text-navy-600 mb-2">Expenses</p>
+            <div className="space-y-1.5">
+              {monthExpenseRows.map((e) => (
+                <div key={e.id} className="flex items-center justify-between gap-3 text-xs px-3 py-2 bg-navy-50/60 rounded-lg">
+                  <span className="text-navy-700 truncate">{e.category}<span className="text-navy-400"> · {vehicleLabel(e.vehicleId)}</span></span>
+                  <span className="font-semibold text-red-600 flex-shrink-0">Rs {e.amount.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

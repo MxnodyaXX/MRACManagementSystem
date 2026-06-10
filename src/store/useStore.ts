@@ -5,6 +5,7 @@ import { sampleData } from '../data/sampleData';
 import { supabaseEnabled } from '../lib/supabase';
 import { db, dbFetchAll } from '../lib/db';
 import { resolveReferralFee } from '../lib/referral';
+import { sendSms, smsTemplates } from '../lib/sms';
 import cab1234Img from '../data/CAB-1234.png';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -116,6 +117,10 @@ export const useStore = create<AppState>()(
           relatedId: id,
         });
 
+        // Confirmation SMS to the customer (no-op if Supabase/SMS not configured).
+        const vehicleLabel = vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.vehicleNumber})` : 'your vehicle';
+        sendSms(b.customerPhone, smsTemplates.bookingConfirmation(b.customerName, vehicleLabel, b.startDate, b.endDate, b.totalAmount));
+
         return id;
       },
 
@@ -148,6 +153,35 @@ export const useStore = create<AppState>()(
           Promise.resolve(db.updateBooking(id, { status: 'Completed' })).catch(console.error);
           Promise.resolve(db.updateVehicle(booking.vehicleId, { status: 'Available' })).catch(console.error);
         }
+      },
+
+      markReferralPaid: (bookingId, paid) => {
+        const updates: Partial<Booking> = { referralPaid: paid, referralPaidAt: paid ? now() : undefined };
+        set((s) => ({ bookings: s.bookings.map((b) => (b.id === bookingId ? { ...b, ...updates } : b)) }));
+        sync(() => db.updateBooking(bookingId, updates));
+
+        if (!paid) return;
+        // Once the paying owner has no referral fees left outstanding, resolve their
+        // "referral payout due" alert so the settlement reflects on the owner's side.
+        const st = get();
+        const booking = st.bookings.find((b) => b.id === bookingId);
+        const ownerId = st.vehicles.find((v) => v.id === booking?.vehicleId)?.ownerId;
+        if (!ownerId) return;
+        const ownerVehicleIds = new Set(st.vehicles.filter((v) => v.ownerId === ownerId).map((v) => v.id));
+        const stillOwes = st.bookings.some((b) =>
+          ownerVehicleIds.has(b.vehicleId) &&
+          (b.referralFee ?? 0) > 0 && b.referral && b.referral !== 'Direct' &&
+          (b.status === 'Ongoing' || b.status === 'Completed') && !b.referralPaid,
+        );
+        if (stillOwes) return;
+        const toResolve = st.notifications.filter((n) => n.type === 'ReferralPayout' && n.ownerId === ownerId && !n.read);
+        if (toResolve.length === 0) return;
+        set((s) => ({
+          notifications: s.notifications.map((n) =>
+            n.type === 'ReferralPayout' && n.ownerId === ownerId && !n.read ? { ...n, read: true } : n,
+          ),
+        }));
+        toResolve.forEach((n) => sync(() => db.updateNotification(n.id, { read: true })));
       },
 
       cancelBooking: (id) => {

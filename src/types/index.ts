@@ -97,6 +97,8 @@ export interface Booking {
   referralFeeType?: 'fixed' | 'percent'; // how the referral fee is entered
   referralFeeValue?: number; // raw input: rupees (fixed) or percent (percent)
   referralFee?: number;      // resolved rupee amount paid to the referrer
+  referralPaid?: boolean;    // has the referral fee been paid out to the referrer
+  referralPaidAt?: string;   // ISO timestamp when the referral fee was settled
   notes?: string;
   createdAt: string;
   pickupLocation?: string;
@@ -169,10 +171,11 @@ export interface Driver {
 
 export interface Notification {
   id: string;
-  type: 'BookingReminder' | 'ReturnReminder' | 'Overdue' | 'ServiceReminder' | 'InsuranceExpiry' | 'General';
+  type: 'BookingReminder' | 'ReturnReminder' | 'Overdue' | 'ServiceReminder' | 'InsuranceExpiry' | 'ReferralPayout' | 'General';
   title: string;
   message: string;
   relatedId?: string;
+  ownerId?: string;   // when set, the alert is addressed to this owner (else global/admin)
   read: boolean;
   createdAt: string;
 }
@@ -221,6 +224,7 @@ export interface AppState {
   cancelBooking: (id: string) => void;
   startBooking: (id: string) => void;
   completeBooking: (id: string) => void;
+  markReferralPaid: (bookingId: string, paid: boolean) => void;
 
   addInquiry: (i: Omit<Inquiry, 'id' | 'createdAt'>) => void;
   updateInquiry: (id: string, updates: Partial<Inquiry>) => void;

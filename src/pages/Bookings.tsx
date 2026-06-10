@@ -20,7 +20,21 @@ import {
 } from 'lucide-react';
 import AvailabilityModal from '../components/ui/AvailabilityModal';
 import { Booking } from '../types';
-import { differenceInDays, parseISO, addDays, isValid } from 'date-fns';
+import {
+  differenceInDays, parseISO, addDays, isValid,
+  endOfWeek, startOfMonth, endOfMonth,
+  startOfQuarter, endOfQuarter, startOfYear, endOfYear,
+} from 'date-fns';
+
+type DatePreset = 'all' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+const DATE_PRESETS: { key: DatePreset; label: string }[] = [
+  { key: 'all',     label: 'All Time'     },
+  { key: 'week',    label: 'This Week'    },
+  { key: 'month',   label: 'This Month'   },
+  { key: 'quarter', label: 'This Quarter' },
+  { key: 'year',    label: 'This Year'    },
+  { key: 'custom',  label: 'Custom'       },
+];
 
 /* ── Calendar setup ─────────────────────────────────────────── */
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales: { 'en-US': enUS } });
@@ -88,6 +102,9 @@ export default function Bookings() {
   const location = useLocation();
 
   const [tab,               setTab]               = useState<BookingStatus | 'All'>('All');
+  const [datePreset,        setDatePreset]        = useState<DatePreset>('all');
+  const [customFrom,        setCustomFrom]        = useState<Date | null>(null);
+  const [customTo,          setCustomTo]          = useState<Date | null>(null);
   const [viewMode,          setViewMode]          = useState<'cards' | 'calendar'>('cards');
   const [modal,             setModal]             = useState<'add' | 'view' | 'calculator' | null>(null);
   const [completedOpen,     setCompletedOpen]     = useState(false);
@@ -129,7 +146,29 @@ export default function Bookings() {
     ? bookings.filter((b) => myVehicleIds.includes(b.vehicleId))
     : bookings;
 
-  const filtered = tab === 'All' ? visibleBookings : visibleBookings.filter((b) => b.status === tab);
+  // Date window (filters on the booking's start date). Strings are yyyy-MM-dd so
+  // lexicographic comparison is also chronological.
+  const dateWindow = useMemo(() => {
+    const now = new Date();
+    const fmt = (d: Date) => format(d, 'yyyy-MM-dd');
+    switch (datePreset) {
+      case 'week':    return { from: fmt(startOfWeek(now, { weekStartsOn: 1 })), to: fmt(endOfWeek(now, { weekStartsOn: 1 })) };
+      case 'month':   return { from: fmt(startOfMonth(now)),   to: fmt(endOfMonth(now))   };
+      case 'quarter': return { from: fmt(startOfQuarter(now)), to: fmt(endOfQuarter(now)) };
+      case 'year':    return { from: fmt(startOfYear(now)),    to: fmt(endOfYear(now))    };
+      case 'custom':  return { from: customFrom ? fmt(customFrom) : null, to: customTo ? fmt(customTo) : null };
+      default:        return null;
+    }
+  }, [datePreset, customFrom, customTo]);
+
+  const inDateWindow = (b: Booking) => {
+    if (!dateWindow) return true;
+    if (dateWindow.from && b.startDate < dateWindow.from) return false;
+    if (dateWindow.to   && b.startDate > dateWindow.to)   return false;
+    return true;
+  };
+  const dateScopedBookings = visibleBookings.filter(inDateWindow);
+  const filtered = dateScopedBookings.filter((b) => tab === 'All' || b.status === tab);
   const sorted   = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Vehicles available to book — owner sees only their own
@@ -325,7 +364,7 @@ export default function Bookings() {
             >
               {s}
               {s !== 'All' && (
-                <span className="ml-1.5 opacity-70">{visibleBookings.filter((b) => b.status === s).length}</span>
+                <span className="ml-1.5 opacity-70">{dateScopedBookings.filter((b) => b.status === s).length}</span>
               )}
             </button>
           ))}
@@ -369,6 +408,70 @@ export default function Bookings() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* ── Date period filter ── */}
+      <div className="flex items-center gap-2 mb-5 flex-wrap">
+        <span className="text-xs text-navy-400 font-medium flex items-center gap-1 flex-shrink-0">
+          <CalendarDays size={13} /> Period:
+        </span>
+        {DATE_PRESETS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setDatePreset(key)}
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0 ${
+              datePreset === key ? 'bg-navy-700 text-white' : 'bg-white text-navy-500 hover:bg-navy-50 shadow-card'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+
+        {datePreset === 'custom' && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <DatePicker
+              selected={customFrom}
+              onChange={setCustomFrom}
+              selectsStart
+              startDate={customFrom}
+              endDate={customTo}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="From"
+              className="input !py-1.5 !w-36 text-xs"
+              calendarClassName="emrac-datepicker"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              isClearable
+            />
+            <span className="text-navy-300 text-xs">→</span>
+            <DatePicker
+              selected={customTo}
+              onChange={setCustomTo}
+              selectsEnd
+              startDate={customFrom}
+              endDate={customTo}
+              minDate={customFrom ?? undefined}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="To"
+              className="input !py-1.5 !w-36 text-xs"
+              calendarClassName="emrac-datepicker"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              isClearable
+            />
+          </div>
+        )}
+
+        {datePreset !== 'all' && (
+          <span className="text-xs text-navy-400 flex-shrink-0 ml-auto">
+            {filtered.length} {filtered.length === 1 ? 'booking' : 'bookings'}
+            {dateWindow?.from && dateWindow?.to && (
+              <span className="text-navy-300"> · {dateWindow.from} → {dateWindow.to}</span>
+            )}
+          </span>
+        )}
       </div>
 
       {/* ── Calendar View ── */}
@@ -537,6 +640,34 @@ export default function Bookings() {
           );
         };
 
+        const renderCompactCard = (b: Booking) => {
+          const vehicle = vehicles.find((v) => v.id === b.vehicleId);
+          const balance = b.totalAmount - b.paidAmount;
+          return (
+            <div
+              key={b.id}
+              className="card !p-2.5 hover:shadow-card-hover transition-shadow cursor-pointer"
+              onClick={() => { setSelected(b); setModal('view'); }}
+            >
+              <div
+                className="h-1 rounded-full mb-2 -mt-0.5"
+                style={{ background: STATUS_COLORS[b.status] ?? '#E8EFF8' }}
+              />
+              <p className="text-xs font-bold text-navy-800 truncate">{b.customerName}</p>
+              <p className="text-[10px] text-navy-400 truncate mb-1.5">
+                {vehicle?.brand} {vehicle?.model} · {vehicle?.vehicleNumber}
+              </p>
+              <p className="text-[10px] text-navy-500 truncate">{b.startDate} → {b.endDate}</p>
+              <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-navy-50">
+                <span className="text-[11px] font-bold text-navy-800">Rs {b.totalAmount.toLocaleString()}</span>
+                {balance > 0 && (
+                  <span className="text-[10px] font-semibold text-red-500">-{balance.toLocaleString()}</span>
+                )}
+              </div>
+            </div>
+          );
+        };
+
         return (
           <>
             {/* Active bookings grid */}
@@ -549,8 +680,15 @@ export default function Bookings() {
               <div className="text-center py-16 text-navy-400 text-sm">No bookings found.</div>
             )}
 
-            {/* Completed bookings accordion */}
-            {completedList.length > 0 && (
+            {/* Completed bookings — full cards when viewing the Completed tab on its own */}
+            {tab === 'Completed' && completedList.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {completedList.map(renderCard)}
+              </div>
+            )}
+
+            {/* Completed bookings accordion (compact tiles) — shown alongside active bookings */}
+            {tab !== 'Completed' && completedList.length > 0 && (
               <div className={activeList.length > 0 ? 'mt-4' : ''}>
                 <button
                   onClick={() => setCompletedOpen((v) => !v)}
@@ -570,8 +708,8 @@ export default function Bookings() {
                 </button>
 
                 {completedOpen && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
-                    {completedList.map(renderCard)}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10 gap-2.5 mt-4">
+                    {completedList.map(renderCompactCard)}
                   </div>
                 )}
               </div>

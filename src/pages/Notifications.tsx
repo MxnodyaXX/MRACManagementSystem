@@ -1,6 +1,7 @@
 import { useStore } from '../store/useStore';
+import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
-import { Bell, CalendarDays, AlertTriangle, Wrench, Shield, CheckCheck } from 'lucide-react';
+import { Bell, CalendarDays, AlertTriangle, Wrench, Shield, CheckCheck, HandCoins } from 'lucide-react';
 import { Notification } from '../types';
 import clsx from 'clsx';
 
@@ -10,6 +11,7 @@ const iconMap: Record<Notification['type'], React.ReactNode> = {
   Overdue:          <AlertTriangle size={16} className="text-red-600" />,
   ServiceReminder:  <Wrench size={16} className="text-purple-600" />,
   InsuranceExpiry:  <Shield size={16} className="text-orange-600" />,
+  ReferralPayout:   <HandCoins size={16} className="text-amber-600" />,
   General:          <Bell size={16} className="text-navy-600" />,
 };
 
@@ -19,6 +21,7 @@ const bgMap: Record<Notification['type'], string> = {
   Overdue:          'bg-red-50',
   ServiceReminder:  'bg-purple-50',
   InsuranceExpiry:  'bg-orange-50',
+  ReferralPayout:   'bg-amber-50',
   General:          'bg-navy-50',
 };
 
@@ -33,9 +36,14 @@ function timeAgo(iso: string) {
 
 export default function Notifications() {
   const { notifications, markNotificationRead, markAllRead } = useStore();
+  const { currentUser, isAdmin } = useAuthStore();
 
-  const unread = notifications.filter((n) => !n.read);
-  const read = notifications.filter((n) => n.read);
+  // Owners only see global alerts + alerts addressed to them; admin sees everything.
+  const visible = notifications.filter((n) =>
+    isAdmin() || !n.ownerId || n.ownerId === currentUser?.ownerId,
+  );
+  const unread = visible.filter((n) => !n.read);
+  const read = visible.filter((n) => n.read);
 
   return (
     <div>
@@ -74,7 +82,7 @@ export default function Notifications() {
         </div>
       )}
 
-      {notifications.length === 0 && (
+      {visible.length === 0 && (
         <div className="card text-center py-16">
           <Bell size={40} className="text-navy-200 mx-auto mb-3" />
           <p className="text-navy-400 text-sm">No notifications yet.</p>
@@ -92,7 +100,7 @@ function NotifCard({ n, onRead }: { n: Notification; onRead: (id: string) => voi
         n.read ? 'bg-white shadow-sm opacity-70' : 'bg-white shadow-card border-l-4',
         !n.read && {
           'border-blue-400': n.type === 'BookingReminder',
-          'border-amber-400': n.type === 'ReturnReminder',
+          'border-amber-400': n.type === 'ReturnReminder' || n.type === 'ReferralPayout',
           'border-red-400': n.type === 'Overdue',
           'border-purple-400': n.type === 'ServiceReminder',
           'border-orange-400': n.type === 'InsuranceExpiry',

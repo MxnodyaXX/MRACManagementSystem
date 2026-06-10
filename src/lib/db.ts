@@ -318,6 +318,8 @@ export const db = {
     if (u.depositReturned !== undefined) row.deposit_returned = u.depositReturned
     if (u.depositDeduction !== undefined) row.deposit_deduction = u.depositDeduction
     if (u.depositNotes !== undefined) row.deposit_notes = u.depositNotes
+    if (u.referralPaid !== undefined) row.referral_paid = u.referralPaid
+    if (u.referralPaidAt !== undefined) row.referral_paid_at = u.referralPaidAt
     return supabase.from('bookings').update(row).eq('id', id)
   },
 
