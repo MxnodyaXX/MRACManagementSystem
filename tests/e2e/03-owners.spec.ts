@@ -9,8 +9,8 @@ test.describe('Owners — CRUD & display', () => {
   })
 
   test('owners page loads with sample owners', async ({ page }) => {
-    await expect(page.locator('text=Kasun Perera')).toBeVisible()
-    await expect(page.locator('text=Nimesh Silva')).toBeVisible()
+    await expect(page.locator('text=Sumod Pieris')).toBeVisible()
+    await expect(page.locator('text=Pavith Bimsara')).toBeVisible()
     await expect(page.locator('text=Roshan Fernando')).toBeVisible()
   })
 

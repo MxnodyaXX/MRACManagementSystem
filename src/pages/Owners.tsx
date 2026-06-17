@@ -16,6 +16,7 @@ const emptyOwner = (): Omit<Owner, 'id' | 'createdAt' | 'totalEarnings' | 'pendi
   address: '',
   bankAccount: '',
   commissionRate: 0,
+  smsOptIn: true,
 });
 
 export default function Owners() {
@@ -213,6 +214,21 @@ export default function Owners() {
           <div className="col-span-2">
             <p className="label">Bank Account</p>
             <input className="input" value={form.bankAccount ?? ''} onChange={(e) => set('bankAccount', e.target.value)} />
+          </div>
+          <div className="col-span-2">
+            <button
+              type="button"
+              onClick={() => set('smsOptIn', !(form.smsOptIn ?? true))}
+              className="w-full flex items-center justify-between gap-3 bg-navy-50/60 rounded-xl px-3.5 py-3 hover:bg-navy-50 transition-colors"
+            >
+              <span className="text-left">
+                <span className="block text-sm font-medium text-navy-700">Receive SMS notifications</span>
+                <span className="block text-xs text-navy-400">Booking, payout and referral texts</span>
+              </span>
+              <span className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form.smsOptIn ?? true ? 'bg-emerald-500' : 'bg-navy-200'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.smsOptIn ?? true ? 'translate-x-5' : ''}`} />
+              </span>
+            </button>
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">

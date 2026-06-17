@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type {
   Vehicle, Owner, Booking, Inquiry, Commission,
-  Expense, Driver, Notification, VehicleHandover,
+  Expense, Driver, Notification, VehicleHandover, Customer,
 } from '../types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ function oFromDb(r: Record<string, unknown>): Owner {
     bankAccount: (r.bank_account as string) ?? undefined,
     commissionRate: r.commission_rate as number,
     totalEarnings: r.total_earnings as number, pendingPayout: r.pending_payout as number,
+    smsOptIn: (r.sms_opt_in as boolean) ?? undefined,
     createdAt: r.created_at as string,
   }
 }
@@ -54,7 +55,7 @@ function oToDb(o: Owner) {
     id: o.id, name: o.name, phone: o.phone, email: o.email,
     address: o.address ?? null, bank_account: o.bankAccount ?? null,
     commission_rate: o.commissionRate, total_earnings: o.totalEarnings,
-    pending_payout: o.pendingPayout, created_at: o.createdAt,
+    pending_payout: o.pendingPayout, sms_opt_in: o.smsOptIn ?? true, created_at: o.createdAt,
   }
 }
 
@@ -189,6 +190,7 @@ function nFromDb(r: Record<string, unknown>): Notification {
     id: r.id as string, type: r.type as Notification['type'],
     title: r.title as string, message: r.message as string,
     relatedId: (r.related_id as string) ?? undefined,
+    ownerId: (r.owner_id as string) ?? undefined,
     read: r.read as boolean, createdAt: r.created_at as string,
   }
 }
@@ -196,7 +198,25 @@ function nFromDb(r: Record<string, unknown>): Notification {
 function nToDb(n: Notification) {
   return {
     id: n.id, type: n.type, title: n.title, message: n.message,
-    related_id: n.relatedId ?? null, read: n.read, created_at: n.createdAt,
+    related_id: n.relatedId ?? null, owner_id: n.ownerId ?? null,
+    read: n.read, created_at: n.createdAt,
+  }
+}
+
+function custFromDb(r: Record<string, unknown>): Customer {
+  return {
+    id: r.id as string, name: r.name as string, phone: r.phone as string,
+    email: (r.email as string) ?? undefined, nic: (r.nic as string) ?? undefined,
+    address: (r.address as string) ?? undefined, notes: (r.notes as string) ?? undefined,
+    smsOptIn: (r.sms_opt_in as boolean) ?? undefined, createdAt: r.created_at as string,
+  }
+}
+
+function custToDb(c: Customer) {
+  return {
+    id: c.id, name: c.name, phone: c.phone, email: c.email ?? null,
+    nic: c.nic ?? null, address: c.address ?? null, notes: c.notes ?? null,
+    sms_opt_in: c.smsOptIn ?? true, created_at: c.createdAt,
   }
 }
 
@@ -230,11 +250,12 @@ async function fetchTable<T>(
   table: string,
   mapper: (r: Record<string, unknown>) => T,
   ascending = true,
+  orderColumn = 'created_at',   // drivers has no created_at — uses joined_at
 ): Promise<T[]> {
   const { data, error } = await supabase
     .from(table)
     .select('*')
-    .order('created_at', { ascending })
+    .order(orderColumn, { ascending })
   if (error) throw error
   return (data ?? []).map(mapper)
 }
@@ -244,7 +265,7 @@ async function fetchTable<T>(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function dbFetchAll() {
-  const [vehicles, owners, bookings, inquiries, commissions, expenses, drivers, notifications, handovers] =
+  const [vehicles, owners, bookings, inquiries, commissions, expenses, drivers, notifications, handovers, customers] =
     await Promise.all([
       fetchTable<Vehicle>('vehicles', vFromDb),
       fetchTable<Owner>('owners', oFromDb),
@@ -252,11 +273,12 @@ export async function dbFetchAll() {
       fetchTable<Inquiry>('inquiries', iFromDb),
       fetchTable<Commission>('commissions', cFromDb),
       fetchTable<Expense>('expenses', eFromDb),
-      fetchTable<Driver>('drivers', dFromDb),
+      fetchTable<Driver>('drivers', dFromDb, true, 'joined_at'),
       fetchTable<Notification>('notifications', nFromDb, false),
       fetchTable<VehicleHandover>('handovers', hFromDb),
+      fetchTable<Customer>('customers', custFromDb),
     ])
-  return { vehicles, owners, bookings, inquiries, commissions, expenses, drivers, notifications, handovers }
+  return { vehicles, owners, bookings, inquiries, commissions, expenses, drivers, notifications, handovers, customers }
 }
 
 export const db = {
@@ -298,6 +320,7 @@ export const db = {
     if (u.commissionRate !== undefined) row.commission_rate = u.commissionRate
     if (u.totalEarnings !== undefined) row.total_earnings = u.totalEarnings
     if (u.pendingPayout !== undefined) row.pending_payout = u.pendingPayout
+    if (u.smsOptIn !== undefined) row.sms_opt_in = u.smsOptIn
     return supabase.from('owners').update(row).eq('id', id)
   },
 
@@ -377,4 +400,19 @@ export const db = {
 
   // ── Handovers ─────────────────────────────────────────────────────────────
   insertHandover: (h: VehicleHandover) => supabase.from('handovers').insert(hToDb(h)),
+
+  // ── Customers ─────────────────────────────────────────────────────────────
+  insertCustomer: (c: Customer) => supabase.from('customers').insert(custToDb(c)),
+  updateCustomer: (id: string, u: Partial<Customer>) => {
+    const row: Record<string, unknown> = {}
+    if (u.name !== undefined) row.name = u.name
+    if (u.phone !== undefined) row.phone = u.phone
+    if (u.email !== undefined) row.email = u.email
+    if (u.nic !== undefined) row.nic = u.nic
+    if (u.address !== undefined) row.address = u.address
+    if (u.notes !== undefined) row.notes = u.notes
+    if (u.smsOptIn !== undefined) row.sms_opt_in = u.smsOptIn
+    return supabase.from('customers').update(row).eq('id', id)
+  },
+  deleteCustomer: (id: string) => supabase.from('customers').delete().eq('id', id),
 }

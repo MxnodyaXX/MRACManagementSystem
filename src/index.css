@@ -54,6 +54,19 @@
 .anim-panel-in  { animation: panel-in 0.34s cubic-bezier(0.16,1,0.3,1) both; }
 .anim-acc-in    { animation: acc-in   0.30s ease both; }
 
+/* Toast slide-in from the right */
+@keyframes toast-in  { from { opacity: 0; transform: translateX(24px) scale(0.96); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes toast-bar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.anim-toast-in  { animation: toast-in 0.32s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* Loader: car glides + shimmer sweep + progress bar */
+@keyframes loader-car   { 0% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 100% { transform: translateX(-10px); } }
+@keyframes loader-bar    { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+@keyframes loader-ring   { to { transform: rotate(360deg); } }
+.anim-loader-car  { animation: loader-car  2.2s ease-in-out infinite; }
+.anim-loader-bar  { animation: loader-bar  1.3s cubic-bezier(0.65,0,0.35,1) infinite; }
+.anim-loader-ring { animation: loader-ring 0.9s linear infinite; }
+
 /* Accordion height reveal — animates from 0fr to 1fr (auto) smoothly */
 .acc-grid       { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s cubic-bezier(0.16,1,0.3,1); }
 .acc-grid.open  { grid-template-rows: 1fr; }

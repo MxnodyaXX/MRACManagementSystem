@@ -16,6 +16,7 @@ const emptyForm = (): Omit<Customer, 'id' | 'createdAt'> => ({
   nic: '',
   address: '',
   notes: '',
+  smsOptIn: true,
 });
 
 const AVATAR_COLORS = [
@@ -65,7 +66,7 @@ export default function Customers() {
 
   const openEdit = (c: Customer) => {
     setSelected(c);
-    setForm({ name: c.name, phone: c.phone, email: c.email ?? '', nic: c.nic ?? '', address: c.address ?? '', notes: c.notes ?? '' });
+    setForm({ name: c.name, phone: c.phone, email: c.email ?? '', nic: c.nic ?? '', address: c.address ?? '', notes: c.notes ?? '', smsOptIn: c.smsOptIn ?? true });
     setError('');
     setModal('edit');
   };
@@ -413,6 +414,21 @@ export default function Customers() {
               onChange={(e) => set('notes', e.target.value)}
               placeholder="Any notes about this customer…"
             />
+          </div>
+          <div className="col-span-2">
+            <button
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, smsOptIn: !(f.smsOptIn ?? true) }))}
+              className="w-full flex items-center justify-between gap-3 bg-navy-50/60 rounded-xl px-3.5 py-3 hover:bg-navy-50 transition-colors"
+            >
+              <span className="text-left">
+                <span className="block text-sm font-medium text-navy-700">Receive SMS notifications</span>
+                <span className="block text-xs text-navy-400">Booking, payment and reminder texts</span>
+              </span>
+              <span className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form.smsOptIn ?? true ? 'bg-emerald-500' : 'bg-navy-200'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.smsOptIn ?? true ? 'translate-x-5' : ''}`} />
+              </span>
+            </button>
           </div>
         </div>
 

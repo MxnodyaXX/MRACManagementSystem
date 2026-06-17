@@ -4,8 +4,8 @@ import { AuthState, AppUser, OwnerPermissions } from '../types/auth';
 
 export const USERS: AppUser[] = [
   { id: 'u_admin', username: 'admin',  password: 'admin123',  name: 'EMRAC Admin',         role: 'admin'             },
-  { id: 'u_o1',    username: 'kasun',  password: 'owner123',  name: 'Kasun Perera',        role: 'owner', ownerId: 'o1' },
-  { id: 'u_o2',    username: 'nimesh', password: 'owner123',  name: 'Nimesh Silva',        role: 'owner', ownerId: 'o2' },
+  { id: 'u_o1',    username: 'kasun',  password: 'owner123',  name: 'Sumod Pieris',        role: 'owner', ownerId: 'o1' },
+  { id: 'u_o2',    username: 'nimesh', password: 'owner123',  name: 'Pavith Bimsara',      role: 'owner', ownerId: 'o2' },
   { id: 'u_o3',    username: 'roshan', password: 'owner123',  name: 'Roshan Fernando',     role: 'owner', ownerId: 'o3' },
   { id: 'u_o4',    username: 'priya',  password: 'owner123',  name: 'Priya Jayawardena',   role: 'owner', ownerId: 'o4' },
   { id: 'u_o5',    username: 'ruwan',  password: 'owner123',  name: 'Ruwan Bandara',       role: 'owner', ownerId: 'o5' },

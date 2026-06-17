@@ -82,7 +82,7 @@ test.describe('Commissions — calculations, status & owner view', () => {
       await ownerViewBtn.click()
       await page.waitForTimeout(200)
       const body = await page.locator('body').innerText()
-      expect(body).toMatch(/Kasun Perera|Nimesh Silva|Roshan Fernando/)
+      expect(body).toMatch(/Sumod Pieris|Pavith Bimsara|Roshan Fernando/)
     }
   })
 })

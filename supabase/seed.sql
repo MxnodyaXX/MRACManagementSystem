@@ -6,8 +6,8 @@
 
 -- ── Owners ───────────────────────────────────────────────────────────────────
 insert into owners (id,name,phone,email,commission_rate,total_earnings,pending_payout,created_at) values
-  ('o1','Kasun Perera',   '0771234567','kasun@email.com', 15,142000,28400,'2024-01-10T00:00:00Z'),
-  ('o2','Nimesh Silva',   '0779876543','nimesh@email.com',15, 98000,14700,'2024-02-15T00:00:00Z'),
+  ('o1','Sumod Pieris',   '0758313004','sumod.pieris@email.com', 15,142000,28400,'2024-01-10T00:00:00Z'),
+  ('o2','Pavith Bimsara', '0716986695','pavith.bimsara@email.com',15, 98000,14700,'2024-02-15T00:00:00Z'),
   ('o3','Roshan Fernando','0763456789','roshan@email.com',12, 67500, 8100,'2024-03-01T00:00:00Z')
 on conflict (id) do nothing;
 

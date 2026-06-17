@@ -1,0 +1,2402 @@
+{
+  "lastUpdated": 1781694223453,
+  "current": {
+    "ts": 1781694223453,
+    "startTime": 1781505708801,
+    "endTime": 1781694223453,
+    "layer": "api",
+    "activeFile": "supabase\\schema.sql",
+    "openTabs": [
+      ".env.local",
+      "src\\lib\\db.ts",
+      "supabase\\schema.sql",
+      "src\\store\\useStore.ts",
+      "src\\types\\index.ts"
+    ],
+    "editedFiles": [
+      {
+        "file": "src\\types\\index.ts",
+        "editCount": 2,
+        "firstEdit": 1781506094601,
+        "lastEdit": 1781692018343
+      },
+      {
+        "file": "supabase\\functions\\send-sms\\index.ts",
+        "editCount": 0,
+        "firstEdit": 1781506027912,
+        "lastEdit": 1781507252046
+      },
+      {
+        "file": "src\\lib\\sms.ts",
+        "editCount": 0,
+        "firstEdit": 1781506075202,
+        "lastEdit": 1781506086135
+      },
+      {
+        "file": "src\\store\\useStore.ts",
+        "editCount": 0,
+        "firstEdit": 1781506152652,
+        "lastEdit": 1781694164086
+      },
+      {
+        "file": "src\\pages\\Customers.tsx",
+        "editCount": 0,
+        "firstEdit": 1781507134178,
+        "lastEdit": 1781507150654
+      },
+      {
+        "file": "src\\pages\\Owners.tsx",
+        "editCount": 0,
+        "firstEdit": 1781507176592,
+        "lastEdit": 1781507185800
+      },
+      {
+        "file": "src\\lib\\db.ts",
+        "editCount": 0,
+        "firstEdit": 1781507210104,
+        "lastEdit": 1781513801137
+      },
+      {
+        "file": "supabase\\sms-setup.sql",
+        "editCount": 0,
+        "firstEdit": 1781507232279,
+        "lastEdit": 1781507232279
+      },
+      {
+        "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+        "editCount": 0,
+        "firstEdit": 1781507320488,
+        "lastEdit": 1781507320488
+      },
+      {
+        "file": "supabase\\schema.sql",
+        "editCount": 0,
+        "firstEdit": 1781513687968,
+        "lastEdit": 1781513705690
+      }
+    ],
+    "saveCount": 2,
+    "topFile": "src\\types\\index.ts"
+  },
+  "history": [
+    {
+      "ts": 1781694223453,
+      "startTime": 1781505708801,
+      "endTime": 1781694223453,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781694164086
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781694203992,
+      "startTime": 1781505708801,
+      "endTime": 1781694203992,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781694164086
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781694002430,
+      "startTime": 1781505708801,
+      "endTime": 1781694002430,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693977532,
+      "startTime": 1781505708801,
+      "endTime": 1781693977532,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693940415,
+      "startTime": 1781505708801,
+      "endTime": 1781693940415,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693903989,
+      "startTime": 1781505708801,
+      "endTime": 1781693903989,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693892690,
+      "startTime": 1781505708801,
+      "endTime": 1781693892690,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693877846,
+      "startTime": 1781505708801,
+      "endTime": 1781693877846,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693869315,
+      "startTime": 1781505708801,
+      "endTime": 1781693869315,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693849528,
+      "startTime": 1781505708801,
+      "endTime": 1781693849528,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693824593,
+      "startTime": 1781505708801,
+      "endTime": 1781693824593,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693603978,
+      "startTime": 1781505708801,
+      "endTime": 1781693603978,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693303968,
+      "startTime": 1781505708801,
+      "endTime": 1781693303968,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693249803,
+      "startTime": 1781505708801,
+      "endTime": 1781693249803,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693238289,
+      "startTime": 1781505708801,
+      "endTime": 1781693238289,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693150240,
+      "startTime": 1781505708801,
+      "endTime": 1781693150240,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693107267,
+      "startTime": 1781505708801,
+      "endTime": 1781693107267,
+      "layer": "api",
+      "activeFile": "supabase\\schema.sql",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781693003958,
+      "startTime": 1781505708801,
+      "endTime": 1781693003958,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692958598,
+      "startTime": 1781505708801,
+      "endTime": 1781692958598,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692703950,
+      "startTime": 1781505708801,
+      "endTime": 1781692703950,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692619835,
+      "startTime": 1781505708801,
+      "endTime": 1781692619835,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692603569,
+      "startTime": 1781505708801,
+      "endTime": 1781692603569,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692403935,
+      "startTime": 1781505708801,
+      "endTime": 1781692403935,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692103926,
+      "startTime": 1781505708801,
+      "endTime": 1781692103926,
+      "layer": "web",
+      "activeFile": "src\\store\\useStore.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692018343,
+      "startTime": 1781505708801,
+      "endTime": 1781692018343,
+      "layer": "web",
+      "activeFile": "src\\types\\index.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 2,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692018343
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 2,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781692011827,
+      "startTime": 1781505708801,
+      "endTime": 1781692011827,
+      "layer": "web",
+      "activeFile": "src\\types\\index.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 1,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781692011827
+        },
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 1,
+      "topFile": "src\\types\\index.ts"
+    },
+    {
+      "ts": 1781691803917,
+      "startTime": 1781505708801,
+      "endTime": 1781691803917,
+      "layer": "web",
+      "activeFile": "src\\lib\\db.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781506101581
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "supabase\\functions\\send-sms\\index.ts"
+    },
+    {
+      "ts": 1781691567761,
+      "startTime": 1781505708801,
+      "endTime": 1781691567761,
+      "layer": "api",
+      "activeFile": "src\\lib\\supabase.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\supabase.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781506101581
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "supabase\\functions\\send-sms\\index.ts"
+    },
+    {
+      "ts": 1781691525077,
+      "startTime": 1781505708801,
+      "endTime": 1781691525077,
+      "layer": "api",
+      "activeFile": "src\\lib\\supabase.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\supabase.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781506101581
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "supabase\\functions\\send-sms\\index.ts"
+    },
+    {
+      "ts": 1781691503908,
+      "startTime": 1781505708801,
+      "endTime": 1781691503908,
+      "layer": "api",
+      "activeFile": "src\\lib\\supabase.ts",
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\supabase.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "supabase\\functions\\send-sms\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506027912,
+          "lastEdit": 1781507252046
+        },
+        {
+          "file": "src\\lib\\sms.ts",
+          "editCount": 0,
+          "firstEdit": 1781506075202,
+          "lastEdit": 1781506086135
+        },
+        {
+          "file": "src\\types\\index.ts",
+          "editCount": 0,
+          "firstEdit": 1781506094601,
+          "lastEdit": 1781506101581
+        },
+        {
+          "file": "src\\store\\useStore.ts",
+          "editCount": 0,
+          "firstEdit": 1781506152652,
+          "lastEdit": 1781513811840
+        },
+        {
+          "file": "src\\pages\\Customers.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507134178,
+          "lastEdit": 1781507150654
+        },
+        {
+          "file": "src\\pages\\Owners.tsx",
+          "editCount": 0,
+          "firstEdit": 1781507176592,
+          "lastEdit": 1781507185800
+        },
+        {
+          "file": "src\\lib\\db.ts",
+          "editCount": 0,
+          "firstEdit": 1781507210104,
+          "lastEdit": 1781513801137
+        },
+        {
+          "file": "supabase\\sms-setup.sql",
+          "editCount": 0,
+          "firstEdit": 1781507232279,
+          "lastEdit": 1781507232279
+        },
+        {
+          "file": "c:\\Users\\mxnod\\.claude\\projects\\c--EMRACManagementSystem\\memory\\emrac-sms-gateway.md",
+          "editCount": 0,
+          "firstEdit": 1781507320488,
+          "lastEdit": 1781507320488
+        },
+        {
+          "file": "supabase\\schema.sql",
+          "editCount": 0,
+          "firstEdit": 1781513687968,
+          "lastEdit": 1781513705690
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "supabase\\functions\\send-sms\\index.ts"
+    }
+  ]
+}

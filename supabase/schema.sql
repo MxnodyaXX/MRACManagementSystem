@@ -151,6 +151,21 @@ create table if not exists handovers (
   created_at      text not null
 );
 
+create table if not exists customers (
+  id          text primary key,
+  name        text not null,
+  phone       text not null,
+  email       text,
+  nic         text,
+  address     text,
+  notes       text,
+  sms_opt_in  boolean not null default true,
+  created_at  text not null
+);
+
+-- Owner-targeted notifications (referral payout alerts addressed to a specific owner)
+alter table notifications add column if not exists owner_id text;
+
 -- ── Disable RLS (private internal app — no public access) ────────────────────
 
 alter table owners        disable row level security;
@@ -162,6 +177,7 @@ alter table expenses      disable row level security;
 alter table drivers       disable row level security;
 alter table notifications disable row level security;
 alter table handovers     disable row level security;
+alter table customers     disable row level security;
 
 -- ── Enable real-time for all tables ──────────────────────────────────────────
 
@@ -174,3 +190,4 @@ alter publication supabase_realtime add table expenses;
 alter publication supabase_realtime add table drivers;
 alter publication supabase_realtime add table notifications;
 alter publication supabase_realtime add table handovers;
+alter publication supabase_realtime add table customers;

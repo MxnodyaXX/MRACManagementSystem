@@ -8,6 +8,7 @@ export interface Customer {
   nic?: string;
   address?: string;
   notes?: string;
+  smsOptIn?: boolean;   // SMS consent (defaults to true when undefined)
   createdAt: string;
 }
 
@@ -51,6 +52,7 @@ export interface Owner {
   commissionRate: number;
   totalEarnings: number;
   pendingPayout: number;
+  smsOptIn?: boolean;   // SMS consent (defaults to true when undefined)
   createdAt: string;
 }
 
