@@ -107,7 +107,7 @@ export default function Bookings() {
   const [customTo,          setCustomTo]          = useState<Date | null>(null);
   const [viewMode,          setViewMode]          = useState<'cards' | 'calendar'>('cards');
   const [modal,             setModal]             = useState<'add' | 'view' | 'calculator' | null>(null);
-  const [completedOpen,     setCompletedOpen]     = useState(false);
+  const [completedOpen,     setCompletedOpen]     = useState(true);
   const [availabilityOpen,  setAvailabilityOpen]  = useState(false);
   const [selected,     setSelected]     = useState<Booking | null>(null);
   const [form,         setForm]         = useState(emptyForm());
@@ -680,16 +680,22 @@ export default function Bookings() {
               <div className="text-center py-16 text-navy-400 text-sm">No bookings found.</div>
             )}
 
-            {/* Completed bookings — full cards when viewing the Completed tab on its own */}
-            {tab === 'Completed' && completedList.length > 0 && (
+            {/* Completed bookings — full cards when:
+                  (a) viewing the Completed tab, or
+                  (b) no active bookings in the current view (e.g. all-Completed filter, or
+                      a past-date window where every result is Completed).
+                In case (b) the accordion would be the only thing on screen and users
+                wouldn't realise there's content behind it. */}
+            {(tab === 'Completed' || activeList.length === 0) && completedList.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {completedList.map(renderCard)}
               </div>
             )}
 
-            {/* Completed bookings accordion (compact tiles) — shown alongside active bookings */}
-            {tab !== 'Completed' && completedList.length > 0 && (
-              <div className={activeList.length > 0 ? 'mt-4' : ''}>
+            {/* Completed bookings accordion (compact tiles) — only shown when active bookings
+                are also visible, so completed ones don't drown out the active feed */}
+            {tab !== 'Completed' && activeList.length > 0 && completedList.length > 0 && (
+              <div className="mt-4">
                 <button
                   onClick={() => setCompletedOpen((v) => !v)}
                   className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-navy-100 hover:bg-navy-50/60 transition-colors shadow-card"

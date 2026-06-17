@@ -45,6 +45,7 @@ export default function Sidebar() {
     ).length,
   );
 
+
   const allLinks = isAdmin()
     ? [...links, { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
     : links.filter((l) => l.to !== '/inquiries');
@@ -75,9 +76,11 @@ export default function Sidebar() {
           })}
         </nav>
 
-        <div className="sidebar-icon mt-auto" title="Settings">
-          <Settings size={20} />
-        </div>
+        <NavLink to="/settings" title="Settings">
+          <div className={clsx('sidebar-icon mt-auto', isActive('/settings', location.pathname) && 'active')}>
+            <Settings size={20} />
+          </div>
+        </NavLink>
       </aside>
 
       {/* ── Mobile floating pill nav ── */}

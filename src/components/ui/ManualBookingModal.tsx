@@ -1,0 +1,523 @@
+import { useState, useEffect } from 'react';
+import { differenceInDays, parseISO } from 'date-fns';
+import {
+  X, Car, User, Calendar, DollarSign, Users,
+  MapPin, FileText, AlertCircle, CheckCircle2, Search, UserCheck,
+} from 'lucide-react';
+import { useStore } from '../../store/useStore';
+import Select from './Select';
+import { resolveReferralFee } from '../../lib/referral';
+
+const REFERRAL_SOURCES = ['WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'Google', 'Word of Mouth'];
+type BookingStatus = 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled';
+
+const emptyForm = () => ({
+  vehicleId: '',
+  customerId: '',
+  customerName: '',
+  customerPhone: '',
+  customerEmail: '',
+  customerNIC: '',
+  customerAddress: '',
+  startDate: '',
+  endDate: '',
+  totalDays: 0,
+  dailyRateUsed: 0,
+  totalAmount: 0,
+  estimatedAmount: 0,
+  paidAmount: 0,
+  status: 'Completed' as BookingStatus,
+  referral: 'Direct',
+  referralFeeType: 'fixed' as 'fixed' | 'percent',
+  referralFeeValue: 0,
+  referralAlreadyPaid: false,
+  commissionAlreadyPaid: true,
+  notes: '',
+  pickupLocation: '',
+  dropLocation: '',
+  driverId: '',
+  depositAmount: 0,
+  depositReturned: 0,
+  depositDeduction: 0,
+  depositNotes: '',
+  quotation: { startLocation: '', endLocation: '', stops: [] as string[], isRoundTrip: true, totalKm: 0 },
+});
+
+interface Props { onClose: () => void; }
+
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-navy-500 mb-1">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+export default function ManualBookingModal({ onClose }: Props) {
+  const { vehicles, owners, drivers, customers, addManualBooking } = useStore();
+  const [form, setForm]           = useState(emptyForm());
+  const [error, setError]         = useState('');
+  const [customerMode, setCustomerMode] = useState<'new' | 'existing'>('new');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [custFound, setCustFound] = useState<null | 'found' | 'new'>(null);
+  const [referralCustom, setReferralCustom] = useState(false);
+
+  const vehicle     = vehicles.find((v) => v.id === form.vehicleId);
+  const vehicleOwner = owners.find((o) => o.id === vehicle?.ownerId);
+  const referralFee = resolveReferralFee(form.referralFeeType, form.referralFeeValue, form.totalAmount);
+  const ownerPayout = Math.max(0, form.totalAmount - referralFee);
+  const balance     = Math.max(0, form.totalAmount - form.paidAmount);
+
+  const isOwnerReferral = !!form.referral && form.referral !== 'Direct' && !REFERRAL_SOURCES.includes(form.referral);
+  const referralOwner   = isOwnerReferral
+    ? owners.find((o) => o.name.trim().toLowerCase() === form.referral.trim().toLowerCase())
+    : undefined;
+
+  const set = (field: string, value: unknown) => {
+    setForm((f) => {
+      const updated = { ...f, [field]: value };
+      // Recalculate days + amount when dates or vehicle change
+      if (field === 'startDate' || field === 'endDate' || field === 'vehicleId' || field === 'dailyRateUsed') {
+        const s   = (field === 'startDate' ? value : updated.startDate) as string;
+        const e   = (field === 'endDate'   ? value : updated.endDate)   as string;
+        const v   = vehicles.find((x) => x.id === (field === 'vehicleId' ? value as string : updated.vehicleId));
+        if (s && e && s <= e) {
+          const days = differenceInDays(parseISO(e), parseISO(s)) + 1;
+          const rate = field === 'dailyRateUsed' ? (value as number) : (updated.dailyRateUsed || v?.dailyRent || 0);
+          updated.totalDays   = days;
+          updated.dailyRateUsed = rate;
+          updated.totalAmount = days * rate;
+        }
+        if (field === 'vehicleId' && v) updated.dailyRateUsed = v.dailyRent;
+      }
+      return updated;
+    });
+  };
+
+  // Customer phone lookup
+  useEffect(() => {
+    if (form.customerPhone.length < 7) { setCustFound(null); return; }
+    const existing = customers.find((c) => c.phone === form.customerPhone);
+    if (existing) {
+      setCustFound('found');
+      setForm((f) => ({ ...f, customerName: existing.name, customerEmail: existing.email ?? '', customerNIC: existing.nic ?? '', customerAddress: existing.address ?? '' }));
+    } else {
+      setCustFound('new');
+    }
+  }, [form.customerPhone, customers]);
+
+  const handleSave = () => {
+    setError('');
+    if (!form.vehicleId)      { setError('Please select a vehicle.'); return; }
+    if (!form.customerName)   { setError('Customer name is required.'); return; }
+    if (!form.customerPhone)  { setError('Customer phone is required.'); return; }
+    if (!form.startDate || !form.endDate) { setError('Start and end dates are required.'); return; }
+    if (form.startDate > form.endDate)    { setError('End date must be after start date.'); return; }
+    if (form.totalAmount <= 0)            { setError('Total amount must be greater than 0.'); return; }
+
+    addManualBooking(form as Parameters<typeof addManualBooking>[0]);
+    onClose();
+  };
+
+  const allReferralOptions = [
+    'Direct',
+    ...REFERRAL_SOURCES,
+    ...owners.map((o) => o.name),
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-navy-700 flex items-center justify-center">
+              <FileText size={17} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-navy-800">Add Manual Booking</h2>
+              <p className="text-xs text-navy-400">Record a past booking — all related tables will be updated</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body — two-column layout */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 divide-x divide-gray-100">
+
+            {/* ── LEFT: Form ── */}
+            <div className="lg:col-span-2 p-6 space-y-6 overflow-y-auto">
+
+              {/* Vehicle & Dates */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Car size={15} className="text-navy-500" />
+                  <h3 className="text-sm font-semibold text-navy-700">Vehicle & Dates</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Field label="Vehicle" required>
+                      <select className="input" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
+                        <option value="">Select vehicle…</option>
+                        {vehicles.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.vehicleNumber} — {v.brand} {v.model} (Rs {v.dailyRent.toLocaleString()}/day)
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                  <Field label="Start Date" required>
+                    <input className="input" type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
+                  </Field>
+                  <Field label="End Date" required>
+                    <input className="input" type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} />
+                  </Field>
+                  <Field label="Daily Rate Used (Rs)" required>
+                    <input className="input" type="number" min="0" value={form.dailyRateUsed || ''} onChange={(e) => set('dailyRateUsed', +e.target.value)} />
+                  </Field>
+                  <Field label="Booking Status" required>
+                    <select className="input" value={form.status} onChange={(e) => set('status', e.target.value as BookingStatus)}>
+                      <option value="Completed">Completed</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Ongoing">Ongoing</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </Field>
+                </div>
+              </section>
+
+              {/* Customer */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <User size={15} className="text-navy-500" />
+                    <h3 className="text-sm font-semibold text-navy-700">Customer</h3>
+                  </div>
+                  {/* New / Existing toggle */}
+                  <div className="flex items-center bg-navy-50 rounded-xl p-0.5 gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => { setCustomerMode('new'); setSelectedCustomerId(''); setForm((f) => ({ ...f, customerName: '', customerPhone: '', customerEmail: '', customerNIC: '', customerAddress: '' })); setCustFound(null); }}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${customerMode === 'new' ? 'bg-navy-700 text-white shadow-sm' : 'text-navy-500 hover:text-navy-700'}`}
+                    >
+                      <User size={12} /> New
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setCustomerMode('existing'); setSelectedCustomerId(''); setCustFound(null); }}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${customerMode === 'existing' ? 'bg-navy-700 text-white shadow-sm' : 'text-navy-500 hover:text-navy-700'}`}
+                    >
+                      <UserCheck size={12} /> Existing
+                    </button>
+                  </div>
+                </div>
+
+                {customerMode === 'existing' ? (
+                  <div className="space-y-3">
+                    <Field label="Select Customer" required>
+                      <Select
+                        value={selectedCustomerId}
+                        onChange={(id) => {
+                          const c = customers.find((x) => x.id === id);
+                          if (!c) return;
+                          setSelectedCustomerId(id);
+                          setForm((f) => ({ ...f, customerId: c.id, customerName: c.name, customerPhone: c.phone, customerEmail: c.email ?? '', customerNIC: c.nic ?? '', customerAddress: c.address ?? '' }));
+                        }}
+                        placeholder="Search customer…"
+                        options={customers.map((c) => ({ value: c.id, label: c.name, sub: c.phone + (c.nic ? ` · ${c.nic}` : '') }))}
+                      />
+                    </Field>
+                    {selectedCustomerId && (() => {
+                      const c = customers.find((x) => x.id === selectedCustomerId);
+                      if (!c) return null;
+                      return (
+                        <div className="bg-navy-50 border border-navy-100 rounded-xl px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
+                          <div><span className="text-navy-400">Phone: </span><span className="font-medium text-navy-700">{c.phone}</span></div>
+                          {c.email && <div><span className="text-navy-400">Email: </span><span className="font-medium text-navy-700">{c.email}</span></div>}
+                          {c.nic && <div><span className="text-navy-400">NIC: </span><span className="font-medium text-navy-700">{c.nic}</span></div>}
+                          {c.address && <div><span className="text-navy-400">Address: </span><span className="font-medium text-navy-700">{c.address}</span></div>}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <Field label="Phone Number (auto-detects existing customer)" required>
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input className="input pl-8" placeholder="+94 71 234 5678" value={form.customerPhone} onChange={(e) => set('customerPhone', e.target.value)} />
+                        </div>
+                        {custFound === 'found' && (
+                          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                            <CheckCircle2 size={12} /> Existing customer found — details pre-filled
+                          </p>
+                        )}
+                        {custFound === 'new' && (
+                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                            <AlertCircle size={12} /> New customer — will be added to Customers table
+                          </p>
+                        )}
+                      </Field>
+                    </div>
+                    <Field label="Full Name" required>
+                      <input className="input" value={form.customerName} onChange={(e) => set('customerName', e.target.value)} />
+                    </Field>
+                    <Field label="NIC / Passport">
+                      <input className="input" value={form.customerNIC} onChange={(e) => set('customerNIC', e.target.value)} />
+                    </Field>
+                    <Field label="Email">
+                      <input className="input" type="email" value={form.customerEmail} onChange={(e) => set('customerEmail', e.target.value)} />
+                    </Field>
+                    <Field label="Address">
+                      <input className="input" value={form.customerAddress} onChange={(e) => set('customerAddress', e.target.value)} />
+                    </Field>
+                  </div>
+                )}
+              </section>
+
+              {/* Payment */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <DollarSign size={15} className="text-navy-500" />
+                  <h3 className="text-sm font-semibold text-navy-700">Payment</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <Field label="Total Amount (Rs)" required>
+                    <input className="input" type="number" min="0" value={form.totalAmount || ''} onChange={(e) => set('totalAmount', +e.target.value)} />
+                  </Field>
+                  <Field label="Amount Paid (Rs)">
+                    <input className="input" type="number" min="0" value={form.paidAmount || ''} onChange={(e) => set('paidAmount', +e.target.value)} />
+                  </Field>
+                  <Field label="Deposit (Rs)">
+                    <input className="input" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <label className="flex items-center gap-2 text-sm text-navy-700 cursor-pointer">
+                    <input type="checkbox" className="rounded" checked={form.commissionAlreadyPaid} onChange={(e) => set('commissionAlreadyPaid', e.target.checked)} />
+                    Owner payout already settled (marks commission as Paid)
+                  </label>
+                </div>
+              </section>
+
+              {/* Referral */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Users size={15} className="text-navy-500" />
+                  <h3 className="text-sm font-semibold text-navy-700">Referral</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Field label="Referred By">
+                      {referralCustom ? (
+                        <div className="flex gap-2">
+                          <input className="input flex-1" placeholder="Custom referral name…" value={form.referral === 'Direct' ? '' : form.referral} onChange={(e) => set('referral', e.target.value || 'Direct')} />
+                          <button className="text-xs text-navy-500 underline whitespace-nowrap" onClick={() => { setReferralCustom(false); set('referral', 'Direct'); }}>
+                            Use list
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <select className="input flex-1" value={allReferralOptions.includes(form.referral) ? form.referral : 'Direct'} onChange={(e) => set('referral', e.target.value)}>
+                            <option value="Direct">Direct</option>
+                            <optgroup label="Marketing Channels">
+                              {REFERRAL_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+                            </optgroup>
+                            <optgroup label="Owners (earns referral fee)">
+                              {owners.map((o) => <option key={o.id} value={o.name}>{o.name}</option>)}
+                            </optgroup>
+                          </select>
+                          <button className="text-xs text-navy-500 underline whitespace-nowrap" onClick={() => setReferralCustom(true)}>
+                            Custom
+                          </button>
+                        </div>
+                      )}
+                      {referralOwner && (
+                        <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                          <CheckCircle2 size={12} /> Owner found — referral fee will update {referralOwner.name}'s profile
+                        </p>
+                      )}
+                    </Field>
+                  </div>
+                  {isOwnerReferral && (
+                    <>
+                      <Field label="Referral Fee Type">
+                        <select className="input" value={form.referralFeeType} onChange={(e) => set('referralFeeType', e.target.value as 'fixed' | 'percent')}>
+                          <option value="fixed">Fixed (Rs)</option>
+                          <option value="percent">Percentage (%)</option>
+                        </select>
+                      </Field>
+                      <Field label={form.referralFeeType === 'fixed' ? 'Referral Fee (Rs)' : 'Referral Fee (%)'}>
+                        <input className="input" type="number" min="0" value={form.referralFeeValue || ''} onChange={(e) => set('referralFeeValue', +e.target.value)} />
+                      </Field>
+                      <div className="col-span-2">
+                        <label className="flex items-center gap-2 text-sm text-navy-700 cursor-pointer">
+                          <input type="checkbox" className="rounded" checked={form.referralAlreadyPaid} onChange={(e) => set('referralAlreadyPaid', e.target.checked)} />
+                          Referral fee already paid to {form.referral}
+                        </label>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </section>
+
+              {/* Additional */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin size={15} className="text-navy-500" />
+                  <h3 className="text-sm font-semibold text-navy-700">Additional Details</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Pickup Location">
+                    <input className="input" value={form.pickupLocation} onChange={(e) => set('pickupLocation', e.target.value)} />
+                  </Field>
+                  <Field label="Drop Location">
+                    <input className="input" value={form.dropLocation} onChange={(e) => set('dropLocation', e.target.value)} />
+                  </Field>
+                  <Field label="Driver (optional)">
+                    <select className="input" value={form.driverId} onChange={(e) => set('driverId', e.target.value)}>
+                      <option value="">No driver</option>
+                      {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </Field>
+                  <div className="col-span-2">
+                    <Field label="Notes">
+                      <textarea className="input resize-none" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Any additional notes about this past booking…" />
+                    </Field>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* ── RIGHT: Rent Summary ── */}
+            <div className="p-6 bg-gray-50 flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Calendar size={15} className="text-navy-500" />
+                <h3 className="text-sm font-semibold text-navy-700">Booking Summary</h3>
+              </div>
+
+              {/* Vehicle card */}
+              {vehicle ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-1">
+                  <p className="text-xs text-navy-400">Vehicle</p>
+                  <p className="font-semibold text-navy-800">{vehicle.brand} {vehicle.model}</p>
+                  <p className="text-xs text-navy-500">{vehicle.vehicleNumber}</p>
+                  {vehicleOwner && <p className="text-xs text-navy-400 mt-1">Owner: <span className="font-medium text-navy-600">{vehicleOwner.name}</span></p>}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-navy-400">
+                  Select a vehicle to see summary
+                </div>
+              )}
+
+              {/* Duration */}
+              {form.totalDays > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+                  <p className="text-xs text-navy-400">Duration</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-navy-600">Days</span>
+                    <span className="font-semibold text-navy-800">{form.totalDays}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-navy-600">Daily Rate</span>
+                    <span className="font-semibold text-navy-800">Rs {form.dailyRateUsed.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Financial breakdown */}
+              {form.totalAmount > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2 text-sm">
+                  <p className="text-xs text-navy-400 mb-2">Financial Breakdown</p>
+
+                  <div className="flex justify-between">
+                    <span className="text-navy-600">Total Rental</span>
+                    <span className="font-semibold text-navy-800">Rs {form.totalAmount.toLocaleString()}</span>
+                  </div>
+
+                  {referralFee > 0 && (
+                    <div className="flex justify-between text-amber-700">
+                      <span>Referral Fee → <span className="font-medium">{form.referral}</span></span>
+                      <span>− Rs {referralFee.toLocaleString()}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between border-t pt-2 mt-1">
+                    <span className="text-navy-600">Owner Payout{vehicleOwner ? ` → ${vehicleOwner.name}` : ''}</span>
+                    <span className="font-semibold text-green-700">Rs {ownerPayout.toLocaleString()}</span>
+                  </div>
+
+                  <div className="border-t pt-2 mt-1 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-navy-600">Paid</span>
+                      <span className="font-semibold text-blue-700">Rs {form.paidAmount.toLocaleString()}</span>
+                    </div>
+                    {balance > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-red-600">Balance Due</span>
+                        <span className="font-semibold text-red-600">Rs {balance.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {balance === 0 && form.paidAmount > 0 && (
+                      <p className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Fully paid
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* What will be updated */}
+              <div className="bg-navy-50 rounded-xl border border-navy-100 p-4 text-xs space-y-1.5">
+                <p className="font-semibold text-navy-700 mb-2">Records that will be updated:</p>
+                <p className="text-navy-600">✓ Bookings table (new entry)</p>
+                <p className={custFound === 'found' ? 'text-navy-600' : 'text-amber-700'}>
+                  {custFound === 'found' ? '✓ Customer profile (updated)' : '✓ Customers table (new entry)'}
+                </p>
+                <p className="text-navy-600">✓ Commissions table (new entry)</p>
+                {form.vehicleId && <p className="text-navy-600">✓ Vehicle rent count & revenue</p>}
+                {vehicleOwner && <p className="text-navy-600">✓ {vehicleOwner.name}'s earnings</p>}
+                {referralOwner && <p className="text-amber-700">✓ {referralOwner.name}'s referral profile</p>}
+              </div>
+
+              {/* Status badge */}
+              <div className="mt-auto">
+                <p className="text-xs text-navy-400 mb-1">Booking Status</p>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                  form.status === 'Completed' ? 'bg-gray-100 text-gray-700' :
+                  form.status === 'Confirmed' ? 'bg-blue-100 text-blue-700' :
+                  form.status === 'Ongoing'   ? 'bg-green-100 text-green-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {form.status}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        {error && (
+          <div className="px-6 py-2 bg-red-50 border-t border-red-100 flex items-center gap-2 text-sm text-red-600">
+            <AlertCircle size={15} /> {error}
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+          <button onClick={onClose} className="btn btn-secondary">Cancel</button>
+          <button onClick={handleSave} className="btn btn-primary">
+            Save Manual Booking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

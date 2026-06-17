@@ -22,11 +22,12 @@ const DEFAULT_PERMS: OwnerPermissions = {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      users: USERS,
       currentUser: null,
       permissions: {},
 
       login: (username, password) => {
-        const user = USERS.find((u) => u.username === username && u.password === password);
+        const user = get().users.find((u) => u.username === username && u.password === password);
         if (!user) return false;
         const perms = get().permissions[user.ownerId ?? ''];
         if (user.role === 'owner' && (perms?.disabled ?? false)) return false;
@@ -35,6 +36,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => set({ currentUser: null }),
+
+      addUser: (userData) => {
+        const newUser: AppUser = { ...userData, id: 'u_' + Math.random().toString(36).slice(2, 8) };
+        set((s) => ({ users: [...s.users, newUser] }));
+      },
 
       updatePermissions: (ownerId, perms) =>
         set((s) => ({

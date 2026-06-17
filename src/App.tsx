@@ -20,6 +20,7 @@ import Permissions from './pages/Permissions';
 import Referrals from './pages/Referrals';
 import Handovers from './pages/Handovers';
 import Customers from './pages/Customers';
+import Settings from './pages/Settings';
 
 export default function App() {
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -74,6 +75,9 @@ export default function App() {
           <Route path="/customers"     element={<Customers />}     />
           {isAdmin() && (
             <Route path="/permissions" element={<Permissions />} />
+          )}
+          {isAdmin() && (
+            <Route path="/settings" element={<Settings />} />
           )}
           <Route path="/referrals" element={<Referrals />} />
           <Route path="*" element={<Navigate to="/" replace />} />

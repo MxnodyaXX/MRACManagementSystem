@@ -13,7 +13,12 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const now = () => new Date().toISOString();
 // Supabase returns PromiseLike (not full Promise), so wrap in Promise.resolve for .catch support
 const sync = (fn: () => PromiseLike<unknown>) => {
-  if (supabaseEnabled) Promise.resolve(fn()).catch(console.error);
+  if (supabaseEnabled) {
+    Promise.resolve(fn()).catch((err) => {
+      console.error(err);
+      toast.error('Database error', (err as { message?: string })?.message ?? 'Failed to save changes to the database.');
+    });
+  }
 };
 
 export const useStore = create<AppState>()(
@@ -34,7 +39,14 @@ export const useStore = create<AppState>()(
         if (!supabaseEnabled) { set({ loaded: true }); return; }
         try {
           const data = await dbFetchAll();
-          set({ ...data, loaded: true });
+          set((s) => {
+            // Keep locally-added bookings that haven't made it to Supabase yet (e.g. DB
+            // insert still in-flight, or it failed silently). They stay visible to the user
+            // and are re-attempted on the next explicit save.
+            const dbIds = new Set(data.bookings.map((b) => b.id));
+            const pending = s.bookings.filter((b) => !dbIds.has(b.id));
+            return { ...data, bookings: [...data.bookings, ...pending], loaded: true };
+          });
         } catch (err) {
           console.error('Supabase load failed:', err);
           toast.error('Could not load data', 'Failed to reach the database — check your connection.');
@@ -107,27 +119,45 @@ export const useStore = create<AppState>()(
           rentCount: (vehicle?.rentCount ?? 0) + 1,
         };
 
+        // Build the notification record manually so we can insert it LAST in the
+        // DB chain. Calling addNotification() here would sync it immediately, which
+        // triggers a realtime → loadAll() race that can wipe the booking before it
+        // lands in Supabase.
+        const bookingNotif: Notification = {
+          id: uid(), type: 'BookingReminder', read: false, createdAt: now(),
+          title: 'New Booking Created',
+          message: `Booking for ${b.customerName} confirmed (${b.startDate} – ${b.endDate})`,
+          relatedId: id,
+        };
+
         set((s) => ({
           bookings: [...s.bookings, newBooking],
           commissions: [...s.commissions, commission],
           vehicles: s.vehicles.map((v) =>
             v.id === b.vehicleId ? { ...v, ...vehicleUpdates } : v
           ),
+          notifications: [bookingNotif, ...s.notifications],
         }));
 
         if (supabaseEnabled) {
+          // Each step is checked for a Supabase error so a failure surfaces
+          // immediately rather than silently letting the chain continue.
+          const ok = (r: { error: unknown } | undefined | null) => {
+            if (r && r.error) throw r.error;
+          };
           Promise.resolve(db.insertBooking(newBooking))
+            .then((r) => ok(r))
             .then(() => db.insertCommission(commission))
+            .then((r) => ok(r))
             .then(() => db.updateVehicle(b.vehicleId, vehicleUpdates))
-            .catch(console.error);
+            .then((r) => ok(r))
+            .then(() => db.insertNotification(bookingNotif))
+            .catch((err) => {
+              const msg = (err as { message?: string })?.message ?? String(err);
+              console.error('[addBooking] DB sync error:', msg, err);
+              toast.error('Booking saved locally — DB sync failed', msg);
+            });
         }
-
-        get().addNotification({
-          type: 'BookingReminder',
-          title: 'New Booking Created',
-          message: `Booking for ${b.customerName} confirmed (${b.startDate} – ${b.endDate})`,
-          relatedId: id,
-        });
 
         // ── SMS fan-out (all no-op if SMS not configured / recipient opted out) ──
         const vehicleLabel = vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.vehicleNumber})` : 'your vehicle';
@@ -215,15 +245,25 @@ export const useStore = create<AppState>()(
 
         if (!paid) return;
 
-        // Tell the referrer their fee has been received (only if a registered owner).
+        // Tell the referrer their fee has been received and reduce their pending payout.
         const settledBk = get().bookings.find((b) => b.id === bookingId);
         if (settledBk?.referral && settledBk.referral !== 'Direct') {
           const referrer = get().owners.find((o) => o.name.trim().toLowerCase() === settledBk.referral!.trim().toLowerCase());
-          if (referrer?.phone) {
-            sendSms(referrer.phone, smsTemplates.referralReceived(referrer.name, settledBk.referralFee ?? 0),
-              { category: 'referralReceived', role: 'referrer', relatedId: bookingId, optIn: referrer.smsOptIn, transactional: true });
+          if (referrer) {
+            if (referrer.phone) {
+              sendSms(referrer.phone, smsTemplates.referralReceived(referrer.name, settledBk.referralFee ?? 0),
+                { category: 'referralReceived', role: 'referrer', relatedId: bookingId, optIn: referrer.smsOptIn, transactional: true });
+            }
+            // Reduce referral owner's pending payout since the fee has now been settled.
+            const fee = settledBk.referralFee ?? 0;
+            if (fee > 0) {
+              const ownerUpdates = { pendingPayout: Math.max(0, referrer.pendingPayout - fee) };
+              set((s) => ({ owners: s.owners.map((o) => o.id === referrer.id ? { ...o, ...ownerUpdates } : o) }));
+              sync(() => db.updateOwner(referrer.id, ownerUpdates));
+            }
           }
         }
+
         // Once the paying owner has no referral fees left outstanding, resolve their
         // "referral payout due" alert so the settlement reflects on the owner's side.
         const st = get();
@@ -321,9 +361,11 @@ export const useStore = create<AppState>()(
 
       // ── Handovers ─────────────────────────────────────────────
       addHandover: (h) => {
+        const newH: VehicleHandover = { ...h, id: uid(), createdAt: now() };
         set((s) => ({
-          handovers: [...s.handovers, { ...h, id: uid(), createdAt: now() }],
+          handovers: [...s.handovers, newH],
         }));
+        sync(() => db.insertHandover(newH));
         toast.success('Handover recorded', `Vehicle ${h.type} logged successfully.`);
       },
 
@@ -351,10 +393,168 @@ export const useStore = create<AppState>()(
       },
 
       updateCommission: (id, updates) => {
+        const existing = get().commissions.find((c) => c.id === id);
         set((s) => ({
           commissions: s.commissions.map((c) => (c.id === id ? { ...c, ...updates } : c)),
         }));
         sync(() => db.updateCommission(id, updates));
+
+        // When a commission transitions to Paid, reduce the vehicle owner's pending payout.
+        if (updates.status === 'Paid' && existing && existing.status !== 'Paid') {
+          const owner = get().owners.find((o) => o.id === existing.ownerId);
+          if (owner && existing.ownerPayout > 0) {
+            const ownerUpdates = { pendingPayout: Math.max(0, owner.pendingPayout - existing.ownerPayout) };
+            set((s) => ({ owners: s.owners.map((o) => o.id === owner.id ? { ...o, ...ownerUpdates } : o) }));
+            sync(() => db.updateOwner(owner.id, ownerUpdates));
+          }
+        }
+      },
+
+      // ── Manual Booking (past-record entry) ───────────────────────────────
+      addManualBooking: (data) => {
+        const bookingId = uid();
+        const store = get();
+        const vehicle = store.vehicles.find((v) => v.id === data.vehicleId);
+        const isCancelled = data.status === 'Cancelled';
+
+        // ── 1. Resolve / create customer ──────────────────────────────────
+        const existingCust = store.customers.find((c) => c.phone === data.customerPhone);
+        const customerId = existingCust?.id ?? uid();
+        const isNewCust = !existingCust;
+        const customerRecord: Customer = existingCust
+          ? { ...existingCust, name: data.customerName, email: data.customerEmail ?? existingCust.email, nic: data.customerNIC ?? existingCust.nic }
+          : { id: customerId, name: data.customerName, phone: data.customerPhone, email: data.customerEmail, nic: data.customerNIC, address: (data as { customerAddress?: string }).customerAddress, notes: undefined, smsOptIn: true, createdAt: now() };
+
+        // ── 2. Referral fee ───────────────────────────────────────────────
+        const referralFee = resolveReferralFee(data.referralFeeType, data.referralFeeValue, data.totalAmount);
+        const ownerPayout = Math.max(0, data.totalAmount - referralFee);
+
+        // ── 3. Booking record ─────────────────────────────────────────────
+        const newBooking: Booking = { ...data, id: bookingId, customerId, referralFee, createdAt: now() };
+
+        // ── 4. Commission record ──────────────────────────────────────────
+        const commissionPaid = (data as { commissionAlreadyPaid?: boolean }).commissionAlreadyPaid ?? data.status === 'Completed';
+        const referralPaidFlag = (data as { referralAlreadyPaid?: boolean }).referralAlreadyPaid ?? false;
+        const commission: Commission = {
+          id: uid(),
+          bookingId,
+          vehicleId: data.vehicleId,
+          ownerId: vehicle?.ownerId ?? '',
+          referral: data.referral ?? 'Direct',
+          totalIncome: data.totalAmount,
+          commissionRate: 0,
+          commissionAmount: 0,
+          ownerPayout,
+          coordinatorFee: referralFee,
+          status: commissionPaid ? 'Paid' : 'Pending',
+          createdAt: now(),
+        };
+
+        // ── 5. Vehicle stat updates (skip for Cancelled) ──────────────────
+        const vehicleUpdates: Partial<Vehicle> = isCancelled ? {} : {
+          revenue: (vehicle?.revenue ?? 0) + data.totalAmount,
+          rentCount: (vehicle?.rentCount ?? 0) + 1,
+          ...(data.status === 'Ongoing'    ? { status: 'Ongoing'   as const } :
+              data.status === 'Confirmed'  ? { status: 'Reserved'  as const } : {}),
+        };
+
+        // ── 6. Vehicle owner earnings ─────────────────────────────────────
+        const vehicleOwner = store.owners.find((o) => o.id === vehicle?.ownerId);
+        const vehicleOwnerUpdates: Partial<Owner> = (!isCancelled && vehicleOwner) ? {
+          totalEarnings: vehicleOwner.totalEarnings + ownerPayout,
+          pendingPayout: commissionPaid ? vehicleOwner.pendingPayout : vehicleOwner.pendingPayout + ownerPayout,
+        } : {};
+
+        // ── 7. Referral owner earnings ────────────────────────────────────
+        const MKTG = ['WhatsApp','Facebook','Instagram','TikTok','Google','Word of Mouth'];
+        const isOwnerReferral = !!data.referral && data.referral !== 'Direct' && !MKTG.includes(data.referral);
+        const referralOwner = isOwnerReferral
+          ? store.owners.find((o) => o.name.trim().toLowerCase() === (data.referral ?? '').trim().toLowerCase())
+          : undefined;
+        const referralOwnerUpdates: Partial<Owner> = (!isCancelled && referralOwner && referralFee > 0) ? {
+          totalEarnings: referralOwner.totalEarnings + referralFee,
+          pendingPayout: referralPaidFlag ? referralOwner.pendingPayout : referralOwner.pendingPayout + referralFee,
+        } : {};
+
+        // ── 8. Build notification records (added to local state now, synced to DB last) ──
+        // IMPORTANT: We do NOT call addNotification() here because that function calls
+        // sync() immediately, which inserts to Supabase right away. That triggers a
+        // realtime event and loadAll() fires BEFORE the booking chain finishes, wiping
+        // the local state. Instead we build the records manually and append them to the
+        // same atomic set() call, then add the DB inserts as the LAST steps in the chain.
+        const bookingNotif: Notification = {
+          id: uid(), type: 'BookingReminder', read: false, createdAt: now(),
+          title: 'Manual Booking Recorded',
+          message: `${data.customerName} · ${vehicle?.vehicleNumber ?? data.vehicleId} · ${data.startDate} → ${data.endDate}`,
+          relatedId: bookingId,
+        };
+        const referralNotif: Notification | null = (!referralPaidFlag && referralOwner && referralFee > 0 && !isCancelled) ? {
+          id: uid(), type: 'ReferralPayout', read: false, createdAt: now(),
+          title: 'Referral Fee Outstanding',
+          message: `${referralOwner.name} is owed Rs ${referralFee.toLocaleString()} for referring ${data.customerName}`,
+          ownerId: vehicleOwner?.id,
+          relatedId: bookingId,
+        } : null;
+
+        // ── 9. Single atomic local-state update ───────────────────────────
+        set((s) => ({
+          customers: isNewCust
+            ? [...s.customers, customerRecord]
+            : s.customers.map((c) => (c.id === customerId ? customerRecord : c)),
+          bookings: [...s.bookings, { ...newBooking, referralPaid: referralPaidFlag }],
+          commissions: [...s.commissions, commission],
+          vehicles: Object.keys(vehicleUpdates).length > 0
+            ? s.vehicles.map((v) => (v.id === data.vehicleId ? { ...v, ...vehicleUpdates } : v))
+            : s.vehicles,
+          owners: s.owners.map((o) => {
+            if (vehicleOwner && o.id === vehicleOwner.id && Object.keys(vehicleOwnerUpdates).length > 0)
+              return { ...o, ...vehicleOwnerUpdates };
+            if (referralOwner && o.id === referralOwner.id && Object.keys(referralOwnerUpdates).length > 0)
+              return { ...o, ...referralOwnerUpdates };
+            return o;
+          }),
+          notifications: referralNotif
+            ? [bookingNotif, referralNotif, ...s.notifications]
+            : [bookingNotif, ...s.notifications],
+        }));
+
+        // ── 10. DB sync — each step is checked for a Supabase error so a silent
+        //       failure (Supabase never rejects, it returns { error }) surfaces
+        //       immediately rather than letting the chain continue past a broken
+        //       step. Notifications are inserted LAST so realtime's loadAll() fires
+        //       only after every other record is already in Supabase ───────────────
+        if (supabaseEnabled) {
+          // Turn a Supabase { error } result into a real thrown error so catch() fires.
+          const ok = (r: { error: unknown } | undefined | null) => {
+            if (r && r.error) throw r.error;
+          };
+
+          const custOp = isNewCust
+            ? db.insertCustomer(customerRecord)
+            : db.updateCustomer(customerId, { name: customerRecord.name, email: customerRecord.email, nic: customerRecord.nic });
+          Promise.resolve(custOp)
+            .then((r) => ok(r))
+            .then(() => db.insertBooking({ ...newBooking, referralPaid: referralPaidFlag }))
+            .then((r) => ok(r))
+            .then(() => db.insertCommission(commission))
+            .then((r) => ok(r))
+            .then(() => { if (Object.keys(vehicleUpdates).length > 0) return db.updateVehicle(data.vehicleId, vehicleUpdates); })
+            .then((r) => { if (r) ok(r); })
+            .then(() => { if (vehicleOwner && Object.keys(vehicleOwnerUpdates).length > 0) return db.updateOwner(vehicleOwner.id, vehicleOwnerUpdates); })
+            .then((r) => { if (r) ok(r); })
+            .then(() => { if (referralOwner && Object.keys(referralOwnerUpdates).length > 0) return db.updateOwner(referralOwner.id, referralOwnerUpdates); })
+            .then((r) => { if (r) ok(r); })
+            .then(() => db.insertNotification(bookingNotif))
+            .then(() => { if (referralNotif) return db.insertNotification(referralNotif); })
+            .catch((err) => {
+              const msg = (err as { message?: string })?.message ?? String(err);
+              console.error('[addManualBooking] DB sync error:', msg, err);
+              toast.error('Booking saved locally — DB sync failed', msg);
+            });
+        }
+
+        toast.success('Manual booking saved', `Booking for ${data.customerName} has been recorded and all records updated.`);
+        return bookingId;
       },
 
       // ── Customers ─────────────────────────────────────────────────────────

@@ -15,6 +15,7 @@ create table if not exists owners (
   commission_rate  numeric(5,2)  not null default 15,
   total_earnings   numeric(12,2) not null default 0,
   pending_payout   numeric(12,2) not null default 0,
+  sms_opt_in       boolean       not null default true,
   created_at       text not null
 );
 
@@ -66,6 +67,9 @@ create table if not exists bookings (
   deposit_returned  numeric(12,2),
   deposit_deduction numeric(12,2),
   deposit_notes     text,
+  referral_fee      numeric(10,2),
+  referral_paid     boolean not null default false,
+  referral_paid_at  text,
   created_at        text not null
 );
 
@@ -165,6 +169,14 @@ create table if not exists customers (
 
 -- Owner-targeted notifications (referral payout alerts addressed to a specific owner)
 alter table notifications add column if not exists owner_id text;
+
+-- sms_opt_in on owners (added after initial schema)
+alter table owners add column if not exists sms_opt_in boolean not null default true;
+
+-- Referral settlement tracking on bookings (added after initial schema)
+alter table bookings add column if not exists referral_fee     numeric(10,2);
+alter table bookings add column if not exists referral_paid    boolean not null default false;
+alter table bookings add column if not exists referral_paid_at text;
 
 -- ── Disable RLS (private internal app — no public access) ────────────────────
 

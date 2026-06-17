@@ -120,7 +120,7 @@ export default function Dashboard() {
   const outstandingBalance = receivableBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
   const today = new Date();
   const thisMonthRevenue = scopedBookings
-    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
     .reduce((s, b) => s + b.totalAmount, 0);
   const thisMonthExpenses = scopedExpenses
     .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
@@ -153,9 +153,9 @@ export default function Dashboard() {
     });
     return months.map(({ year, month, label }) => {
       const rev = scopedBookings
-        .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; })
+        .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === year && d.getMonth() === month; })
         .reduce((s, b) => s + b.totalAmount, 0);
-      const cnt = scopedBookings.filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === year && d.getMonth() === month; }).length;
+      const cnt = scopedBookings.filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === year && d.getMonth() === month; }).length;
       const exp = scopedExpenses
         .filter((e) => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() === month; })
         .reduce((s, e) => s + e.amount, 0);

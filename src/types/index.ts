@@ -182,17 +182,6 @@ export interface Notification {
   createdAt: string;
 }
 
-export interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  nic?: string;
-  address?: string;
-  notes?: string;
-  createdAt: string;
-}
-
 export interface AppState {
   vehicles: Vehicle[];
   owners: Owner[];
@@ -243,4 +232,5 @@ export interface AppState {
 
   isVehicleAvailable: (vehicleId: string, startDate: string, endDate: string, excludeBookingId?: string) => boolean;
   updateCommission: (id: string, updates: Partial<Commission>) => void;
+  addManualBooking: (data: Omit<Booking, 'id' | 'createdAt'> & { customerAddress?: string; dailyRateUsed?: number; referralAlreadyPaid?: boolean; commissionAlreadyPaid?: boolean }) => string;
 }

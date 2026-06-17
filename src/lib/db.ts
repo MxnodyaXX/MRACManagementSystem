@@ -72,6 +72,9 @@ function bFromDb(r: Record<string, unknown>): Booking {
     paidAmount: r.paid_amount as number,
     status: r.status as Booking['status'],
     referral: (r.referral as string) ?? undefined,
+    referralFee: (r.referral_fee as number) ?? undefined,
+    referralPaid: (r.referral_paid as boolean) ?? undefined,
+    referralPaidAt: (r.referral_paid_at as string) ?? undefined,
     notes: (r.notes as string) ?? undefined, createdAt: r.created_at as string,
     pickupLocation: (r.pickup_location as string) ?? undefined,
     dropLocation: (r.drop_location as string) ?? undefined,
@@ -85,21 +88,34 @@ function bFromDb(r: Record<string, unknown>): Booking {
 }
 
 function bToDb(b: Booking) {
-  return {
+  // Required columns that every row must have.
+  const row: Record<string, unknown> = {
     id: b.id, vehicle_id: b.vehicleId, customer_id: b.customerId,
     customer_name: b.customerName, customer_phone: b.customerPhone,
-    customer_email: b.customerEmail ?? null, customer_nic: b.customerNIC ?? null,
     start_date: b.startDate, end_date: b.endDate, total_days: b.totalDays,
-    total_amount: b.totalAmount, estimated_amount: b.estimatedAmount ?? null,
-    paid_amount: b.paidAmount, status: b.status, referral: b.referral ?? null,
-    notes: b.notes ?? null, created_at: b.createdAt,
-    pickup_location: b.pickupLocation ?? null, drop_location: b.dropLocation ?? null,
-    driver_id: b.driverId ?? null, quotation: b.quotation ?? null,
-    deposit_amount: b.depositAmount ?? null,
-    deposit_returned: b.depositReturned ?? null,
-    deposit_deduction: b.depositDeduction ?? null,
-    deposit_notes: b.depositNotes ?? null,
-  }
+    total_amount: b.totalAmount, paid_amount: b.paidAmount,
+    status: b.status, created_at: b.createdAt,
+  };
+  // Optional columns: only included when they carry a real value so that rows
+  // inserted into an older schema (missing these columns) don't throw an error.
+  // Supabase uses the column's DEFAULT when the key is absent.
+  if (b.customerEmail      != null) row.customer_email      = b.customerEmail;
+  if (b.customerNIC        != null) row.customer_nic        = b.customerNIC;
+  if (b.estimatedAmount    != null) row.estimated_amount    = b.estimatedAmount;
+  if (b.referral           != null) row.referral            = b.referral;
+  if (b.referralFee        != null) row.referral_fee        = b.referralFee;
+  if (b.referralPaid)               row.referral_paid       = b.referralPaid;   // skip when false (DB default)
+  if (b.referralPaidAt     != null) row.referral_paid_at    = b.referralPaidAt;
+  if (b.notes              != null) row.notes               = b.notes;
+  if (b.pickupLocation     != null) row.pickup_location     = b.pickupLocation;
+  if (b.dropLocation       != null) row.drop_location       = b.dropLocation;
+  if (b.driverId           != null && b.driverId !== '') row.driver_id = b.driverId;
+  if (b.quotation          != null) row.quotation           = b.quotation;
+  if (b.depositAmount      != null) row.deposit_amount      = b.depositAmount;
+  if (b.depositReturned    != null) row.deposit_returned    = b.depositReturned;
+  if (b.depositDeduction   != null) row.deposit_deduction   = b.depositDeduction;
+  if (b.depositNotes       != null) row.deposit_notes       = b.depositNotes;
+  return row;
 }
 
 function iFromDb(r: Record<string, unknown>): Inquiry {
