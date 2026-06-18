@@ -18,6 +18,7 @@ import Drivers from './pages/Drivers';
 import Notifications from './pages/Notifications';
 import Permissions from './pages/Permissions';
 import Referrals from './pages/Referrals';
+import CreditManagement from './pages/CreditManagement';
 import Handovers from './pages/Handovers';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
@@ -25,12 +26,14 @@ import Settings from './pages/Settings';
 export default function App() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const isAdmin     = useAuthStore((s) => s.isAdmin);
+  const loadUsers   = useAuthStore((s) => s.loadUsers);
   const loadAll     = useStore((s) => s.loadAll);
   const loaded      = useStore((s) => s.loaded);
   const [minDone, setMinDone] = useState(false);
 
   useEffect(() => {
     loadAll();
+    loadUsers();   // hydrate login profiles from the database
     const timer = setTimeout(() => setMinDone(true), 900); // keep the loader visible briefly
     const cleanup = setupRealtime(loadAll);
     return () => { clearTimeout(timer); cleanup?.(); };
@@ -78,6 +81,9 @@ export default function App() {
           )}
           {isAdmin() && (
             <Route path="/settings" element={<Settings />} />
+          )}
+          {isAdmin() && (
+            <Route path="/credit" element={<CreditManagement />} />
           )}
           <Route path="/referrals" element={<Referrals />} />
           <Route path="*" element={<Navigate to="/" replace />} />

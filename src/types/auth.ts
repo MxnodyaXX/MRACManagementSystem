@@ -26,6 +26,7 @@ export interface AuthState {
   login: (username: string, password: string) => boolean;
   logout: () => void;
   addUser: (user: Omit<AppUser, 'id'>) => void;
+  loadUsers: () => Promise<void>;
   updatePermissions: (ownerId: string, perms: Partial<OwnerPermissions>) => void;
   getOwnerPermissions: (ownerId: string) => OwnerPermissions;
   isAdmin: () => boolean;

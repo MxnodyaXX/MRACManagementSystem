@@ -49,6 +49,8 @@ export interface Owner {
   email: string;
   address?: string;
   bankAccount?: string;
+  nic?: string;         // captured during login-profile setup
+  username?: string;    // the owner's login username
   commissionRate: number;
   totalEarnings: number;
   pendingPayout: number;
@@ -111,6 +113,18 @@ export interface Booking {
   depositReturned?: number;
   depositDeduction?: number;
   depositNotes?: string;
+
+  // ── Return / payment details ──────────────────────────────────────────────
+  pickupAt?: string;          // ISO datetime the vehicle was handed over
+  returnAt?: string;          // ISO datetime the vehicle was returned
+  advanceAmount?: number;     // advance paid up-front (separate from paidAmount)
+  discount?: number;          // discount given off the bill
+  extraCharges?: number;      // extra charges added to the bill (e.g. extra km, damage)
+  paymentMethod?: string;     // Cash / Card / Bank Transfer / Online
+  // ── Credit (due transferred to the customer's account) ────────────────────
+  creditAmount?: number;      // outstanding balance recorded as customer credit
+  creditSettled?: boolean;    // true once the credit has been collected
+  creditResponsibility?: 'self' | 'owner' | 'company'; // who is liable for the credit
 }
 
 export interface Inquiry {
@@ -233,4 +247,6 @@ export interface AppState {
   isVehicleAvailable: (vehicleId: string, startDate: string, endDate: string, excludeBookingId?: string) => boolean;
   updateCommission: (id: string, updates: Partial<Commission>) => void;
   addManualBooking: (data: Omit<Booking, 'id' | 'createdAt'> & { customerAddress?: string; dailyRateUsed?: number; referralAlreadyPaid?: boolean; commissionAlreadyPaid?: boolean }) => string;
+  recomputeStats: () => void;
+  settleCredit: (bookingId: string) => void;
 }

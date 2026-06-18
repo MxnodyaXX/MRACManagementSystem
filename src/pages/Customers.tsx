@@ -5,9 +5,10 @@ import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import {
   Plus, Search, User, Phone, Mail, MapPin, CreditCard,
-  ChevronDown, Edit2, Trash2, CalendarDays, Car, AlertTriangle,
+  ChevronDown, Edit2, Trash2, CalendarDays, Car, AlertTriangle, Info,
 } from 'lucide-react';
-import { Customer } from '../types';
+import { Customer, Booking } from '../types';
+import { customerCredit, bookingBill, bookingPaid, bookingDue, bookingCredit } from '../lib/credit';
 
 const emptyForm = (): Omit<Customer, 'id' | 'createdAt'> => ({
   name: '',
@@ -35,12 +36,13 @@ function initials(name: string) {
 }
 
 export default function Customers() {
-  const { customers, bookings, vehicles, addCustomer, updateCustomer, deleteCustomer } = useStore();
+  const { customers, bookings, vehicles, owners, addCustomer, updateCustomer, deleteCustomer } = useStore();
 
   const [search,     setSearch]     = useState('');
   const [modal,      setModal]      = useState<'add' | 'edit' | 'delete' | null>(null);
   const [selected,   setSelected]   = useState<Customer | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detailBooking, setDetailBooking] = useState<Booking | null>(null);
   const [form,       setForm]       = useState(emptyForm());
   const [error,      setError]      = useState('');
 
@@ -165,6 +167,7 @@ export default function Customers() {
           {filtered.map((c) => {
             const history  = getHistory(c);
             const spend    = totalSpend(c);
+            const credit   = customerCredit(c, bookings);
             const expanded = expandedId === c.id;
 
             return (
@@ -237,6 +240,11 @@ export default function Customers() {
                         <p className="text-[10px] text-navy-400">Rs {spend.toLocaleString()} paid</p>
                       </div>
                     </div>
+                    {credit.outstanding > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-100 px-2 py-1 rounded-lg">
+                        <CreditCard size={11} /> Credit Rs {credit.outstanding.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -261,6 +269,31 @@ export default function Customers() {
                 {/* ── Accordion content ── */}
                 {expanded && (
                   <div className="mt-2">
+                    {/* Credit summary */}
+                    {credit.outstanding > 0 && (
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
+                            <CreditCard size={13} /> Outstanding Credit
+                          </span>
+                          <span className="text-sm font-bold text-red-700">Rs {credit.outstanding.toLocaleString()}</span>
+                        </div>
+                        <p className="text-[10px] text-red-500 mb-2">{credit.count} unpaid booking{credit.count !== 1 ? 's' : ''}</p>
+                        <div className="space-y-1">
+                          {credit.bookings.map(({ booking: b, amount }) => {
+                            const v = vehicles.find((x) => x.id === b.vehicleId);
+                            return (
+                              <div key={b.id} className="flex items-center justify-between text-[11px]">
+                                <span className="text-navy-600 truncate">
+                                  {v ? `${v.brand} ${v.model}` : 'Booking'} <span className="text-navy-400">· {b.startDate}</span>
+                                </span>
+                                <span className="font-semibold text-red-600 flex-shrink-0">Rs {amount.toLocaleString()}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     {history.length === 0 ? (
                       <div className="text-center py-6 text-xs text-navy-400">
                         No rental history found for this customer.
@@ -307,6 +340,15 @@ export default function Customers() {
 
                               {/* Status */}
                               <StatusBadge status={b.status} size="sm" />
+
+                              {/* More info */}
+                              <button
+                                onClick={() => setDetailBooking(b)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-navy-400 hover:bg-white hover:text-navy-700 transition-colors flex-shrink-0"
+                                title="View full booking details"
+                              >
+                                <Info size={15} />
+                              </button>
                             </div>
                           );
                         })}
@@ -468,6 +510,90 @@ export default function Customers() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ── Full booking detail ── */}
+      <Modal open={!!detailBooking} onClose={() => setDetailBooking(null)} title="Booking Details" width="max-w-lg">
+        {detailBooking && (() => {
+          const b = detailBooking;
+          const v = vehicles.find((x) => x.id === b.vehicleId);
+          const owner = owners.find((o) => o.id === v?.ownerId);
+          const startTime = b.pickupAt?.includes('T') ? b.pickupAt.split('T')[1] : undefined;
+          const endTime = b.returnAt?.includes('T') ? b.returnAt.split('T')[1] : undefined;
+          const credit = bookingCredit(b);
+          const due = bookingDue(b);
+          const Row = ({ label, value, accent }: { label: string; value: React.ReactNode; accent?: string }) => (
+            <div className="flex items-start justify-between gap-4 py-1.5 border-b border-navy-50 last:border-0">
+              <span className="text-xs text-navy-400">{label}</span>
+              <span className={`text-xs font-medium text-right ${accent ?? 'text-navy-800'}`}>{value}</span>
+            </div>
+          );
+          const money = (n?: number) => `Rs ${(n ?? 0).toLocaleString()}`;
+          return (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-navy-700 flex items-center justify-center text-white flex-shrink-0">
+                  <Car size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-navy-800 truncate">{v ? `${v.brand} ${v.model}` : 'Vehicle'} <span className="font-normal text-navy-400">· {v?.vehicleNumber}</span></p>
+                  <p className="text-xs text-navy-400">{owner ? `Owner: ${owner.name}` : ''}</p>
+                </div>
+                <StatusBadge status={b.status} />
+              </div>
+
+              {/* Rental */}
+              <div>
+                <p className="text-[11px] font-semibold text-navy-400 uppercase tracking-wide mb-1">Rental</p>
+                <Row label="Customer" value={b.customerName} />
+                <Row label="Phone" value={b.customerPhone} />
+                <Row label="Start" value={`${b.startDate}${startTime ? ` · ${startTime}` : ''}`} />
+                <Row label="End" value={`${b.endDate}${endTime ? ` · ${endTime}` : ''}`} />
+                <Row label="Duration" value={`${b.totalDays} day${b.totalDays !== 1 ? 's' : ''}`} />
+                {b.pickupLocation && <Row label="Pickup" value={b.pickupLocation} />}
+                {b.dropLocation && <Row label="Drop" value={b.dropLocation} />}
+              </div>
+
+              {/* Payment */}
+              <div>
+                <p className="text-[11px] font-semibold text-navy-400 uppercase tracking-wide mb-1">Payment</p>
+                <Row label="Total Amount" value={money(b.totalAmount)} />
+                {(b.extraCharges ?? 0) > 0 && <Row label="Extra Charges" value={money(b.extraCharges)} />}
+                {(b.discount ?? 0) > 0 && <Row label="Discount" value={`− ${money(b.discount)}`} accent="text-emerald-600" />}
+                <Row label="Bill" value={money(bookingBill(b))} />
+                <Row label="Paid" value={money(b.paidAmount)} accent="text-blue-700" />
+                {(b.advanceAmount ?? 0) > 0 && <Row label="Advance" value={money(b.advanceAmount)} accent="text-blue-700" />}
+                <Row label="Total Received" value={money(bookingPaid(b))} accent="text-blue-700" />
+                {(b.depositAmount ?? 0) > 0 && <Row label="Deposit" value={money(b.depositAmount)} />}
+                {b.paymentMethod && <Row label="Payment Method" value={b.paymentMethod} />}
+                {due > 0 && <Row label="Balance Due" value={money(due)} accent="text-red-600" />}
+                {credit > 0 && <Row label="Credit (unsettled)" value={money(credit)} accent="text-amber-600" />}
+                {(b.creditAmount ?? 0) > 0 && b.creditSettled && <Row label="Credit" value="Settled" accent="text-emerald-600" />}
+                {b.creditResponsibility && <Row label="Credit Liability" value={b.creditResponsibility === 'self' ? 'Vehicle owner' : b.creditResponsibility === 'owner' ? 'Referring owner' : 'Company'} />}
+              </div>
+
+              {/* Referral */}
+              {(b.referral && b.referral !== 'Direct') && (
+                <div>
+                  <p className="text-[11px] font-semibold text-navy-400 uppercase tracking-wide mb-1">Referral</p>
+                  <Row label="Referred by" value={b.referral} />
+                  {(b.referralFee ?? 0) > 0 && <Row label="Referral Fee" value={money(b.referralFee)} accent="text-amber-700" />}
+                  {(b.referralFee ?? 0) > 0 && <Row label="Fee Status" value={b.referralPaid ? 'Paid' : 'Pending'} accent={b.referralPaid ? 'text-emerald-600' : 'text-amber-600'} />}
+                </div>
+              )}
+
+              {b.notes && (
+                <div>
+                  <p className="text-[11px] font-semibold text-navy-400 uppercase tracking-wide mb-1">Notes</p>
+                  <p className="text-xs text-navy-600 bg-navy-50/60 rounded-lg px-3 py-2">{b.notes}</p>
+                </div>
+              )}
+
+              <p className="text-[10px] text-navy-300 text-center">Booking ID: {b.id} · created {new Date(b.createdAt).toLocaleString()}</p>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

@@ -3,26 +3,32 @@ import type {
   Vehicle, Owner, Booking, Inquiry, Commission,
   Expense, Driver, Notification, VehicleHandover, Customer,
 } from '../types'
+import type { AppUser } from '../types/auth'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mappers: DB row (snake_case) ↔ TS types (camelCase)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// PostgREST returns `numeric`/`decimal` columns as STRINGS (to preserve precision).
+// Coerce them to real numbers, or every reduce/sum becomes string concatenation.
+const num    = (v: unknown): number => Number(v ?? 0);
+const numOpt = (v: unknown): number | undefined => (v == null ? undefined : Number(v));
+
 function vFromDb(r: Record<string, unknown>): Vehicle {
   return {
     id: r.id as string, vehicleNumber: r.vehicle_number as string,
-    brand: r.brand as string, model: r.model as string, year: r.year as number,
-    ownerId: r.owner_id as string, dailyRent: r.daily_rent as number,
-    extraKmRate: (r.extra_km_rate as number) ?? undefined,
-    includedKmPerDay: (r.included_km_per_day as number) ?? undefined,
+    brand: r.brand as string, model: r.model as string, year: num(r.year),
+    ownerId: r.owner_id as string, dailyRent: num(r.daily_rent),
+    extraKmRate: numOpt(r.extra_km_rate),
+    includedKmPerDay: numOpt(r.included_km_per_day),
     status: r.status as Vehicle['status'],
     insurance: r.insurance as Vehicle['insurance'],
-    revenue: r.revenue as number, rentCount: r.rent_count as number,
+    revenue: num(r.revenue), rentCount: num(r.rent_count),
     imageUrl: (r.image_url as string) ?? undefined,
-    color: (r.color as string) ?? undefined, seats: (r.seats as number) ?? undefined,
+    color: (r.color as string) ?? undefined, seats: numOpt(r.seats),
     fuelType: (r.fuel_type as string) ?? undefined,
     transmission: (r.transmission as string) ?? undefined,
-    mileage: (r.mileage as number) ?? undefined, createdAt: r.created_at as string,
+    mileage: numOpt(r.mileage), createdAt: r.created_at as string,
   }
 }
 
@@ -43,8 +49,10 @@ function oFromDb(r: Record<string, unknown>): Owner {
     id: r.id as string, name: r.name as string, phone: r.phone as string,
     email: r.email as string, address: (r.address as string) ?? undefined,
     bankAccount: (r.bank_account as string) ?? undefined,
-    commissionRate: r.commission_rate as number,
-    totalEarnings: r.total_earnings as number, pendingPayout: r.pending_payout as number,
+    nic: (r.nic as string) ?? undefined,
+    username: (r.username as string) ?? undefined,
+    commissionRate: num(r.commission_rate),
+    totalEarnings: num(r.total_earnings), pendingPayout: num(r.pending_payout),
     smsOptIn: (r.sms_opt_in as boolean) ?? undefined,
     createdAt: r.created_at as string,
   }
@@ -54,6 +62,7 @@ function oToDb(o: Owner) {
   return {
     id: o.id, name: o.name, phone: o.phone, email: o.email,
     address: o.address ?? null, bank_account: o.bankAccount ?? null,
+    nic: o.nic ?? null, username: o.username ?? null,
     commission_rate: o.commissionRate, total_earnings: o.totalEarnings,
     pending_payout: o.pendingPayout, sms_opt_in: o.smsOptIn ?? true, created_at: o.createdAt,
   }
@@ -67,12 +76,12 @@ function bFromDb(r: Record<string, unknown>): Booking {
     customerEmail: (r.customer_email as string) ?? undefined,
     customerNIC: (r.customer_nic as string) ?? undefined,
     startDate: r.start_date as string, endDate: r.end_date as string,
-    totalDays: r.total_days as number, totalAmount: r.total_amount as number,
-    estimatedAmount: (r.estimated_amount as number) ?? undefined,
-    paidAmount: r.paid_amount as number,
+    totalDays: num(r.total_days), totalAmount: num(r.total_amount),
+    estimatedAmount: numOpt(r.estimated_amount),
+    paidAmount: num(r.paid_amount),
     status: r.status as Booking['status'],
     referral: (r.referral as string) ?? undefined,
-    referralFee: (r.referral_fee as number) ?? undefined,
+    referralFee: numOpt(r.referral_fee),
     referralPaid: (r.referral_paid as boolean) ?? undefined,
     referralPaidAt: (r.referral_paid_at as string) ?? undefined,
     notes: (r.notes as string) ?? undefined, createdAt: r.created_at as string,
@@ -80,10 +89,19 @@ function bFromDb(r: Record<string, unknown>): Booking {
     dropLocation: (r.drop_location as string) ?? undefined,
     driverId: (r.driver_id as string) ?? undefined,
     quotation: (r.quotation as Booking['quotation']) ?? undefined,
-    depositAmount: (r.deposit_amount as number) ?? undefined,
-    depositReturned: (r.deposit_returned as number) ?? undefined,
-    depositDeduction: (r.deposit_deduction as number) ?? undefined,
+    depositAmount: numOpt(r.deposit_amount),
+    depositReturned: numOpt(r.deposit_returned),
+    depositDeduction: numOpt(r.deposit_deduction),
     depositNotes: (r.deposit_notes as string) ?? undefined,
+    pickupAt: (r.pickup_at as string) ?? undefined,
+    returnAt: (r.return_at as string) ?? undefined,
+    advanceAmount: numOpt(r.advance_amount),
+    discount: numOpt(r.discount),
+    extraCharges: numOpt(r.extra_charges),
+    paymentMethod: (r.payment_method as string) ?? undefined,
+    creditAmount: numOpt(r.credit_amount),
+    creditSettled: (r.credit_settled as boolean) ?? undefined,
+    creditResponsibility: (r.credit_responsibility as Booking['creditResponsibility']) ?? undefined,
   }
 }
 
@@ -115,6 +133,15 @@ function bToDb(b: Booking) {
   if (b.depositReturned    != null) row.deposit_returned    = b.depositReturned;
   if (b.depositDeduction   != null) row.deposit_deduction   = b.depositDeduction;
   if (b.depositNotes       != null) row.deposit_notes       = b.depositNotes;
+  if (b.pickupAt           != null) row.pickup_at           = b.pickupAt;
+  if (b.returnAt           != null) row.return_at           = b.returnAt;
+  if (b.advanceAmount      != null) row.advance_amount      = b.advanceAmount;
+  if (b.discount           != null) row.discount            = b.discount;
+  if (b.extraCharges       != null) row.extra_charges       = b.extraCharges;
+  if (b.paymentMethod      != null) row.payment_method      = b.paymentMethod;
+  if (b.creditAmount       != null) row.credit_amount       = b.creditAmount;
+  if (b.creditSettled)              row.credit_settled      = b.creditSettled;
+  if (b.creditResponsibility != null) row.credit_responsibility = b.creditResponsibility;
   return row;
 }
 
@@ -145,11 +172,11 @@ function cFromDb(r: Record<string, unknown>): Commission {
   return {
     id: r.id as string, bookingId: r.booking_id as string,
     vehicleId: r.vehicle_id as string, ownerId: r.owner_id as string,
-    referral: r.referral as string, totalIncome: r.total_income as number,
-    commissionRate: r.commission_rate as number,
-    commissionAmount: r.commission_amount as number,
-    ownerPayout: r.owner_payout as number,
-    coordinatorFee: (r.coordinator_fee as number) ?? undefined,
+    referral: r.referral as string, totalIncome: num(r.total_income),
+    commissionRate: num(r.commission_rate),
+    commissionAmount: num(r.commission_amount),
+    ownerPayout: num(r.owner_payout),
+    coordinatorFee: numOpt(r.coordinator_fee),
     status: r.status as Commission['status'], createdAt: r.created_at as string,
   }
 }
@@ -166,7 +193,7 @@ function cToDb(c: Commission) {
 function eFromDb(r: Record<string, unknown>): Expense {
   return {
     id: r.id as string, vehicleId: r.vehicle_id as string,
-    category: r.category as Expense['category'], amount: r.amount as number,
+    category: r.category as Expense['category'], amount: num(r.amount),
     description: r.description as string, date: r.date as string,
     receipt: (r.receipt as string) ?? undefined, createdAt: r.created_at as string,
   }
@@ -184,8 +211,8 @@ function dFromDb(r: Record<string, unknown>): Driver {
   return {
     id: r.id as string, name: r.name as string, phone: r.phone as string,
     licenseNumber: r.license_number as string, licenseExpiry: r.license_expiry as string,
-    status: r.status as Driver['status'], dailyRate: r.daily_rate as number,
-    totalEarnings: r.total_earnings as number,
+    status: r.status as Driver['status'], dailyRate: num(r.daily_rate),
+    totalEarnings: num(r.total_earnings),
     currentBookingId: (r.current_booking_id as string) ?? undefined,
     joinedAt: r.joined_at as string, address: (r.address as string) ?? undefined,
     nic: (r.nic as string) ?? undefined,
@@ -236,15 +263,32 @@ function custToDb(c: Customer) {
   }
 }
 
+function userFromDb(r: Record<string, unknown>): AppUser {
+  return {
+    id: r.id as string, username: r.username as string, password: r.password as string,
+    name: r.name as string, role: r.role as AppUser['role'],
+    ownerId: (r.owner_id as string) ?? undefined,
+    email: (r.email as string) ?? undefined, nic: (r.nic as string) ?? undefined,
+  }
+}
+
+function userToDb(u: AppUser) {
+  return {
+    id: u.id, username: u.username, password: u.password, name: u.name,
+    role: u.role, owner_id: u.ownerId ?? null, email: u.email ?? null,
+    nic: u.nic ?? null, created_at: new Date().toISOString(),
+  }
+}
+
 function hFromDb(r: Record<string, unknown>): VehicleHandover {
   return {
     id: r.id as string, bookingId: r.booking_id as string,
     vehicleId: r.vehicle_id as string, type: r.type as VehicleHandover['type'],
     location: r.location as string, dateTime: r.date_time as string,
-    mileage: r.mileage as number, fuelLevel: r.fuel_level as string,
-    notes: (r.notes as string) ?? undefined, extraKm: (r.extra_km as number) ?? undefined,
-    extraKmCharge: (r.extra_km_charge as number) ?? undefined,
-    finalAmount: (r.final_amount as number) ?? undefined, createdAt: r.created_at as string,
+    mileage: num(r.mileage), fuelLevel: r.fuel_level as string,
+    notes: (r.notes as string) ?? undefined, extraKm: numOpt(r.extra_km),
+    extraKmCharge: numOpt(r.extra_km_charge),
+    finalAmount: numOpt(r.final_amount), createdAt: r.created_at as string,
   }
 }
 
@@ -297,6 +341,11 @@ export async function dbFetchAll() {
   return { vehicles, owners, bookings, inquiries, commissions, expenses, drivers, notifications, handovers, customers }
 }
 
+/** Login profiles — fetched by the auth store (not part of dbFetchAll). */
+export async function dbFetchUsers(): Promise<AppUser[]> {
+  return fetchTable<AppUser>('users', userFromDb)
+}
+
 export const db = {
   // ── Vehicles ──────────────────────────────────────────────────────────────
   insertVehicle: (v: Vehicle) => supabase.from('vehicles').insert(vToDb(v)),
@@ -333,6 +382,8 @@ export const db = {
     if (u.email !== undefined) row.email = u.email
     if (u.address !== undefined) row.address = u.address
     if (u.bankAccount !== undefined) row.bank_account = u.bankAccount
+    if (u.nic !== undefined) row.nic = u.nic
+    if (u.username !== undefined) row.username = u.username
     if (u.commissionRate !== undefined) row.commission_rate = u.commissionRate
     if (u.totalEarnings !== undefined) row.total_earnings = u.totalEarnings
     if (u.pendingPayout !== undefined) row.pending_payout = u.pendingPayout
@@ -359,6 +410,15 @@ export const db = {
     if (u.depositNotes !== undefined) row.deposit_notes = u.depositNotes
     if (u.referralPaid !== undefined) row.referral_paid = u.referralPaid
     if (u.referralPaidAt !== undefined) row.referral_paid_at = u.referralPaidAt
+    if (u.pickupAt !== undefined) row.pickup_at = u.pickupAt
+    if (u.returnAt !== undefined) row.return_at = u.returnAt
+    if (u.advanceAmount !== undefined) row.advance_amount = u.advanceAmount
+    if (u.discount !== undefined) row.discount = u.discount
+    if (u.extraCharges !== undefined) row.extra_charges = u.extraCharges
+    if (u.paymentMethod !== undefined) row.payment_method = u.paymentMethod
+    if (u.creditAmount !== undefined) row.credit_amount = u.creditAmount
+    if (u.creditSettled !== undefined) row.credit_settled = u.creditSettled
+    if (u.creditResponsibility !== undefined) row.credit_responsibility = u.creditResponsibility
     return supabase.from('bookings').update(row).eq('id', id)
   },
 
@@ -431,4 +491,19 @@ export const db = {
     return supabase.from('customers').update(row).eq('id', id)
   },
   deleteCustomer: (id: string) => supabase.from('customers').delete().eq('id', id),
+
+  // ── Users (login profiles) ──────────────────────────────────────────────────
+  insertUser: (u: AppUser) => supabase.from('users').insert(userToDb(u)),
+  updateUser: (id: string, u: Partial<AppUser>) => {
+    const row: Record<string, unknown> = {}
+    if (u.username !== undefined) row.username = u.username
+    if (u.password !== undefined) row.password = u.password
+    if (u.name !== undefined) row.name = u.name
+    if (u.role !== undefined) row.role = u.role
+    if (u.ownerId !== undefined) row.owner_id = u.ownerId
+    if (u.email !== undefined) row.email = u.email
+    if (u.nic !== undefined) row.nic = u.nic
+    return supabase.from('users').update(row).eq('id', id)
+  },
+  deleteUser: (id: string) => supabase.from('users').delete().eq('id', id),
 }

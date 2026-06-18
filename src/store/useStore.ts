@@ -557,6 +557,63 @@ export const useStore = create<AppState>()(
         return bookingId;
       },
 
+      // Rebuild vehicle revenue/rentCount and owner earnings from the actual
+      // bookings & commissions — the authoritative source. Heals any drift in the
+      // stored rollups and is safe to run any time (idempotent).
+      recomputeStats: () => {
+        const s = get();
+        const active = s.bookings.filter((b) => b.status !== 'Cancelled');
+        const activeIds = new Set(active.map((b) => b.id));
+
+        // Owner earnings from commissions of non-cancelled bookings.
+        const ownerAgg: Record<string, { total: number; pending: number }> = {};
+        s.commissions.forEach((c) => {
+          if (!activeIds.has(c.bookingId)) return;
+          const a = (ownerAgg[c.ownerId] ??= { total: 0, pending: 0 });
+          a.total += c.ownerPayout;
+          if (c.status !== 'Paid') a.pending += c.ownerPayout;
+        });
+
+        const vehicles = s.vehicles.map((v) => {
+          const vb = active.filter((b) => b.vehicleId === v.id);
+          return { ...v, revenue: vb.reduce((sum, b) => sum + b.totalAmount, 0), rentCount: vb.length };
+        });
+        const owners = s.owners.map((o) => {
+          const agg = ownerAgg[o.id] ?? { total: 0, pending: 0 };
+          return { ...o, totalEarnings: agg.total, pendingPayout: agg.pending };
+        });
+
+        set({ vehicles, owners });
+
+        // Persist only the rows that actually changed.
+        vehicles.forEach((v) => {
+          const old = s.vehicles.find((x) => x.id === v.id)!;
+          if (old.revenue !== v.revenue || old.rentCount !== v.rentCount) {
+            sync(() => db.updateVehicle(v.id, { revenue: v.revenue, rentCount: v.rentCount }));
+          }
+        });
+        owners.forEach((o) => {
+          const old = s.owners.find((x) => x.id === o.id)!;
+          if (old.totalEarnings !== o.totalEarnings || old.pendingPayout !== o.pendingPayout) {
+            sync(() => db.updateOwner(o.id, { totalEarnings: o.totalEarnings, pendingPayout: o.pendingPayout }));
+          }
+        });
+
+        toast.success('Statistics recalculated', 'Revenue and earnings were rebuilt from the actual bookings.');
+      },
+
+      // Settle a customer's credit due — the outstanding amount has been collected,
+      // so it's added to the booking's paid amount and the credit is marked settled.
+      settleCredit: (bookingId) => {
+        const b = get().bookings.find((x) => x.id === bookingId);
+        if (!b || b.creditSettled) return;
+        const credit = b.creditAmount ?? 0;
+        const updates: Partial<Booking> = { creditSettled: true, paidAmount: b.paidAmount + credit };
+        set((s) => ({ bookings: s.bookings.map((x) => (x.id === bookingId ? { ...x, ...updates } : x)) }));
+        sync(() => db.updateBooking(bookingId, updates));
+        toast.success('Credit settled', `Rs ${credit.toLocaleString()} collected from ${b.customerName}.`);
+      },
+
       // ── Customers ─────────────────────────────────────────────────────────
       addCustomer: (c) => {
         const newC = { ...c, id: uid(), createdAt: now() };

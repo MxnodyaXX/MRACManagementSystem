@@ -12,6 +12,8 @@ create table if not exists owners (
   email            text not null,
   address          text,
   bank_account     text,
+  nic              text,
+  username         text,
   commission_rate  numeric(5,2)  not null default 15,
   total_earnings   numeric(12,2) not null default 0,
   pending_payout   numeric(12,2) not null default 0,
@@ -167,16 +169,46 @@ create table if not exists customers (
   created_at  text not null
 );
 
+-- App login profiles (admin + owner logins). NOTE: password stored as-is to match
+-- the client-side auth model — acceptable only for a private internal tool. For a
+-- public deployment, switch to Supabase Auth or store a password hash instead.
+create table if not exists users (
+  id          text primary key,
+  username    text not null unique,
+  password    text not null,
+  name        text not null,
+  role        text not null default 'owner',
+  owner_id    text references owners(id) on delete cascade,
+  email       text,
+  nic         text,
+  created_at  text not null
+);
+
 -- Owner-targeted notifications (referral payout alerts addressed to a specific owner)
 alter table notifications add column if not exists owner_id text;
 
 -- sms_opt_in on owners (added after initial schema)
 alter table owners add column if not exists sms_opt_in boolean not null default true;
 
+-- Login-profile details saved onto the owner record (added after initial schema)
+alter table owners add column if not exists nic      text;
+alter table owners add column if not exists username text;
+
 -- Referral settlement tracking on bookings (added after initial schema)
 alter table bookings add column if not exists referral_fee     numeric(10,2);
 alter table bookings add column if not exists referral_paid    boolean not null default false;
 alter table bookings add column if not exists referral_paid_at text;
+
+-- Return / payment / credit details on bookings (added after initial schema)
+alter table bookings add column if not exists pickup_at             text;
+alter table bookings add column if not exists return_at             text;
+alter table bookings add column if not exists advance_amount        numeric(12,2);
+alter table bookings add column if not exists discount              numeric(12,2);
+alter table bookings add column if not exists extra_charges         numeric(12,2);
+alter table bookings add column if not exists payment_method        text;
+alter table bookings add column if not exists credit_amount         numeric(12,2);
+alter table bookings add column if not exists credit_settled        boolean default false;
+alter table bookings add column if not exists credit_responsibility text;
 
 -- ── Disable RLS (private internal app — no public access) ────────────────────
 
@@ -190,6 +222,7 @@ alter table drivers       disable row level security;
 alter table notifications disable row level security;
 alter table handovers     disable row level security;
 alter table customers     disable row level security;
+alter table users         disable row level security;
 
 -- ── Enable real-time for all tables ──────────────────────────────────────────
 
@@ -203,3 +236,4 @@ alter publication supabase_realtime add table drivers;
 alter publication supabase_realtime add table notifications;
 alter publication supabase_realtime add table handovers;
 alter publication supabase_realtime add table customers;
+alter publication supabase_realtime add table users;

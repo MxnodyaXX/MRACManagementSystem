@@ -15,9 +15,10 @@ import {
 import {
   Car, CalendarDays, DollarSign, AlertCircle,
   Users, CheckSquare, UserCircle, MessageSquare,
-  ArrowUpRight, Crown, TrendingUp, Wallet,
+  ArrowUpRight, Crown, TrendingUp, Wallet, CreditCard,
 } from 'lucide-react';
 import { Vehicle, Booking } from '../types';
+import { creditTotals } from '../lib/credit';
 
 function useIsMobile() {
   const [v, setV] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
@@ -118,6 +119,8 @@ export default function Dashboard() {
      income, not outstanding. */
   const receivableBookings = scopedBookings.filter((b) => b.status === 'Ongoing' || b.status === 'Completed');
   const outstandingBalance = receivableBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
+  /* Credit to be received — balances recorded as customer credit dues. */
+  const credit = creditTotals(scopedBookings);
   const today = new Date();
   const thisMonthRevenue = scopedBookings
     .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
@@ -133,7 +136,7 @@ export default function Dashboard() {
     .map((b) => ({ ...b, balance: b.totalAmount - b.paidAmount }))
     .sort((a, b) => b.balance - a.balance);
   const monthRevenueRows = scopedBookings
-    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.createdAt); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
+    .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
     .sort((a, b) => b.totalAmount - a.totalAmount);
   const monthExpenseRows = scopedExpenses
     .filter((e) => { const d = new Date(e.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
@@ -241,6 +244,33 @@ export default function Dashboard() {
             <p className="text-xs text-navy-400 mt-0.5">Revenue Rs {thisMonthRevenue.toLocaleString()} − Expenses Rs {thisMonthExpenses.toLocaleString()}</p>
           </div>
         </button>
+      </div>
+
+      {/* ── Total Credit To Be Received ──────────────────────────── */}
+      <div
+        className="card anim-fade-up cursor-pointer hover:shadow-card-hover transition-shadow"
+        style={{ animationDelay: '170ms' }}
+        onClick={() => navigate('/customers')}
+        title="View customers with outstanding credit"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 bg-amber-500">
+            <CreditCard size={20} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-navy-400 font-medium">Total Credit To Be Received</p>
+              <ArrowUpRight size={14} className="text-navy-300" />
+            </div>
+            <p className={`text-2xl font-black leading-tight ${credit.total > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              Rs {credit.total.toLocaleString()}
+            </p>
+            <div className="flex gap-4 mt-1.5">
+              <span className="text-xs text-navy-500"><span className="font-semibold text-navy-700">{credit.customers}</span> customer{credit.customers !== 1 ? 's' : ''} with credit</span>
+              <span className="text-xs text-navy-500"><span className="font-semibold text-navy-700">{credit.bookings}</span> pending booking{credit.bookings !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Leaderboard ─────────────────────────────────────────── */}

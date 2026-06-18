@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
   X, Car, User, Calendar, DollarSign, Users,
-  MapPin, FileText, AlertCircle, CheckCircle2, Search, UserCheck,
+  MapPin, FileText, AlertCircle, CheckCircle2, Search, UserCheck, Lock,
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import Select from './Select';
+import TimePicker from './TimePicker';
 import { resolveReferralFee } from '../../lib/referral';
+import { creditResponsibilityOf } from '../../lib/credit';
+import { sendSms } from '../../lib/sms';
+
+const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const REFERRAL_SOURCES = ['WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'Google', 'Word of Mouth'];
 type BookingStatus = 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled';
@@ -21,11 +26,17 @@ const emptyForm = () => ({
   customerAddress: '',
   startDate: '',
   endDate: '',
+  startTime: '',
+  endTime: '',
   totalDays: 0,
   dailyRateUsed: 0,
   totalAmount: 0,
   estimatedAmount: 0,
   paidAmount: 0,
+  advanceAmount: 0,
+  discount: 0,
+  paymentMethod: 'Cash',
+  creditAmount: 0,
   status: 'Completed' as BookingStatus,
   referral: 'Direct',
   referralFeeType: 'fixed' as 'fixed' | 'percent',
@@ -64,14 +75,35 @@ export default function ManualBookingModal({ onClose }: Props) {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [custFound, setCustFound] = useState<null | 'found' | 'new'>(null);
   const [referralCustom, setReferralCustom] = useState(false);
+  const [creditChoice, setCreditChoice] = useState<'discount' | 'credit'>('credit');
+  const [creditAck, setCreditAck] = useState(false);
+  const [otp, setOtp] = useState<{ sent: boolean; code: string; input: string; verified: boolean; fallback?: string }>({ sent: false, code: '', input: '', verified: false });
 
   const vehicle     = vehicles.find((v) => v.id === form.vehicleId);
   const vehicleOwner = owners.find((o) => o.id === vehicle?.ownerId);
   const referralFee = resolveReferralFee(form.referralFeeType, form.referralFeeValue, form.totalAmount);
   const ownerPayout = Math.max(0, form.totalAmount - referralFee);
-  const balance     = Math.max(0, form.totalAmount - form.paidAmount);
+  const billAmount  = Math.max(0, form.totalAmount - (form.discount || 0));
+  const paidTotal   = (form.paidAmount || 0) + (form.advanceAmount || 0);
+  const due         = Math.max(0, billAmount - paidTotal);
 
   const isOwnerReferral = !!form.referral && form.referral !== 'Direct' && !REFERRAL_SOURCES.includes(form.referral);
+  const isSocialReferral = REFERRAL_SOURCES.includes(form.referral);
+  const companyResponsible = form.referral === 'Company';
+  // A credit on another party's vehicle needs that owner's OTP approval (Company is exempt).
+  const needsOwnerOtp = creditChoice === 'credit' && due > 0 && !isSocialReferral && !companyResponsible && !!vehicleOwner;
+
+  const sendOwnerOtp = async () => {
+    if (!vehicleOwner) return;
+    const code = genOtp();
+    const ok = await sendSms(
+      vehicleOwner.phone,
+      `EMRAC: A credit of Rs ${due.toLocaleString()} for ${form.customerName || 'a customer'} is being recorded against your vehicle. Approve with code ${code}.`,
+      { category: 'creditOtp', role: 'owner', transactional: true },
+    );
+    setOtp({ sent: true, code, input: '', verified: false, fallback: ok ? undefined : code });
+  };
+  const verifyOwnerOtp = () => setOtp((s) => ({ ...s, verified: s.input.trim() === s.code }));
   const referralOwner   = isOwnerReferral
     ? owners.find((o) => o.name.trim().toLowerCase() === form.referral.trim().toLowerCase())
     : undefined;
@@ -118,7 +150,29 @@ export default function ManualBookingModal({ onClose }: Props) {
     if (form.startDate > form.endDate)    { setError('End date must be after start date.'); return; }
     if (form.totalAmount <= 0)            { setError('Total amount must be greater than 0.'); return; }
 
-    addManualBooking(form as Parameters<typeof addManualBooking>[0]);
+    // Resolve the remaining balance into either a discount or a customer credit due.
+    let discount = form.discount || 0;
+    let creditAmount = 0;
+    if (due > 0) {
+      if (isSocialReferral) {
+        setError('Social-media referral bookings must be fully paid — credit is not allowed. Add the balance as a discount or record full payment.');
+        if (creditChoice === 'credit') return;
+      }
+      if (creditChoice === 'discount') {
+        discount += due;                 // waive the remaining balance
+      } else {
+        if (!creditAck) { setError('Please acknowledge the credit responsibility notice before adding a credit due.'); return; }
+        if (needsOwnerOtp && !otp.verified) { setError(`Owner approval (OTP) is required before recording this credit on ${vehicleOwner?.name}'s vehicle.`); return; }
+        creditAmount = due;              // record as customer credit
+      }
+    }
+    const creditResponsibility = creditResponsibilityOf(form.referral, isOwnerReferral);
+
+    // Combine date + time into precise handover/return timestamps.
+    const pickupAt = form.startTime ? `${form.startDate}T${form.startTime}` : undefined;
+    const returnAt = form.endTime ? `${form.endDate}T${form.endTime}` : undefined;
+
+    addManualBooking({ ...form, discount, creditAmount, creditResponsibility, pickupAt, returnAt } as Parameters<typeof addManualBooking>[0]);
     onClose();
   };
 
@@ -177,8 +231,14 @@ export default function ManualBookingModal({ onClose }: Props) {
                   <Field label="Start Date" required>
                     <input className="input" type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
                   </Field>
+                  <Field label="Start Time">
+                    <TimePicker value={form.startTime} onChange={(t) => set('startTime', t)} placeholder="Handover time" />
+                  </Field>
                   <Field label="End Date" required>
                     <input className="input" type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} />
+                  </Field>
+                  <Field label="End Time">
+                    <TimePicker value={form.endTime} onChange={(t) => set('endTime', t)} placeholder="Return time" />
                   </Field>
                   <Field label="Daily Rate Used (Rs)" required>
                     <input className="input" type="number" min="0" value={form.dailyRateUsed || ''} onChange={(e) => set('dailyRateUsed', +e.target.value)} />
@@ -294,13 +354,109 @@ export default function ManualBookingModal({ onClose }: Props) {
                   <Field label="Total Amount (Rs)" required>
                     <input className="input" type="number" min="0" value={form.totalAmount || ''} onChange={(e) => set('totalAmount', +e.target.value)} />
                   </Field>
+                  <Field label="Discount (Rs)">
+                    <input className="input" type="number" min="0" value={form.discount || ''} onChange={(e) => set('discount', +e.target.value)} />
+                  </Field>
+                  <Field label="Payment Method">
+                    <select className="input" value={form.paymentMethod} onChange={(e) => set('paymentMethod', e.target.value)}>
+                      <option>Cash</option><option>Card</option><option>Bank Transfer</option><option>Online</option><option>Cheque</option>
+                    </select>
+                  </Field>
                   <Field label="Amount Paid (Rs)">
                     <input className="input" type="number" min="0" value={form.paidAmount || ''} onChange={(e) => set('paidAmount', +e.target.value)} />
+                  </Field>
+                  <Field label="Advance (Rs)">
+                    <input className="input" type="number" min="0" value={form.advanceAmount || ''} onChange={(e) => set('advanceAmount', +e.target.value)} />
                   </Field>
                   <Field label="Deposit (Rs)">
                     <input className="input" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} />
                   </Field>
                 </div>
+
+                {/* Remaining balance → discount or credit */}
+                {due > 0 && (
+                  <div className="mt-4 border border-amber-200 bg-amber-50/60 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-navy-700">Remaining balance</span>
+                      <span className="text-base font-bold text-red-600">Rs {due.toLocaleString()}</span>
+                    </div>
+                    {isSocialReferral ? (
+                      <p className="text-xs text-red-600 flex items-start gap-1.5">
+                        <AlertCircle size={13} className="mt-0.5 flex-shrink-0" />
+                        Social-media referral — credit is not allowed. Record full payment, or waive the balance as a discount.
+                      </p>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setCreditChoice('discount')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${creditChoice === 'discount' ? 'bg-navy-700 text-white' : 'bg-white text-navy-600 border border-navy-200'}`}>
+                          Add as Discount
+                        </button>
+                        <button type="button" onClick={() => setCreditChoice('credit')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${creditChoice === 'credit' ? 'bg-amber-500 text-white' : 'bg-white text-navy-600 border border-navy-200'}`}>
+                          Add as Credit Due
+                        </button>
+                      </div>
+                    )}
+                    {due > 0 && creditChoice === 'credit' && !isSocialReferral && (
+                      <div className="space-y-2">
+                        <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+                          <strong>The company is not responsible for credit payments.</strong> You are responsible for handling credit payments with your customers.
+                        </div>
+                        <p className="text-[11px] text-navy-500">
+                          Liability: {isOwnerReferral
+                            ? <>the <strong>referring owner ({form.referral})</strong> is responsible (owner approval / OTP required — coming in the next update).</>
+                            : form.referral === 'Company'
+                              ? <>the <strong>company</strong> is responsible.</>
+                              : <>this booking is <strong>yours</strong> — you are fully responsible for collecting it.</>}
+                        </p>
+                        <label className="flex items-center gap-2 text-xs text-navy-700 cursor-pointer">
+                          <input type="checkbox" className="rounded" checked={creditAck} onChange={(e) => setCreditAck(e.target.checked)} />
+                          I understand and accept responsibility for this credit.
+                        </label>
+
+                        {/* Owner OTP approval (required when the credit sits on another owner's vehicle) */}
+                        {needsOwnerOtp && (
+                          <div className="bg-white border border-navy-200 rounded-lg p-3 space-y-2">
+                            <p className="text-xs font-semibold text-navy-700 flex items-center gap-1.5">
+                              <Lock size={12} /> Owner approval required — {vehicleOwner?.name}
+                              {otp.verified && <span className="text-green-600 flex items-center gap-1 font-normal"><CheckCircle2 size={11} /> Approved</span>}
+                            </p>
+                            {!otp.verified && (
+                              <>
+                                {!otp.sent ? (
+                                  <button type="button" onClick={sendOwnerOtp} className="btn btn-secondary text-xs w-full">
+                                    Send approval OTP to {vehicleOwner?.name}
+                                  </button>
+                                ) : (
+                                  <>
+                                    {otp.fallback && (
+                                      <div className="bg-amber-50 border border-amber-200 rounded px-2 py-1 text-[11px] text-amber-800">
+                                        SMS not configured — dev OTP: <strong className="font-mono">{otp.fallback}</strong>
+                                      </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                      <input
+                                        className="input flex-1 font-mono tracking-widest text-center"
+                                        placeholder="000000" maxLength={6}
+                                        value={otp.input}
+                                        onChange={(e) => setOtp((s) => ({ ...s, input: e.target.value.replace(/\D/g, '') }))}
+                                      />
+                                      <button type="button" onClick={verifyOwnerOtp} className="btn btn-primary flex-shrink-0">Verify</button>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {companyResponsible && (
+                          <p className="text-[11px] text-blue-600">Company referral — the company is responsible; no owner approval needed.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-3">
                   <label className="flex items-center gap-2 text-sm text-navy-700 cursor-pointer">
                     <input type="checkbox" className="rounded" checked={form.commissionAlreadyPaid} onChange={(e) => set('commissionAlreadyPaid', e.target.checked)} />
@@ -458,16 +614,18 @@ export default function ManualBookingModal({ onClose }: Props) {
 
                   <div className="border-t pt-2 mt-1 space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-navy-600">Paid</span>
-                      <span className="font-semibold text-blue-700">Rs {form.paidAmount.toLocaleString()}</span>
+                      <span className="text-navy-600">Paid{form.advanceAmount > 0 ? ' + Advance' : ''}</span>
+                      <span className="font-semibold text-blue-700">Rs {paidTotal.toLocaleString()}</span>
                     </div>
-                    {balance > 0 && (
+                    {due > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-red-600">Balance Due</span>
-                        <span className="font-semibold text-red-600">Rs {balance.toLocaleString()}</span>
+                        <span className={creditChoice === 'credit' ? 'text-amber-600' : 'text-red-600'}>
+                          {creditChoice === 'credit' ? 'Credit Due' : 'To Discount'}
+                        </span>
+                        <span className={`font-semibold ${creditChoice === 'credit' ? 'text-amber-600' : 'text-red-600'}`}>Rs {due.toLocaleString()}</span>
                       </div>
                     )}
-                    {balance === 0 && form.paidAmount > 0 && (
+                    {due === 0 && paidTotal > 0 && (
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <CheckCircle2 size={12} /> Fully paid
                       </p>

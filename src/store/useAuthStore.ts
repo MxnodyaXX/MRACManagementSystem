@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, AppUser, OwnerPermissions } from '../types/auth';
+import { supabaseEnabled } from '../lib/supabase';
+import { db, dbFetchUsers } from '../lib/db';
 
 export const USERS: AppUser[] = [
   { id: 'u_admin', username: 'admin',  password: 'admin123',  name: 'EMRAC Admin',         role: 'admin'             },
@@ -40,6 +42,26 @@ export const useAuthStore = create<AuthState>()(
       addUser: (userData) => {
         const newUser: AppUser = { ...userData, id: 'u_' + Math.random().toString(36).slice(2, 8) };
         set((s) => ({ users: [...s.users, newUser] }));
+        if (supabaseEnabled) {
+          Promise.resolve(db.insertUser(newUser)).catch((e) => console.error('[auth] insertUser failed:', e));
+        }
+      },
+
+      // Merge DB-stored login profiles into the list on boot. The built-in USERS
+      // stay as a fallback so the admin can always sign in even on a fresh device.
+      loadUsers: async () => {
+        if (!supabaseEnabled) return;
+        try {
+          const dbUsers = await dbFetchUsers();
+          set((s) => {
+            const byUsername = new Map<string, AppUser>();
+            s.users.forEach((u) => byUsername.set(u.username, u)); // defaults first
+            dbUsers.forEach((u) => byUsername.set(u.username, u));  // DB overrides/adds
+            return { users: Array.from(byUsername.values()) };
+          });
+        } catch (e) {
+          console.error('[auth] loadUsers failed:', e);
+        }
       },
 
       updatePermissions: (ownerId, perms) =>

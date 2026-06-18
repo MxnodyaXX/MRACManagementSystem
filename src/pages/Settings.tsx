@@ -110,9 +110,10 @@ function ProfileSetupModal({ owner, onClose, onCreated }: ProfileProps) {
       setError('That username is already taken — choose another.'); return;
     }
     setSaving(true);
-    // Update owner record with verified email/address if they were missing
-    updateOwner(owner.id, { email: email.trim(), address: address.trim() });
-    // Create user profile
+    // Persist the full profile to the owners table (DB): verified email, address,
+    // NIC and the chosen login username.
+    updateOwner(owner.id, { email: email.trim(), address: address.trim(), nic: nic.trim(), username: username.trim() });
+    // Create the login profile (auth)
     addUser({ username: username.trim(), password, name: owner.name, role: 'owner', ownerId: owner.id, email: email.trim(), nic: nic.trim() });
     setSaving(false);
     onCreated();
@@ -330,7 +331,7 @@ function ProfileSetupModal({ owner, onClose, onCreated }: ProfileProps) {
 // ─── Settings page ───────────────────────────────────────────────────────────
 
 export default function Settings() {
-  const { owners }    = useStore();
+  const { owners, recomputeStats } = useStore();
   const { users }     = useAuthStore();
   const [manualOpen,  setManualOpen]  = useState(false);
   const [setupOwner,  setSetupOwner]  = useState<Owner | null>(null);
@@ -359,6 +360,19 @@ export default function Settings() {
             <div>
               <p className="font-semibold text-navy-800 text-sm">Add Manual Booking</p>
               <p className="text-xs text-navy-400 mt-1 leading-relaxed">Record a past booking that was missed. Updates vehicle stats, customer profile, commissions, and referral earnings.</p>
+            </div>
+          </button>
+
+          <button
+            onClick={recomputeStats}
+            className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-card border border-gray-100 hover:border-navy-200 hover:shadow-md text-left transition-all"
+          >
+            <div className="w-11 h-11 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+              <RefreshCw size={20} className="text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-navy-800 text-sm">Recalculate Statistics</p>
+              <p className="text-xs text-navy-400 mt-1 leading-relaxed">Rebuild every vehicle's revenue/rent count and owner earnings from the actual bookings. Fixes any inflated or incorrect totals.</p>
             </div>
           </button>
         </div>

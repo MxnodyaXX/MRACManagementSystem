@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Car, CalendarDays, MessageSquare,
-  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact, HandCoins,
+  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact, HandCoins, CreditCard,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../store/useStore';
@@ -47,7 +47,9 @@ export default function Sidebar() {
 
 
   const allLinks = isAdmin()
-    ? [...links, { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
+    ? [...links,
+        { to: '/credit',      icon: CreditCard,  label: 'Credit'      },
+        { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
     : links.filter((l) => l.to !== '/inquiries');
 
   return (
