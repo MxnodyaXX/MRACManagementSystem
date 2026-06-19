@@ -25,6 +25,7 @@ function vFromDb(r: Record<string, unknown>): Vehicle {
     insurance: r.insurance as Vehicle['insurance'],
     revenue: num(r.revenue), rentCount: num(r.rent_count),
     imageUrl: (r.image_url as string) ?? undefined,
+    imageUrls: Array.isArray(r.image_urls) ? (r.image_urls as string[]) : undefined,
     color: (r.color as string) ?? undefined, seats: numOpt(r.seats),
     fuelType: (r.fuel_type as string) ?? undefined,
     transmission: (r.transmission as string) ?? undefined,
@@ -48,7 +49,10 @@ function oFromDb(r: Record<string, unknown>): Owner {
   return {
     id: r.id as string, name: r.name as string, phone: r.phone as string,
     email: r.email as string, address: (r.address as string) ?? undefined,
-    bankAccount: (r.bank_account as string) ?? undefined,
+    bankName:          (r.bank_name           as string) ?? undefined,
+    branchName:        (r.branch_name         as string) ?? undefined,
+    accountNumber:     (r.account_number      as string) ?? undefined,
+    accountHolderName: (r.account_holder_name as string) ?? undefined,
     nic: (r.nic as string) ?? undefined,
     username: (r.username as string) ?? undefined,
     commissionRate: num(r.commission_rate),
@@ -61,7 +65,11 @@ function oFromDb(r: Record<string, unknown>): Owner {
 function oToDb(o: Owner) {
   return {
     id: o.id, name: o.name, phone: o.phone, email: o.email,
-    address: o.address ?? null, bank_account: o.bankAccount ?? null,
+    address: o.address ?? null,
+    bank_name:           o.bankName          ?? null,
+    branch_name:         o.branchName        ?? null,
+    account_number:      o.accountNumber     ?? null,
+    account_holder_name: o.accountHolderName ?? null,
     nic: o.nic ?? null, username: o.username ?? null,
     commission_rate: o.commissionRate, total_earnings: o.totalEarnings,
     pending_payout: o.pendingPayout, sms_opt_in: o.smsOptIn ?? true, created_at: o.createdAt,
@@ -363,7 +371,7 @@ export const db = {
     if (u.insurance !== undefined) row.insurance = u.insurance
     if (u.revenue !== undefined) row.revenue = u.revenue
     if (u.rentCount !== undefined) row.rent_count = u.rentCount
-    if (u.imageUrl !== undefined) row.image_url = u.imageUrl
+    if ('imageUrl' in u) row.image_url = u.imageUrl ?? null
     if (u.color !== undefined) row.color = u.color
     if (u.seats !== undefined) row.seats = u.seats
     if (u.fuelType !== undefined) row.fuel_type = u.fuelType
@@ -380,8 +388,11 @@ export const db = {
     if (u.name !== undefined) row.name = u.name
     if (u.phone !== undefined) row.phone = u.phone
     if (u.email !== undefined) row.email = u.email
-    if (u.address !== undefined) row.address = u.address
-    if (u.bankAccount !== undefined) row.bank_account = u.bankAccount
+    if (u.address            !== undefined) row.address             = u.address
+    if (u.bankName           !== undefined) row.bank_name           = u.bankName
+    if (u.branchName         !== undefined) row.branch_name         = u.branchName
+    if (u.accountNumber      !== undefined) row.account_number      = u.accountNumber
+    if (u.accountHolderName  !== undefined) row.account_holder_name = u.accountHolderName
     if (u.nic !== undefined) row.nic = u.nic
     if (u.username !== undefined) row.username = u.username
     if (u.commissionRate !== undefined) row.commission_rate = u.commissionRate

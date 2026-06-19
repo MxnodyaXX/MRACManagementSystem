@@ -3,6 +3,8 @@ import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
+import Select from '../components/ui/Select';
+import DateInput from '../components/ui/DateInput';
 import { Plus, Trash2, Receipt } from 'lucide-react';
 import { Expense, ExpenseCategory } from '../types';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -115,14 +117,14 @@ export default function Expenses() {
       {/* Filters + Add */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <select
-            className="input w-40 sm:w-48"
+          <Select
+            className="w-40 sm:w-48"
             value={vehicleFilter}
-            onChange={(e) => setVehicleFilter(e.target.value)}
-          >
-            <option value="">All Vehicles</option>
-            {scopedVehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} · {v.vehicleNumber}</option>)}
-          </select>
+            onChange={setVehicleFilter}
+            placeholder="All Vehicles"
+            nullable
+            options={scopedVehicles.map((v) => ({ value: v.id, label: `${v.brand} ${v.model} · ${v.vehicleNumber}` }))}
+          />
           {filter !== 'All' && (
             <button onClick={() => setFilter('All')} className="text-xs text-navy-400 hover:text-navy-700 px-2 py-1 rounded-lg hover:bg-navy-50">
               Clear filter ×
@@ -191,16 +193,13 @@ export default function Expenses() {
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <p className="label">Vehicle *</p>
-            <select className="input" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
-              <option value="">Select vehicle</option>
-              {scopedVehicles.map((v) => <option key={v.id} value={v.id}>{v.brand} {v.model} — {v.vehicleNumber}</option>)}
-            </select>
+            <Select value={form.vehicleId} onChange={(v) => set('vehicleId', v)} placeholder="Select vehicle" nullable
+              options={scopedVehicles.map((v) => ({ value: v.id, label: `${v.brand} ${v.model} — ${v.vehicleNumber}` }))} />
           </div>
           <div>
             <p className="label">Category</p>
-            <select className="input" value={form.category} onChange={(e) => set('category', e.target.value as ExpenseCategory)}>
-              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            <Select value={form.category} onChange={(v) => set('category', v as ExpenseCategory)}
+              options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
           </div>
           <div>
             <p className="label">Amount (Rs) *</p>
@@ -208,7 +207,7 @@ export default function Expenses() {
           </div>
           <div>
             <p className="label">Date</p>
-            <input className="input" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
+            <DateInput value={form.date} onChange={(v) => set('date', v)} />
           </div>
           <div>
             <p className="label">Description *</p>

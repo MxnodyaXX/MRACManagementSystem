@@ -5,6 +5,8 @@ import { sendRentalSummary } from '../utils/email';
 import { resolveReferralFee } from '../lib/referral';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
+import Select from '../components/ui/Select';
+import DateTimeInput from '../components/ui/DateTimeInput';
 import StatusBadge from '../components/ui/StatusBadge';
 import InvoiceModal from '../components/ui/InvoiceModal';
 import {
@@ -158,7 +160,7 @@ export default function Handovers() {
           {activeBookings.map((b) => {
             const vehicle  = vehicles.find((v) => v.id === b.vehicleId);
             const { delivery, return: ret } = getHandovers(b.id);
-            const balance  = b.totalAmount - b.paidAmount;
+            const balance  = b.totalAmount - (b.discount ?? 0) - b.paidAmount;
 
             return (
               <div key={b.id} className="card">
@@ -381,8 +383,7 @@ export default function Handovers() {
                 </div>
                 <div>
                   <p className="label">Date & Time *</p>
-                  <input className="input" type="datetime-local" value={form.dateTime}
-                    onChange={(e) => set('dateTime', e.target.value)} />
+                  <DateTimeInput value={form.dateTime} onChange={(v) => set('dateTime', v)} />
                 </div>
                 <div>
                   <p className="label">Odometer Reading (km) *</p>
@@ -394,10 +395,8 @@ export default function Handovers() {
                 </div>
                 <div>
                   <p className="label">Fuel Level</p>
-                  <select className="input" value={form.fuelLevel}
-                    onChange={(e) => set('fuelLevel', e.target.value)}>
-                    {FUEL_LEVELS.map((f) => <option key={f}>{f}</option>)}
-                  </select>
+                  <Select value={form.fuelLevel} onChange={(v) => set('fuelLevel', v)}
+                    options={FUEL_LEVELS.map((f) => ({ value: f, label: f }))} />
                 </div>
                 <div>
                   <p className="label">Condition / Notes</p>
@@ -465,8 +464,7 @@ export default function Handovers() {
                 </div>
                 <div>
                   <p className="label">Date & Time *</p>
-                  <input className="input" type="datetime-local" value={form.dateTime}
-                    onChange={(e) => setReturn('dateTime', e.target.value)} />
+                  <DateTimeInput value={form.dateTime} onChange={(v) => setReturn('dateTime', v)} />
                 </div>
                 <div>
                   <p className="label">Odometer Reading (km) *</p>
@@ -478,10 +476,8 @@ export default function Handovers() {
                 </div>
                 <div>
                   <p className="label">Fuel Level at Return</p>
-                  <select className="input" value={form.fuelLevel}
-                    onChange={(e) => setReturn('fuelLevel', e.target.value)}>
-                    {FUEL_LEVELS.map((f) => <option key={f}>{f}</option>)}
-                  </select>
+                  <Select value={form.fuelLevel} onChange={(v) => setReturn('fuelLevel', v)}
+                    options={FUEL_LEVELS.map((f) => ({ value: f, label: f }))} />
                 </div>
                 <div>
                   <p className="label">Condition / Notes</p>

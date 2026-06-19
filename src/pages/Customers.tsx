@@ -302,7 +302,7 @@ export default function Customers() {
                       <div className="space-y-2">
                         {history.map((b) => {
                           const vehicle = vehicles.find((v) => v.id === b.vehicleId);
-                          const balance = b.totalAmount - b.paidAmount;
+                          const balance = b.totalAmount - (b.discount ?? 0) - b.paidAmount;
                           return (
                             <div
                               key={b.id}

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import Select from './Select';
+import DateInput from './DateInput';
 import TimePicker from './TimePicker';
 import { resolveReferralFee } from '../../lib/referral';
 import { creditResponsibilityOf } from '../../lib/credit';
@@ -218,24 +219,18 @@ export default function ManualBookingModal({ onClose }: Props) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <Field label="Vehicle" required>
-                      <select className="input" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
-                        <option value="">Select vehicle…</option>
-                        {vehicles.map((v) => (
-                          <option key={v.id} value={v.id}>
-                            {v.vehicleNumber} — {v.brand} {v.model} (Rs {v.dailyRent.toLocaleString()}/day)
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={form.vehicleId} onChange={(v) => set('vehicleId', v)} placeholder="Select vehicle…" nullable
+                        options={vehicles.map((v) => ({ value: v.id, label: `${v.vehicleNumber} — ${v.brand} ${v.model}`, sub: `Rs ${v.dailyRent.toLocaleString()}/day` }))} />
                     </Field>
                   </div>
                   <Field label="Start Date" required>
-                    <input className="input" type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
+                    <DateInput value={form.startDate} onChange={(v) => set('startDate', v)} />
                   </Field>
                   <Field label="Start Time">
                     <TimePicker value={form.startTime} onChange={(t) => set('startTime', t)} placeholder="Handover time" />
                   </Field>
                   <Field label="End Date" required>
-                    <input className="input" type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} />
+                    <DateInput value={form.endDate} onChange={(v) => set('endDate', v)} minDate={form.startDate} />
                   </Field>
                   <Field label="End Time">
                     <TimePicker value={form.endTime} onChange={(t) => set('endTime', t)} placeholder="Return time" />
@@ -244,12 +239,8 @@ export default function ManualBookingModal({ onClose }: Props) {
                     <input className="input" type="number" min="0" value={form.dailyRateUsed || ''} onChange={(e) => set('dailyRateUsed', +e.target.value)} />
                   </Field>
                   <Field label="Booking Status" required>
-                    <select className="input" value={form.status} onChange={(e) => set('status', e.target.value as BookingStatus)}>
-                      <option value="Completed">Completed</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Ongoing">Ongoing</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                    <Select value={form.status} onChange={(v) => set('status', v as BookingStatus)}
+                      options={['Completed', 'Confirmed', 'Ongoing', 'Cancelled'].map((s) => ({ value: s, label: s }))} />
                   </Field>
                 </div>
               </section>
@@ -358,9 +349,8 @@ export default function ManualBookingModal({ onClose }: Props) {
                     <input className="input" type="number" min="0" value={form.discount || ''} onChange={(e) => set('discount', +e.target.value)} />
                   </Field>
                   <Field label="Payment Method">
-                    <select className="input" value={form.paymentMethod} onChange={(e) => set('paymentMethod', e.target.value)}>
-                      <option>Cash</option><option>Card</option><option>Bank Transfer</option><option>Online</option><option>Cheque</option>
-                    </select>
+                    <Select value={form.paymentMethod} onChange={(v) => set('paymentMethod', v)}
+                      options={['Cash', 'Card', 'Bank Transfer', 'Online', 'Cheque'].map((s) => ({ value: s, label: s }))} />
                   </Field>
                   <Field label="Amount Paid (Rs)">
                     <input className="input" type="number" min="0" value={form.paidAmount || ''} onChange={(e) => set('paidAmount', +e.target.value)} />
@@ -483,15 +473,16 @@ export default function ManualBookingModal({ onClose }: Props) {
                         </div>
                       ) : (
                         <div className="flex gap-2">
-                          <select className="input flex-1" value={allReferralOptions.includes(form.referral) ? form.referral : 'Direct'} onChange={(e) => set('referral', e.target.value)}>
-                            <option value="Direct">Direct</option>
-                            <optgroup label="Marketing Channels">
-                              {REFERRAL_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-                            </optgroup>
-                            <optgroup label="Owners (earns referral fee)">
-                              {owners.map((o) => <option key={o.id} value={o.name}>{o.name}</option>)}
-                            </optgroup>
-                          </select>
+                          <Select
+                            className="flex-1"
+                            value={allReferralOptions.includes(form.referral) ? form.referral : 'Direct'}
+                            onChange={(v) => set('referral', v)}
+                            options={[
+                              { value: 'Direct', label: 'Direct' },
+                              ...REFERRAL_SOURCES.map((s) => ({ value: s, label: s, group: 'Marketing Channels' })),
+                              ...owners.map((o) => ({ value: o.name, label: o.name, group: 'Owners', sub: 'earns referral fee' })),
+                            ]}
+                          />
                           <button className="text-xs text-navy-500 underline whitespace-nowrap" onClick={() => setReferralCustom(true)}>
                             Custom
                           </button>
@@ -507,10 +498,8 @@ export default function ManualBookingModal({ onClose }: Props) {
                   {isOwnerReferral && (
                     <>
                       <Field label="Referral Fee Type">
-                        <select className="input" value={form.referralFeeType} onChange={(e) => set('referralFeeType', e.target.value as 'fixed' | 'percent')}>
-                          <option value="fixed">Fixed (Rs)</option>
-                          <option value="percent">Percentage (%)</option>
-                        </select>
+                        <Select value={form.referralFeeType} onChange={(v) => set('referralFeeType', v as 'fixed' | 'percent')}
+                          options={[{ value: 'fixed', label: 'Fixed (Rs)' }, { value: 'percent', label: 'Percentage (%)' }]} />
                       </Field>
                       <Field label={form.referralFeeType === 'fixed' ? 'Referral Fee (Rs)' : 'Referral Fee (%)'}>
                         <input className="input" type="number" min="0" value={form.referralFeeValue || ''} onChange={(e) => set('referralFeeValue', +e.target.value)} />
@@ -540,10 +529,8 @@ export default function ManualBookingModal({ onClose }: Props) {
                     <input className="input" value={form.dropLocation} onChange={(e) => set('dropLocation', e.target.value)} />
                   </Field>
                   <Field label="Driver (optional)">
-                    <select className="input" value={form.driverId} onChange={(e) => set('driverId', e.target.value)}>
-                      <option value="">No driver</option>
-                      {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
+                    <Select value={form.driverId} onChange={(v) => set('driverId', v)} placeholder="No driver" nullable
+                      options={drivers.map((d) => ({ value: d.id, label: d.name }))} />
                   </Field>
                   <div className="col-span-2">
                     <Field label="Notes">

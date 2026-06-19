@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import Modal from './Modal';
+import DateInput from './DateInput';
 import StatusBadge from './StatusBadge';
 import { CheckCircle, Clock, XCircle, Search } from 'lucide-react';
 import { parseISO, addDays, isValid } from 'date-fns';
@@ -166,22 +167,11 @@ export default function AvailabilityModal({ open, onClose }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="label">Start Date *</p>
-            <input
-              className="input"
-              type="date"
-              value={startDate}
-              onChange={(e) => { setStartDate(e.target.value); setChecked(false); }}
-            />
+            <DateInput value={startDate} onChange={(v) => { setStartDate(v); setChecked(false); }} />
           </div>
           <div>
             <p className="label">End Date *</p>
-            <input
-              className="input"
-              type="date"
-              min={startDate}
-              value={endDate}
-              onChange={(e) => { setEndDate(e.target.value); setChecked(false); }}
-            />
+            <DateInput value={endDate} minDate={startDate} onChange={(v) => { setEndDate(v); setChecked(false); }} />
           </div>
         </div>
 

@@ -50,7 +50,8 @@ export const sampleData: {
     {
       id: 'o1', name: 'Sumod Pieris', phone: '0758313004',
       email: 'sumod.pieris@email.com', address: 'No. 45, Flower Road, Colombo 07',
-      bankAccount: '01234567890', commissionRate: 0,
+      bankName: 'Commercial Bank', branchName: 'Colombo 07', accountNumber: '1200034567890', accountHolderName: 'Sumod Pieris',
+      commissionRate: 0,
       // Paid payouts: bk1(22500)+bk7(18000)+bk2(14000) = 54500
       totalEarnings: 54500,
       // Pending payouts: bk15(18000)+bk10(14000) = 32000
@@ -60,7 +61,8 @@ export const sampleData: {
     {
       id: 'o2', name: 'Pavith Bimsara', phone: '0716986695',
       email: 'pavith.bimsara@email.com', address: '23/B, Lake Drive, Battaramulla',
-      bankAccount: '09876543210', commissionRate: 0,
+      bankName: 'Peoples Bank', branchName: 'Battaramulla', accountNumber: '2090976543210', accountHolderName: 'Pavith Bimsara',
+      commissionRate: 0,
       // Paid payouts: bk3(31000)+bk6(40000) = 71000  (both Kasun-referred, Rs 2,000 fee each)
       totalEarnings: 71000,
       // Pending: bk11(38500)+bk14(33000) = 71500
@@ -70,7 +72,8 @@ export const sampleData: {
     {
       id: 'o3', name: 'Roshan Fernando', phone: '0763456789',
       email: 'roshan.fernando@email.com', address: '78, Main Street, Gampaha',
-      bankAccount: '05556667778', commissionRate: 0,
+      bankName: 'Bank of Ceylon', branchName: 'Gampaha', accountNumber: '3050056667778', accountHolderName: 'Roshan Fernando',
+      commissionRate: 0,
       // Paid: bk4-credit not in earnings; bk9(8500, Nimesh-referred Rs 500 fee) = 8500
       totalEarnings: 8500,
       // Pending: bk13(12000) = 12000
@@ -80,7 +83,8 @@ export const sampleData: {
     {
       id: 'o4', name: 'Priya Jayawardena', phone: '0752345678',
       email: 'priya.j@email.com', address: '12, Temple Road, Kandy',
-      bankAccount: '04443332221', commissionRate: 0,
+      bankName: 'Hatton National Bank', branchName: 'Kandy', accountNumber: '4040043332221', accountHolderName: 'Priya Jayawardena',
+      commissionRate: 0,
       // Paid: bk5(37500, Kamal-referred Rs 2,500 fee)
       totalEarnings: 37500,
       // Pending: bk12(40000)
@@ -90,7 +94,8 @@ export const sampleData: {
     {
       id: 'o5', name: 'Ruwan Bandara', phone: '0745678901',
       email: 'ruwan.bandara@email.com', address: '55, Hill Street, Nugegoda',
-      bankAccount: '07778889990', commissionRate: 0,
+      bankName: 'Sampath Bank', branchName: 'Nugegoda', accountNumber: '5070078889990', accountHolderName: 'Ruwan Bandara',
+      commissionRate: 0,
       // Paid: bk8 final=66000, Kamal-referred Rs 3,000 fee → payout 63000
       totalEarnings: 63000,
       // Pending: bk16(25500, Nimal-referred Rs 1,500 fee)

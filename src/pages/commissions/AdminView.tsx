@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Select from '../../components/ui/Select';
+import DateInput from '../../components/ui/DateInput';
 import Modal from '../../components/ui/Modal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { TrendingUp, DollarSign, Users, Percent, Search, X, FileSpreadsheet, FileText, Maximize2, ChevronDown } from 'lucide-react';
@@ -626,9 +627,9 @@ export default function AdminView() {
           </div>
           {period === 'custom' && (
             <div className="flex items-center gap-2">
-              <input type="date" className="input text-sm w-auto" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} />
+              <DateInput value={dateFrom} onChange={setDateFrom} maxDate={dateTo || undefined} placeholder="From" className="w-36" />
               <span className="text-xs text-navy-400">to</span>
-              <input type="date" className="input text-sm w-auto" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} />
+              <DateInput value={dateTo} onChange={setDateTo} minDate={dateFrom || undefined} placeholder="To" className="w-36" />
             </div>
           )}
           {period !== 'all' && period !== 'custom' && (

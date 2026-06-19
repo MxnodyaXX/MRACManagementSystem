@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
+import Select from '../components/ui/Select';
 import { Plus, Car, Lock, FileText, Printer } from 'lucide-react';
 import { Owner } from '../types';
 
@@ -14,7 +15,10 @@ const emptyOwner = (): Omit<Owner, 'id' | 'createdAt' | 'totalEarnings' | 'pendi
   phone: '',
   email: '',
   address: '',
-  bankAccount: '',
+  bankName: '',
+  branchName: '',
+  accountNumber: '',
+  accountHolderName: '',
   commissionRate: 0,
   smsOptIn: true,
 });
@@ -211,9 +215,24 @@ export default function Owners() {
             <p className="label">Address</p>
             <input className="input" value={form.address ?? ''} onChange={(e) => set('address', e.target.value)} />
           </div>
-          <div className="col-span-2">
-            <p className="label">Bank Account</p>
-            <input className="input" value={form.bankAccount ?? ''} onChange={(e) => set('bankAccount', e.target.value)} />
+          <div className="col-span-2 border-t border-navy-100 pt-4 mt-1">
+            <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide mb-3">Banking Details</p>
+          </div>
+          <div>
+            <p className="label">Bank Name</p>
+            <input className="input" placeholder="e.g. Commercial Bank" value={form.bankName ?? ''} onChange={(e) => set('bankName', e.target.value)} />
+          </div>
+          <div>
+            <p className="label">Branch Name</p>
+            <input className="input" placeholder="e.g. Colombo 07" value={form.branchName ?? ''} onChange={(e) => set('branchName', e.target.value)} />
+          </div>
+          <div>
+            <p className="label">Account Number</p>
+            <input className="input" placeholder="e.g. 1200034567890" value={form.accountNumber ?? ''} onChange={(e) => set('accountNumber', e.target.value)} />
+          </div>
+          <div>
+            <p className="label">Account Holder Name</p>
+            <input className="input" placeholder="As on bank passbook" value={form.accountHolderName ?? ''} onChange={(e) => set('accountHolderName', e.target.value)} />
           </div>
           <div className="col-span-2">
             <button
@@ -265,12 +284,10 @@ export default function Owners() {
 
               {/* Month / Year selector */}
               <div className="flex gap-3 items-center">
-                <select className="input flex-1 text-sm" value={stmtMonth} onChange={(e) => setStmtMonth(+e.target.value)}>
-                  {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                </select>
-                <select className="input w-28 text-sm" value={stmtYear} onChange={(e) => setStmtYear(+e.target.value)}>
-                  {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
+                <Select className="flex-1" value={String(stmtMonth)} onChange={(v) => setStmtMonth(Number(v))}
+                  options={MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))} />
+                <Select className="w-28" value={String(stmtYear)} onChange={(v) => setStmtYear(Number(v))}
+                  options={yearOptions.map((y) => ({ value: String(y), label: String(y) }))} />
                 <button
                   className="flex items-center gap-1.5 text-xs bg-navy-700 text-white px-3 py-2 rounded-xl hover:bg-navy-800 transition-colors flex-shrink-0"
                   onClick={() => window.print()}
@@ -389,10 +406,35 @@ export default function Owners() {
                 ))}
               </div>
 
-              {selected.bankAccount && (
-                <div className="bg-navy-50/60 rounded-xl p-3">
-                  <p className="text-xs text-navy-400">Bank Account</p>
-                  <p className="text-sm font-medium text-navy-800">{selected.bankAccount}</p>
+              {(selected.bankName || selected.accountNumber) && (
+                <div className="bg-navy-50/60 rounded-xl p-4 space-y-3">
+                  <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide">Banking Details</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    {selected.bankName && (
+                      <div>
+                        <p className="text-xs text-navy-400">Bank</p>
+                        <p className="font-medium text-navy-800">{selected.bankName}</p>
+                      </div>
+                    )}
+                    {selected.branchName && (
+                      <div>
+                        <p className="text-xs text-navy-400">Branch</p>
+                        <p className="font-medium text-navy-800">{selected.branchName}</p>
+                      </div>
+                    )}
+                    {selected.accountNumber && (
+                      <div>
+                        <p className="text-xs text-navy-400">Account Number</p>
+                        <p className="font-medium text-navy-800 font-mono tracking-wide">{selected.accountNumber}</p>
+                      </div>
+                    )}
+                    {selected.accountHolderName && (
+                      <div>
+                        <p className="text-xs text-navy-400">Account Holder</p>
+                        <p className="font-medium text-navy-800">{selected.accountHolderName}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

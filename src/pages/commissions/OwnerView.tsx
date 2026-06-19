@@ -3,6 +3,7 @@ import { useStore } from '../../store/useStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Select from '../../components/ui/Select';
+import DateInput from '../../components/ui/DateInput';
 import Modal from '../../components/ui/Modal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import {
@@ -51,9 +52,9 @@ function PeriodPills({ period, setPeriod, dateFrom, setDateFrom, dateTo, setDate
       </div>
       {period === 'custom' && (
         <div className="flex items-center gap-2">
-          <input type="date" className="input text-sm w-auto" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} />
+          <DateInput value={dateFrom} onChange={setDateFrom} maxDate={dateTo || undefined} placeholder="From" className="w-36" />
           <span className="text-xs text-navy-400">to</span>
-          <input type="date" className="input text-sm w-auto" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} />
+          <DateInput value={dateTo} onChange={setDateTo} minDate={dateFrom || undefined} placeholder="To" className="w-36" />
         </div>
       )}
       {period !== 'all' && period !== 'custom' && (
@@ -80,7 +81,7 @@ function RentDetailModal({ booking, handovers, onClose }: {
   const startMileage = delivery?.mileage;
   const endMileage   = ret?.mileage;
   const kmDriven     = startMileage != null && endMileage != null ? endMileage - startMileage : null;
-  const outstanding  = Math.max(0, booking.totalAmount - booking.paidAmount);
+  const outstanding  = Math.max(0, booking.totalAmount - (booking.discount ?? 0) - booking.paidAmount);
 
   const Row = ({ icon, label, value, valueClass = '' }: { icon: React.ReactNode; label: string; value: React.ReactNode; valueClass?: string }) => (
     <div className="flex items-start gap-3 py-2.5 border-b border-navy-50 last:border-0">

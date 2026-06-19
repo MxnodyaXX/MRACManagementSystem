@@ -34,6 +34,7 @@ export interface Vehicle {
   revenue: number;
   rentCount: number;
   imageUrl?: string;
+  imageUrls?: string[];
   color?: string;
   seats?: number;
   fuelType?: string;
@@ -48,7 +49,10 @@ export interface Owner {
   phone: string;
   email: string;
   address?: string;
-  bankAccount?: string;
+  bankName?: string;
+  branchName?: string;
+  accountNumber?: string;
+  accountHolderName?: string;
   nic?: string;         // captured during login-profile setup
   username?: string;    // the owner's login username
   commissionRate: number;
@@ -217,7 +221,7 @@ export interface AppState {
   updateCustomer: (id: string, updates: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
 
-  addVehicle: (v: Omit<Vehicle, 'id' | 'createdAt' | 'revenue' | 'rentCount'>) => void;
+  addVehicle: (v: Omit<Vehicle, 'id' | 'createdAt' | 'revenue' | 'rentCount'>) => string;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
   deleteVehicle: (id: string) => void;
 

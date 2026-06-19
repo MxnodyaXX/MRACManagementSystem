@@ -4,8 +4,12 @@ import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import Select from '../components/ui/Select';
+import DateInput from '../components/ui/DateInput';
 import { Plus, UserCheck, Phone, AlertTriangle } from 'lucide-react';
 import { Driver } from '../types';
+
+const DRIVER_STATUSES: Driver['status'][] = ['Available', 'On Duty', 'Off'];
 import { differenceInDays, parseISO } from 'date-fns';
 
 const emptyForm = (): Omit<Driver, 'id' | 'joinedAt' | 'totalEarnings'> => ({
@@ -141,15 +145,12 @@ export default function Drivers() {
               {/* Admin: interactive controls; Owner: read-only status badge */}
               {!readOnly ? (
                 <div className="flex gap-2">
-                  <select
-                    className="input flex-1 text-xs py-1.5"
+                  <Select
+                    className="flex-1"
                     value={d.status}
-                    onChange={(e) => updateDriver(d.id, { status: e.target.value as Driver['status'] })}
-                  >
-                    <option>Available</option>
-                    <option>On Duty</option>
-                    <option>Off</option>
-                  </select>
+                    onChange={(v) => updateDriver(d.id, { status: v as Driver['status'] })}
+                    options={DRIVER_STATUSES.map((s) => ({ value: s, label: s }))}
+                  />
                   <button
                     onClick={() => { setSelected(d); setForm({ ...d }); setModal('edit'); }}
                     className="btn-secondary text-xs py-1.5 px-3"
@@ -193,7 +194,7 @@ export default function Drivers() {
             </div>
             <div>
               <p className="label">License Expiry</p>
-              <input className="input" type="date" value={form.licenseExpiry} onChange={(e) => set('licenseExpiry', e.target.value)} />
+              <DateInput value={form.licenseExpiry} onChange={(v) => set('licenseExpiry', v)} />
             </div>
             <div>
               <p className="label">Daily Rate (Rs)</p>
@@ -201,11 +202,8 @@ export default function Drivers() {
             </div>
             <div>
               <p className="label">Status</p>
-              <select className="input" value={form.status} onChange={(e) => set('status', e.target.value)}>
-                <option>Available</option>
-                <option>On Duty</option>
-                <option>Off</option>
-              </select>
+              <Select value={form.status} onChange={(v) => set('status', v)}
+                options={DRIVER_STATUSES.map((s) => ({ value: s, label: s }))} />
             </div>
             <div className="col-span-2">
               <p className="label">Address</p>

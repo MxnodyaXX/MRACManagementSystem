@@ -118,7 +118,10 @@ export default function Dashboard() {
      and still unpaid. Confirmed bookings haven't started, so their balance is expected future
      income, not outstanding. */
   const receivableBookings = scopedBookings.filter((b) => b.status === 'Ongoing' || b.status === 'Completed');
-  const outstandingBalance = receivableBookings.reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
+  /* Exclude bookings already tracked as formal credit — those appear in the Total Credit card.
+     The two cards are additive: Outstanding + Credit.total = all money owed, no double-counting. */
+  const informallyUnpaid = receivableBookings.filter((b) => !((b.creditAmount ?? 0) > 0 && !b.creditSettled));
+  const outstandingBalance = informallyUnpaid.reduce((s, b) => s + Math.max(0, b.totalAmount - (b.discount ?? 0) - b.paidAmount), 0);
   /* Credit to be received — balances recorded as customer credit dues. */
   const credit = creditTotals(scopedBookings);
   const today = new Date();
@@ -131,9 +134,9 @@ export default function Dashboard() {
   const monthlyProfit = thisMonthRevenue - thisMonthExpenses;
 
   /* breakdown rows for the info popups */
-  const outstandingRows = receivableBookings
-    .filter((b) => b.totalAmount > b.paidAmount)
-    .map((b) => ({ ...b, balance: b.totalAmount - b.paidAmount }))
+  const outstandingRows = informallyUnpaid
+    .filter((b) => b.totalAmount - (b.discount ?? 0) > b.paidAmount)
+    .map((b) => ({ ...b, balance: b.totalAmount - (b.discount ?? 0) - b.paidAmount }))
     .sort((a, b) => b.balance - a.balance);
   const monthRevenueRows = scopedBookings
     .filter((b) => { if (b.status === 'Cancelled') return false; const d = new Date(b.startDate); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); })
@@ -221,7 +224,7 @@ export default function Dashboard() {
             <p className={`text-2xl font-black leading-tight ${outstandingBalance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
               Rs {outstandingBalance.toLocaleString()}
             </p>
-            <p className="text-xs text-navy-400 mt-0.5">across {outstandingRows.length} unpaid bookings</p>
+            <p className="text-xs text-navy-400 mt-0.5">{outstandingRows.length} unpaid booking{outstandingRows.length !== 1 ? 's' : ''} · excludes tracked credits</p>
           </div>
         </button>
         <button
@@ -250,8 +253,8 @@ export default function Dashboard() {
       <div
         className="card anim-fade-up cursor-pointer hover:shadow-card-hover transition-shadow"
         style={{ animationDelay: '170ms' }}
-        onClick={() => navigate('/customers')}
-        title="View customers with outstanding credit"
+        onClick={() => navigate('/credit')}
+        title="View and manage outstanding customer credits"
       >
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 bg-amber-500">

@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { supabaseEnabled } from '../lib/supabase';
+import { uploadVehicleImage, deleteVehicleImage } from '../lib/vehicleImages';
+import { toast } from '../store/useToast';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
-import VehicleImage from '../components/ui/VehicleImage';
-import { vehicleBodyColor } from '../components/ui/CarSVG';
-import { Plus, Car, Pencil, Trash2, Shield, CalendarDays, Wrench, TrendingUp, Hash } from 'lucide-react';
+import CropModal from '../components/ui/CropModal';
+import Select from '../components/ui/Select';
+import DateInput from '../components/ui/DateInput';
+import { Plus, Car, Pencil, Trash2, Shield, CalendarDays, Wrench, TrendingUp, Hash, Camera, Upload, X, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Vehicle, VehicleStatus } from '../types';
+import { isInsuranceComplete, clearInsuranceReminder } from '../lib/insuranceReminder';
 
 const STATUS_OPTIONS: VehicleStatus[] = ['Available', 'Reserved', 'Ongoing', 'Maintenance'];
 const FUEL_TYPES    = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
@@ -39,6 +44,18 @@ export default function Vehicles() {
   const [modal,    setModal]    = useState<'add' | 'edit' | 'view' | null>(null);
   const [selected, setSelected] = useState<Vehicle | null>(null);
   const [form,     setForm]     = useState(empty());
+  const [uploading,       setUploading]       = useState(false);
+  const [savedUrls,       setSavedUrls]       = useState<string[]>([]);
+  const [pendingFiles,    setPendingFiles]    = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
+  const [galleryIndex,    setGalleryIndex]    = useState(0);
+  const [uploadingFor,    setUploadingFor]    = useState<string | null>(null);
+  const [cropFile,        setCropFile]        = useState<File | null>(null);
+  const [cropSrc,         setCropSrc]         = useState<string | null>(null);
+  const fileInputRef     = useRef<HTMLInputElement>(null);
+  const cardFileInputRef = useRef<HTMLInputElement>(null);
+  const uploadTargetRef  = useRef<string | null>(null);
+  const cropQueueRef     = useRef<File[]>([]);
 
   const isOwnerRole = !isAdmin() && currentUser?.role === 'owner';
   const canActOn    = (v: Vehicle) => isAdmin() || v.ownerId === currentUser?.ownerId;
@@ -49,18 +66,142 @@ export default function Vehicles() {
   const myFiltered     = isOwnerRole ? filtered.filter((v) => v.ownerId === currentUser?.ownerId) : filtered;
   const othersFiltered = isOwnerRole ? filtered.filter((v) => v.ownerId !== currentUser?.ownerId) : [];
 
-  const openAdd = () => { setForm(empty()); setModal('add'); };
-  const openEdit = (v: Vehicle) => { setSelected(v); setForm({ ...v }); setModal('edit'); };
+  const resetImageState = (urls: string[] = []) => {
+    setSavedUrls(urls);
+    setPendingFiles([]);
+    setPendingPreviews([]);
+    setGalleryIndex(0);
+  };
+
+  const openAdd = () => { setForm(empty()); resetImageState(); setModal('add'); };
+  const openEdit = (v: Vehicle) => {
+    setSelected(v);
+    setForm({ ...v });
+    resetImageState(v.imageUrls ?? (v.imageUrl ? [v.imageUrl] : []));
+    setModal('edit');
+  };
   const openView = (v: Vehicle, allowView = true) => {
     if (!allowView) return;
     setSelected(v);
+    setGalleryIndex(0);
     setModal('view');
   };
 
-  const handleSave = () => {
-    if (modal === 'add') addVehicle(form);
-    else if (modal === 'edit' && selected) updateVehicle(selected.id, form);
-    setModal(null);
+  const addFileToPending = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => setPendingPreviews((prev) => [...prev, e.target!.result as string]);
+    reader.readAsDataURL(file);
+    setPendingFiles((prev) => [...prev, file]);
+  };
+
+  const startCropFor = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => { setCropFile(file); setCropSrc(e.target!.result as string); };
+    reader.readAsDataURL(file);
+  };
+
+  const advanceCropQueue = () => {
+    if (cropQueueRef.current.length === 0) { setCropFile(null); setCropSrc(null); return; }
+    const [next, ...rest] = cropQueueRef.current;
+    cropQueueRef.current = rest;
+    startCropFor(next);
+  };
+
+  const handleCropSave = (croppedFile: File) => { addFileToPending(croppedFile); advanceCropQueue(); };
+  const handleCropSkip = () => { if (cropFile) addFileToPending(cropFile); advanceCropQueue(); };
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+    const accepted = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (!accepted.length) return;
+    cropQueueRef.current = accepted.slice(1);
+    startCropFor(accepted[0]);
+    // reset so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeSavedUrl = (url: string) => setSavedUrls((prev) => prev.filter((u) => u !== url));
+  const removePending  = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+    setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const triggerCardUpload = (vehicleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    uploadTargetRef.current = vehicleId;
+    cardFileInputRef.current?.click();
+  };
+
+  const handleCardFileSelect = async (files: FileList | null) => {
+    const vehicleId = uploadTargetRef.current;
+    if (!files || !vehicleId || !supabaseEnabled) return;
+    const file = files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    setUploadingFor(vehicleId);
+    try {
+      const url = await uploadVehicleImage(vehicleId, file);
+      const v = vehicles.find((x) => x.id === vehicleId);
+      const existing = v?.imageUrls ?? (v?.imageUrl ? [v.imageUrl] : []);
+      const newUrls = [...existing, url];
+      updateVehicle(vehicleId, { imageUrls: newUrls, imageUrl: newUrls[0] });
+    } catch (err) {
+      console.error('Card image upload failed:', err);
+      toast.error('Upload failed', (err as { message?: string })?.message ?? 'Could not upload the image. Make sure the "vehicle-images" storage bucket exists and is set to Public in Supabase.');
+    } finally {
+      setUploadingFor(null);
+      uploadTargetRef.current = null;
+      if (cardFileInputRef.current) cardFileInputRef.current.value = '';
+    }
+  };
+
+  const handleSave = async () => {
+    setUploading(true);
+    try {
+      let vehicleId: string;
+      if (modal === 'add') {
+        vehicleId = addVehicle(form);
+      } else {
+        vehicleId = selected!.id;
+      }
+
+      // Upload any new files
+      const uploadedUrls: string[] = [];
+      if (supabaseEnabled && pendingFiles.length > 0) {
+        for (const file of pendingFiles) {
+          try {
+            uploadedUrls.push(await uploadVehicleImage(vehicleId, file));
+          } catch (err) {
+            console.error('Image upload failed:', err);
+            toast.error('Upload failed', (err as { message?: string })?.message ?? 'Could not upload image. Make sure the "vehicle-images" storage bucket exists and is set to Public in Supabase.');
+          }
+        }
+      }
+
+      // Delete removed saved URLs (edit mode only, best-effort)
+      if (modal === 'edit' && selected) {
+        const originalUrls = selected.imageUrls ?? (selected.imageUrl ? [selected.imageUrl] : []);
+        const removedUrls = originalUrls.filter((u) => !savedUrls.includes(u));
+        for (const url of removedUrls) deleteVehicleImage(url);
+      }
+
+      const finalUrls = [...savedUrls, ...uploadedUrls];
+      const imageUpdates = { imageUrls: finalUrls, imageUrl: finalUrls[0] ?? undefined };
+
+      if (modal === 'edit') {
+        updateVehicle(vehicleId, { ...form, ...imageUpdates });
+      } else {
+        if (finalUrls.length > 0) updateVehicle(vehicleId, imageUpdates);
+      }
+
+      // Clear the weekly reminder gate if insurance is now complete so no
+      // further SMS/notifications fire for this vehicle until it lapses again.
+      if (isInsuranceComplete(form)) {
+        clearInsuranceReminder(vehicleId);
+      }
+    } finally {
+      setUploading(false);
+      setModal(null);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -85,36 +226,83 @@ export default function Vehicles() {
       >
         {/* Vehicle image */}
         {v.imageUrl ? (
-          /* Cutout photo — car pops out of a recessed platform for a 3D feel */
-          <div className="relative mb-3 pt-4">
-            <div className="h-20 rounded-2xl bg-gradient-to-b from-navy-50 to-navy-100/70 ring-1 ring-navy-100"
-              style={{ boxShadow: 'inset 0 6px 16px rgba(27,43,107,0.20), inset 0 -2px 6px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.7)' }} />
-            {/* ground shadow at the wheel contact line */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-1 w-2/3 h-2.5 rounded-[50%] bg-navy-900/30 blur-md" />
-            <img src={v.imageUrl} alt={`${v.brand} ${v.model}`}
-              className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[94%] max-w-[420px] pointer-events-none select-none"
-              style={{ filter: 'drop-shadow(0 10px 9px rgba(27,43,107,0.25))' }} />
-            <div className="absolute top-5 right-2 z-10"><StatusBadge status={v.status} /></div>
+          /*
+           * clip-path allows the car to overflow 28 px above the platform (pop-out)
+           * while keeping sides and bottom clipped to the rounded platform edge.
+           */
+          <div
+            className="relative mb-3 group/img"
+            style={{ clipPath: 'inset(-28px 0 0 0 round 0 0 16px 16px)' }}
+          >
+            {/* Recessed platform */}
+            <div
+              className="h-24 rounded-2xl"
+              style={{
+                background: 'linear-gradient(180deg,#ccd4e5 0%,#d9e0ee 50%,#e5eaf4 100%)',
+                boxShadow:
+                  'inset 0 6px 18px rgba(20,30,80,0.20),' +
+                  'inset 0 -3px 8px rgba(255,255,255,0.28),' +
+                  'inset 3px 0 10px rgba(20,30,80,0.08),' +
+                  'inset -3px 0 10px rgba(20,30,80,0.08)',
+              }}
+            />
+            {/* Car — anchored to platform floor, rises above it */}
+            <img
+              src={v.imageUrl}
+              alt={`${v.brand} ${v.model}`}
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full pointer-events-none select-none"
+              style={{
+                maxHeight: 148,
+                objectFit: 'contain',
+                objectPosition: 'center bottom',
+                filter: 'drop-shadow(0 8px 14px rgba(15,25,70,0.24)) drop-shadow(0 2px 5px rgba(0,0,0,0.12))',
+              }}
+            />
+            {/* Badges */}
+            <div className="absolute top-2 right-2 z-10"><StatusBadge status={v.status} /></div>
             {!mine && (
-              <div className="absolute top-5 left-2 z-10">
+              <div className="absolute top-2 left-2 z-10">
                 <span className="text-[10px] bg-navy-700/70 text-white px-2 py-0.5 rounded-full">View only</span>
               </div>
             )}
+            {mine && can('canEditVehicle') && supabaseEnabled && (
+              <button
+                type="button"
+                onClick={(e) => triggerCardUpload(v.id, e)}
+                className="absolute bottom-2 right-2 z-10 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                title="Change photo"
+              >
+                {uploadingFor === v.id
+                  ? <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : <Camera size={12} />}
+              </button>
+            )}
           </div>
         ) : (
-          /* No custom photo — keep the illustration contained in a recessed box */
-          <div className="w-full h-32 rounded-2xl overflow-hidden mb-3 relative bg-gradient-to-b from-white to-navy-100/60 ring-1 ring-navy-100">
-            <VehicleImage brand={v.brand} model={v.model} color={v.color}
-              bodyColor={vehicleBodyColor(v.color ?? '')} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 rounded-2xl pointer-events-none"
-              style={{ boxShadow: 'inset 0 4px 12px rgba(27,43,107,0.22), inset 0 -2px 6px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.6)' }} />
-            <div className="absolute top-2 right-2">
-              <StatusBadge status={v.status} />
-            </div>
+          /* No photo yet — upload placeholder */
+          <div
+            className={`w-full h-32 rounded-2xl mb-3 relative flex flex-col items-center justify-center gap-1.5
+              bg-gradient-to-b from-navy-50/80 to-navy-100/50 ring-1 ring-dashed ring-navy-200
+              ${mine && can('canEditVehicle') && supabaseEnabled ? 'cursor-pointer hover:bg-navy-100/60 hover:ring-navy-300 transition-colors' : ''}`}
+            onClick={(e) => { if (mine && can('canEditVehicle') && supabaseEnabled) triggerCardUpload(v.id, e); }}
+          >
+            <div className="absolute top-2 right-2 z-10"><StatusBadge status={v.status} /></div>
             {!mine && (
-              <div className="absolute top-2 left-2">
+              <div className="absolute top-2 left-2 z-10">
                 <span className="text-[10px] bg-navy-700/70 text-white px-2 py-0.5 rounded-full">View only</span>
               </div>
+            )}
+            {uploadingFor === v.id ? (
+              <span className="w-6 h-6 border-2 border-navy-300 border-t-navy-600 rounded-full animate-spin" />
+            ) : mine && can('canEditVehicle') && supabaseEnabled ? (
+              <>
+                <div className="w-9 h-9 rounded-full bg-navy-100 flex items-center justify-center">
+                  <Camera size={16} className="text-navy-400" />
+                </div>
+                <p className="text-[11px] text-navy-400 font-medium">Add Photo</p>
+              </>
+            ) : (
+              <Car size={28} className="text-navy-200" />
             )}
           </div>
         )}
@@ -179,6 +367,14 @@ export default function Vehicles() {
           </div>
         )}
 
+        {/* Insurance incomplete warning — shown to owners/admins who can act on this vehicle */}
+        {mine && !isInsuranceComplete(v) && (
+          <div className="flex items-center gap-1.5 text-[11px] text-orange-600 bg-orange-50 rounded-lg px-2.5 py-1.5 mb-3">
+            <AlertTriangle size={10} className="flex-shrink-0" />
+            Insurance details incomplete
+          </div>
+        )}
+
         {/* Footer: revenue + actions */}
         <div className="flex items-center justify-between border-t border-navy-50 pt-3">
           <div className="flex items-center gap-3">
@@ -226,6 +422,15 @@ export default function Vehicles() {
 
   return (
     <div>
+      {/* Hidden file input for card quick-upload */}
+      <input
+        ref={cardFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleCardFileSelect(e.target.files)}
+      />
+
       <Header title="Vehicles" subtitle={`${vehicles.length} vehicles in your fleet`} />
 
       {/* Filter tabs + Add */}
@@ -303,10 +508,8 @@ export default function Vehicles() {
             <input className="input" type="number" value={form.year} onChange={(e) => set('year', +e.target.value)} />
           </Field>
           <Field label="Owner">
-            <select className="input" value={form.ownerId} onChange={(e) => set('ownerId', e.target.value)}>
-              <option value="">Select owner</option>
-              {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-            </select>
+            <Select value={form.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Select owner" nullable
+              options={owners.map((o) => ({ value: o.id, label: o.name }))} />
           </Field>
           <Field label="Daily Rent (Rs)">
             <input className="input" type="number" value={form.dailyRent} onChange={(e) => set('dailyRent', +e.target.value)} />
@@ -318,22 +521,19 @@ export default function Vehicles() {
             <input className="input" type="number" value={form.extraKmRate ?? 50} onChange={(e) => set('extraKmRate', +e.target.value)} placeholder="50" />
           </Field>
           <Field label="Status">
-            <select className="input" value={form.status} onChange={(e) => set('status', e.target.value as VehicleStatus)}>
-              {STATUS_OPTIONS.map((s) => <option key={s}>{s}</option>)}
-            </select>
+            <Select value={form.status} onChange={(v) => set('status', v as VehicleStatus)}
+              options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))} />
           </Field>
           <Field label="Color">
             <input className="input" value={form.color ?? ''} onChange={(e) => set('color', e.target.value)} placeholder="Silver" />
           </Field>
           <Field label="Fuel Type">
-            <select className="input" value={form.fuelType ?? ''} onChange={(e) => set('fuelType', e.target.value)}>
-              {FUEL_TYPES.map((f) => <option key={f}>{f}</option>)}
-            </select>
+            <Select value={form.fuelType ?? ''} onChange={(v) => set('fuelType', v)}
+              options={FUEL_TYPES.map((f) => ({ value: f, label: f }))} />
           </Field>
           <Field label="Transmission">
-            <select className="input" value={form.transmission ?? ''} onChange={(e) => set('transmission', e.target.value)}>
-              {TRANSMISSIONS.map((t) => <option key={t}>{t}</option>)}
-            </select>
+            <Select value={form.transmission ?? ''} onChange={(v) => set('transmission', v)}
+              options={TRANSMISSIONS.map((t) => ({ value: t, label: t }))} />
           </Field>
           <Field label="Seats">
             <input className="input" type="number" value={form.seats ?? 5} onChange={(e) => set('seats', +e.target.value)} />
@@ -342,11 +542,120 @@ export default function Vehicles() {
             <input className="input" type="number" value={form.mileage ?? 0} onChange={(e) => set('mileage', +e.target.value)} />
           </Field>
 
+          {/* ── Vehicle Photos ──────────────────────────────────────────────── */}
+          <div className="col-span-2">
+            <div className="flex items-center gap-2 mb-3 mt-1">
+              <Camera size={14} className="text-navy-400" />
+              <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide">Vehicle Photos</p>
+            </div>
+
+            <div className="grid grid-cols-5 gap-4">
+              {/* Left: thumbnails + upload zone */}
+              <div className="col-span-3 flex flex-col gap-3">
+                {(savedUrls.length > 0 || pendingPreviews.length > 0) && (
+                  <div className="flex gap-2 flex-wrap">
+                    {savedUrls.map((url, i) => (
+                      <div key={url} className="relative group w-20 h-14 rounded-xl overflow-hidden ring-1 ring-navy-100 flex-shrink-0">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-navy-700/80 text-white px-1 rounded">Primary</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeSavedUrl(url)}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white rounded-full items-center justify-center hidden group-hover:flex"
+                        >
+                          <X size={8} />
+                        </button>
+                      </div>
+                    ))}
+                    {pendingPreviews.map((preview, i) => (
+                      <div key={i} className="relative group w-20 h-14 rounded-xl overflow-hidden ring-1 ring-amber-200 flex-shrink-0">
+                        <img src={preview} alt="" className="w-full h-full object-cover opacity-70" />
+                        <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-amber-600/90 text-white px-1 rounded">New</span>
+                        <button
+                          type="button"
+                          onClick={() => removePending(i)}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white rounded-full items-center justify-center hidden group-hover:flex"
+                        >
+                          <X size={8} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {supabaseEnabled ? (
+                  <label
+                    className="flex flex-col items-center justify-center w-full border-2 border-dashed border-navy-200 rounded-xl py-4 px-3 cursor-pointer hover:border-navy-400 hover:bg-navy-50/40 transition-colors"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => { e.preventDefault(); handleFileSelect(e.dataTransfer.files); }}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                    />
+                    <Upload size={18} className="text-navy-300 mb-1.5" />
+                    <p className="text-xs text-navy-400">Drop images here or click to browse</p>
+                    <p className="text-[10px] text-navy-300 mt-0.5">JPEG · PNG · WebP · Multiple allowed</p>
+                  </label>
+                ) : (
+                  <div className="flex items-center gap-2 bg-navy-50 rounded-xl px-3 py-2.5 text-xs text-navy-400">
+                    <Camera size={13} className="flex-shrink-0" />
+                    Image upload requires Supabase Storage to be configured.
+                  </div>
+                )}
+              </div>
+
+              {/* Right: card preview */}
+              <div className="col-span-2 flex flex-col gap-2">
+                <p className="text-[11px] font-medium text-navy-400">Card Preview</p>
+                <div
+                  className="w-full rounded-2xl overflow-hidden bg-navy-50 ring-1 ring-navy-100 relative"
+                  style={{ aspectRatio: '16/7' }}
+                >
+                  {(pendingPreviews[0] || savedUrls[0]) ? (
+                    <>
+                      <img
+                        src={pendingPreviews[0] || savedUrls[0]}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
+                      <Camera size={16} className="text-navy-200" />
+                      <p className="text-[10px] text-navy-300">No photo yet</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-navy-300 leading-relaxed">
+                  How your first photo will look on the vehicle card.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Insurance ───────────────────────────────────────────────────── */}
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-3 mt-1">
               <Shield size={14} className="text-navy-400" />
               <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide">Insurance Details</p>
             </div>
+            {!isInsuranceComplete(form) && (
+              <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 mb-3 text-xs text-orange-700">
+                <AlertTriangle size={13} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Insurance details are incomplete</p>
+                  <p className="text-orange-600 mt-0.5">A weekly reminder will be sent to the owner until all four fields are filled in.</p>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <Field label="Provider">
                 <input className="input" value={form.insurance.provider} onChange={(e) => setIns('provider', e.target.value)} />
@@ -355,7 +664,7 @@ export default function Vehicles() {
                 <input className="input" value={form.insurance.policyNumber} onChange={(e) => setIns('policyNumber', e.target.value)} />
               </Field>
               <Field label="Expiry Date">
-                <input className="input" type="date" value={form.insurance.expiryDate} onChange={(e) => setIns('expiryDate', e.target.value)} />
+                <DateInput value={form.insurance.expiryDate} onChange={(v) => setIns('expiryDate', v)} />
               </Field>
               <Field label="Premium (Rs)">
                 <input className="input" type="number" value={form.insurance.premium} onChange={(e) => setIns('premium', +e.target.value)} />
@@ -365,9 +674,9 @@ export default function Vehicles() {
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
-          <button onClick={handleSave} className="btn-primary">
-            {modal === 'add' ? 'Add Vehicle' : 'Save Changes'}
+          <button onClick={() => setModal(null)} className="btn-secondary" disabled={uploading}>Cancel</button>
+          <button onClick={handleSave} className="btn-primary disabled:opacity-60" disabled={uploading}>
+            {uploading ? 'Uploading…' : modal === 'add' ? 'Add Vehicle' : 'Save Changes'}
           </button>
         </div>
       </Modal>
@@ -378,23 +687,71 @@ export default function Vehicles() {
           const owner = owners.find((o) => o.id === selected.ownerId);
           return (
             <div className="space-y-4">
-              {selected.imageUrl ? (
-                <div className="relative pt-6">
-                  <div className="h-28 rounded-2xl bg-gradient-to-b from-navy-50 to-navy-100/70 ring-1 ring-navy-100"
-                    style={{ boxShadow: 'inset 0 7px 20px rgba(27,43,107,0.20), inset 0 -2px 8px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.7)' }} />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-1.5 w-2/3 h-3 rounded-[50%] bg-navy-900/30 blur-lg" />
-                  <img src={selected.imageUrl} alt={`${selected.brand} ${selected.model}`}
-                    className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[86%] pointer-events-none select-none"
-                    style={{ filter: 'drop-shadow(0 14px 12px rgba(27,43,107,0.28))' }} />
-                </div>
-              ) : (
-                <div className="w-full h-40 rounded-2xl overflow-hidden relative bg-gradient-to-b from-white to-navy-100/60 ring-1 ring-navy-100">
-                  <VehicleImage brand={selected.brand} model={selected.model} color={selected.color}
-                    bodyColor={vehicleBodyColor(selected.color ?? '')} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ boxShadow: 'inset 0 5px 16px rgba(27,43,107,0.22), inset 0 -2px 8px rgba(27,43,107,0.10), inset 0 1px 1px rgba(255,255,255,0.6)' }} />
-                </div>
-              )}
+              {(() => {
+                const imgs = selected.imageUrls && selected.imageUrls.length > 0
+                  ? selected.imageUrls
+                  : selected.imageUrl ? [selected.imageUrl] : [];
+                const clampedIdx = Math.min(galleryIndex, Math.max(0, imgs.length - 1));
+
+                if (imgs.length > 0) {
+                  return (
+                    <div className="space-y-2">
+                      {/* Main image */}
+                      <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-navy-900/5 ring-1 ring-navy-100">
+                        <img
+                          src={imgs[clampedIdx]}
+                          alt={`${selected.brand} ${selected.model}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {imgs.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setGalleryIndex((i) => (i - 1 + imgs.length) % imgs.length)}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                            ><ChevronLeft size={14} /></button>
+                            <button
+                              onClick={() => setGalleryIndex((i) => (i + 1) % imgs.length)}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                            ><ChevronRight size={14} /></button>
+                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                              {imgs.map((_, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => setGalleryIndex(i)}
+                                  className={`w-1.5 h-1.5 rounded-full transition-colors ${i === clampedIdx ? 'bg-white' : 'bg-white/40'}`}
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {/* Thumbnail strip */}
+                      {imgs.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                          {imgs.map((url, i) => (
+                            <button
+                              key={url}
+                              onClick={() => setGalleryIndex(i)}
+                              className={`flex-shrink-0 w-14 h-10 rounded-lg overflow-hidden ring-2 transition-all ${i === clampedIdx ? 'ring-navy-600' : 'ring-transparent opacity-60 hover:opacity-90'}`}
+                            >
+                              <img src={url} alt="" className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="w-full h-40 rounded-2xl flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-navy-50/80 to-navy-100/50 ring-1 ring-dashed ring-navy-200">
+                    <div className="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center">
+                      <Camera size={18} className="text-navy-400" />
+                    </div>
+                    <p className="text-xs text-navy-400">No photos yet — add one via Edit</p>
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center gap-4">
                 <div className="flex-1 min-w-0">
@@ -448,6 +805,16 @@ export default function Vehicles() {
           );
         })()}
       </Modal>
+
+      {/* Crop modal — appears above the form modal when a file is selected */}
+      {cropSrc && (
+        <CropModal
+          src={cropSrc}
+          fileName={cropFile?.name ?? 'image.jpg'}
+          onSave={handleCropSave}
+          onSkip={handleCropSkip}
+        />
+      )}
     </div>
   );
 }

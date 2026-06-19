@@ -134,6 +134,9 @@ export const smsTemplates = {
   ownerInsuranceExpiry: (ownerName: string, vehicle: string, date: string) =>
     `Dear ${ownerName}, the insurance for your vehicle ${vehicle} expires on ${date}. Please renew it to keep the vehicle active. - ${BRAND}.`,
 
+  ownerInsuranceMissing: (ownerName: string, vehicle: string, regNo: string) =>
+    `Dear ${ownerName}, insurance details for your vehicle ${vehicle} (${regNo}) are incomplete in the ${BRAND} system. Please update them to keep the vehicle compliant. - ${BRAND}.`,
+
   ownerExpenseLogged: (ownerName: string, vehicle: string, category: string, amount: number) =>
     `Dear ${ownerName}, an expense was logged on your vehicle ${vehicle}: ${category} ${rs(amount)}. View details in your owner portal. - ${BRAND}.`,
 

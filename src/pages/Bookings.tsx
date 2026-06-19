@@ -19,6 +19,7 @@ import {
   ChevronDown, Search as SearchIcon,
 } from 'lucide-react';
 import AvailabilityModal from '../components/ui/AvailabilityModal';
+import { buildBookingWhatsAppMsg, openWhatsApp } from '../lib/whatsapp';
 import { Booking } from '../types';
 import {
   differenceInDays, parseISO, addDays, isValid,
@@ -553,7 +554,7 @@ export default function Bookings() {
         const renderCard = (b: Booking) => {
           const vehicle = vehicles.find((v) => v.id === b.vehicleId);
           const owner   = owners.find((o) => o.id === vehicle?.ownerId);
-          const balance = b.totalAmount - b.paidAmount;
+          const balance = b.totalAmount - (b.discount ?? 0) - b.paidAmount;
           return (
             <div
               key={b.id}
@@ -642,7 +643,7 @@ export default function Bookings() {
 
         const renderCompactCard = (b: Booking) => {
           const vehicle = vehicles.find((v) => v.id === b.vehicleId);
-          const balance = b.totalAmount - b.paidAmount;
+          const balance = b.totalAmount - (b.discount ?? 0) - b.paidAmount;
           return (
             <div
               key={b.id}
@@ -1180,7 +1181,7 @@ export default function Bookings() {
           const vehicle = vehicles.find((v) => v.id === selected.vehicleId);
           const owner   = owners.find((o) => o.id === vehicle?.ownerId);
           const driver  = drivers.find((d) => d.id === selected.driverId);
-          const balance = selected.totalAmount - selected.paidAmount;
+          const balance = selected.totalAmount - (selected.discount ?? 0) - selected.paidAmount;
           return (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -1309,24 +1310,7 @@ export default function Bookings() {
                   className="flex items-center gap-1.5 text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
                   onClick={() => {
                     const v = vehicles.find((vv) => vv.id === selected.vehicleId);
-                    const balance = selected.totalAmount - selected.paidAmount;
-                    const msg = [
-                      `Hello ${selected.customerName},`,
-                      ``,
-                      `Your booking with *MRAC* is confirmed.`,
-                      ``,
-                      `*Vehicle:* ${v?.brand ?? ''} ${v?.model ?? ''} (${v?.vehicleNumber ?? ''})`,
-                      `*Period:* ${selected.startDate} → ${selected.endDate} (${selected.totalDays} days)`,
-                      `*Total:* Rs ${selected.totalAmount.toLocaleString()}`,
-                      `*Paid:* Rs ${selected.paidAmount.toLocaleString()}`,
-                      ...(balance > 0 ? [`*Balance due:* Rs ${balance.toLocaleString()}`] : []),
-                      ...(selected.pickupLocation ? [`*Pickup:* ${selected.pickupLocation}`] : []),
-                      ``,
-                      `Thank you for choosing MRAC!`,
-                    ].join('\n');
-                    const phone = selected.customerPhone.replace(/[^0-9]/g, '');
-                    const intlPhone = phone.startsWith('0') ? '94' + phone.slice(1) : phone;
-                    window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                    openWhatsApp(selected.customerPhone, buildBookingWhatsAppMsg(selected, v));
                   }}
                 >
                   <MessageCircle size={13} /> WhatsApp

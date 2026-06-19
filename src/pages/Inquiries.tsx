@@ -5,6 +5,7 @@ import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
+import DateInput from '../components/ui/DateInput';
 import { Plus, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Inquiry } from '../types';
 
@@ -236,11 +237,11 @@ export default function Inquiries() {
           </div>
           <div>
             <p className="label">Start Date</p>
-            <input className="input" type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
+            <DateInput value={form.startDate} onChange={(v) => set('startDate', v)} />
           </div>
           <div>
             <p className="label">End Date</p>
-            <input className="input" type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} />
+            <DateInput value={form.endDate} onChange={(v) => set('endDate', v)} />
           </div>
           <div className="col-span-2">
             <p className="label">Notes</p>
@@ -323,15 +324,11 @@ export default function Inquiries() {
 
           <div>
             <p className="label">Reason *</p>
-            <select
-              className="input"
+            <Select
               value={lostReason}
-              onChange={(e) => { setLostReason(e.target.value); if (e.target.value !== 'Other') setLostCustom(''); }}
-            >
-              {LOST_REASONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
+              onChange={(v) => { setLostReason(v); if (v !== 'Other') setLostCustom(''); }}
+              options={LOST_REASONS.map((r) => ({ value: r, label: r }))}
+            />
           </div>
 
           {lostReason === 'Other' && (

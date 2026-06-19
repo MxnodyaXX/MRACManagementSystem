@@ -60,6 +60,7 @@ export const useStore = create<AppState>()(
         set((s) => ({ vehicles: [...s.vehicles, newV] }));
         sync(() => db.insertVehicle(newV));
         toast.success('Vehicle added', `${newV.brand} ${newV.model} (${newV.vehicleNumber}) is now in the fleet.`);
+        return newV.id;
       },
 
       updateVehicle: (id, updates) => {
@@ -203,7 +204,7 @@ export const useStore = create<AppState>()(
         // Payment-received receipt to the customer when the paid amount increases.
         if (prev && updates.paidAmount !== undefined && updates.paidAmount > prev.paidAmount) {
           const paidNow = updates.paidAmount - prev.paidAmount;
-          const balance = Math.max(0, prev.totalAmount - updates.paidAmount);
+          const balance = Math.max(0, prev.totalAmount - (prev.discount ?? 0) - updates.paidAmount);
           const optIn = get().customers.find((c) => c.phone === prev.customerPhone)?.smsOptIn;
           sendSms(prev.customerPhone, smsTemplates.paymentReceived(prev.customerName, paidNow, balance),
             { category: 'paymentReceived', role: 'customer', relatedId: id, optIn, transactional: true });

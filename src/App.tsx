@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useStore } from './store/useStore';
 import { setupRealtime } from './lib/realtime';
+import { runInsuranceReminders } from './lib/insuranceReminder';
 import Sidebar from './components/layout/Sidebar';
 import Toaster from './components/ui/Toaster';
 import LoadingScreen from './components/ui/LoadingScreen';
@@ -38,6 +39,14 @@ export default function App() {
     const cleanup = setupRealtime(loadAll);
     return () => { clearTimeout(timer); cleanup?.(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Run insurance reminders once per session, immediately after data is loaded.
+  // Uses getState() snapshot to avoid subscribing to rapidly-changing store slices.
+  useEffect(() => {
+    if (!loaded) return;
+    const { vehicles, owners, notifications, addNotification } = useStore.getState();
+    runInsuranceReminders({ vehicles, owners, notifications, addNotification });
+  }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Boot loading screen until data is ready (and a short minimum so it doesn't flash).
   if (!loaded || !minDone) {
