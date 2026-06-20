@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import {
   Settings as SettingsIcon, ClipboardList, UserPlus, CheckCircle2,
@@ -334,6 +335,11 @@ export default function Settings() {
   const { owners, recomputeStats } = useStore();
   const { users }     = useAuthStore();
   const [manualOpen,  setManualOpen]  = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('resume')) setManualOpen(true);
+  }, [searchParams]);
   const [setupOwner,  setSetupOwner]  = useState<Owner | null>(null);
   const [successId,   setSuccessId]   = useState<string | null>(null);
 

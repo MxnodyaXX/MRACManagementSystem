@@ -470,47 +470,7 @@ export const sampleData: {
   // ── Payout records (one per non-cancelled booking) ─────────────────────────
   // No company commission. Owner keeps the full income; an owner/third-party
   // referral fee (coordinatorFee) is the only deduction. Marketing sources
-  // (WhatsApp, Facebook, Instagram, TikTok, Google, Word of Mouth) carry no fee.
-  // Kamal Perera referred 5 hires (bk3, bk5, bk6, bk8, bk14); Nimal Silva 2 (bk9, bk16).
-  commissions: [
-    // Kamal's own vehicles (v1 Prius, v2 Axio) — no referral fee on his own cars
-    { id: 'cm1',  bookingId: 'bk1',  vehicleId: 'v1', ownerId: 'o1', referral: 'Direct',
-      totalIncome: 22500, commissionRate: 0, commissionAmount: 0, ownerPayout: 22500, status: 'Paid',    createdAt: '2026-04-28T10:00:00Z' },
-    { id: 'cm7',  bookingId: 'bk7',  vehicleId: 'v1', ownerId: 'o1', referral: 'Instagram',
-      totalIncome: 18000, commissionRate: 0, commissionAmount: 0, ownerPayout: 18000, status: 'Paid',    createdAt: '2026-05-22T10:00:00Z' },
-    { id: 'cm15', bookingId: 'bk15', vehicleId: 'v1', ownerId: 'o1', referral: 'Word of Mouth',
-      totalIncome: 18000, commissionRate: 0, commissionAmount: 0, ownerPayout: 18000, status: 'Pending', createdAt: '2026-06-01T14:00:00Z' },
-    { id: 'cm2',  bookingId: 'bk2',  vehicleId: 'v2', ownerId: 'o1', referral: 'WhatsApp',
-      totalIncome: 14000, commissionRate: 0, commissionAmount: 0, ownerPayout: 14000, status: 'Paid',    createdAt: '2026-04-30T09:00:00Z' },
-    { id: 'cm10', bookingId: 'bk10', vehicleId: 'v2', ownerId: 'o1', referral: 'Direct',
-      totalIncome: 14000, commissionRate: 0, commissionAmount: 0, ownerPayout: 14000, status: 'Pending', createdAt: '2026-05-28T10:00:00Z' },
-    // Nimal's vehicles (v3 Vezel, v6 X-Trail) — bk3, bk6, bk14 referred by Kamal
-    { id: 'cm3',  bookingId: 'bk3',  vehicleId: 'v3', ownerId: 'o2', referral: 'Sumod Pieris',
-      totalIncome: 33000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 31000, status: 'Paid',    createdAt: '2026-05-08T08:00:00Z' },
-    { id: 'cm11', bookingId: 'bk11', vehicleId: 'v3', ownerId: 'o2', referral: 'Facebook',
-      totalIncome: 38500, commissionRate: 0, commissionAmount: 0, ownerPayout: 38500, status: 'Pending', createdAt: '2026-05-26T11:00:00Z' },
-    { id: 'cm6',  bookingId: 'bk6',  vehicleId: 'v6', ownerId: 'o2', referral: 'Sumod Pieris',
-      totalIncome: 42000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 40000, status: 'Paid',    createdAt: '2026-05-18T09:00:00Z' },
-    { id: 'cm14', bookingId: 'bk14', vehicleId: 'v6', ownerId: 'o2', referral: 'Sumod Pieris',
-      totalIncome: 35000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2000, ownerPayout: 33000, status: 'Pending', createdAt: '2026-06-01T10:00:00Z' },
-    // Suresh's vehicles (v4 Alto, v8 Fit) — bk9 referred by Nimal
-    { id: 'cm4',  bookingId: 'bk4',  vehicleId: 'v4', ownerId: 'o3', referral: 'Direct',
-      totalIncome: 7500,  commissionRate: 0, commissionAmount: 0, ownerPayout: 7500,  status: 'Credit',  createdAt: '2026-05-10T11:00:00Z' },
-    { id: 'cm9',  bookingId: 'bk9',  vehicleId: 'v8', ownerId: 'o3', referral: 'Pavith Bimsara',
-      totalIncome: 9000,  commissionRate: 0, commissionAmount: 0, coordinatorFee: 500, ownerPayout: 8500,  status: 'Paid',    createdAt: '2026-05-26T09:00:00Z' },
-    { id: 'cm13', bookingId: 'bk13', vehicleId: 'v8', ownerId: 'o3', referral: 'Google',
-      totalIncome: 12000, commissionRate: 0, commissionAmount: 0, ownerPayout: 12000, status: 'Pending', createdAt: '2026-05-31T09:00:00Z' },
-    // Priya's vehicle (v5 HiAce) — bk5 referred by Kamal
-    { id: 'cm5',  bookingId: 'bk5',  vehicleId: 'v5', ownerId: 'o4', referral: 'Sumod Pieris',
-      totalIncome: 40000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 2500, ownerPayout: 37500, status: 'Paid',    createdAt: '2026-05-15T08:00:00Z' },
-    { id: 'cm12', bookingId: 'bk12', vehicleId: 'v5', ownerId: 'o4', referral: 'TikTok',
-      totalIncome: 40000, commissionRate: 0, commissionAmount: 0, ownerPayout: 40000, status: 'Pending', createdAt: '2026-05-29T07:00:00Z' },
-    // Ruwan's vehicle (v7 Montero) — bk8 referred by Kamal, bk16 by Nimal
-    { id: 'cm8',  bookingId: 'bk8',  vehicleId: 'v7', ownerId: 'o5', referral: 'Sumod Pieris',
-      totalIncome: 66000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 3000, ownerPayout: 63000, status: 'Paid',    createdAt: '2026-05-24T08:00:00Z' },
-    { id: 'cm16', bookingId: 'bk16', vehicleId: 'v7', ownerId: 'o5', referral: 'Pavith Bimsara',
-      totalIncome: 27000, commissionRate: 0, commissionAmount: 0, coordinatorFee: 1500, ownerPayout: 25500, status: 'Pending', createdAt: '2026-06-01T15:00:00Z' },
-  ],
+  commissions: [],
 
   // ── Handovers ─────────────────────────────────────────────────────────────
   // Delivery + Return for all Completed; Delivery-only for Ongoing

@@ -160,6 +160,10 @@ export const smsTemplates = {
   driverLicenseExpiry: (driverName: string, date: string) =>
     `Dear ${driverName}, your driving licence expires on ${date}. Please renew it to continue accepting ${BRAND} trips.`,
 
+  // ── Customer credit reminders ─────────────────────────────────────────────
+  creditReminder: (customerName: string, amount: number, count: number) =>
+    `Dear ${customerName}, this is a gentle reminder that you have an outstanding balance of ${rs(amount)} across ${count} booking${count !== 1 ? 's' : ''} with ${BRAND}. Kindly settle your account at your earliest convenience. Thank you.`,
+
   // ── Admin / staff (internal alerts) ───────────────────────────────────────
   adminNewBooking: (customer: string, vehicle: string, start: string, end: string, total: number) =>
     `EMRAC: New booking - ${customer}, ${vehicle}, ${start} to ${end}, ${rs(total)}.`,

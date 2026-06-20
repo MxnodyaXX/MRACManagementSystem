@@ -129,6 +129,7 @@ export interface Booking {
   creditAmount?: number;      // outstanding balance recorded as customer credit
   creditSettled?: boolean;    // true once the credit has been collected
   creditResponsibility?: 'self' | 'owner' | 'company'; // who is liable for the credit
+  badDebt?: number;           // amount written off as unrecoverable
 }
 
 export interface Inquiry {
@@ -200,6 +201,18 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface ProcessDraft {
+  id: string;
+  type: 'return' | 'booking' | 'payment';
+  label: string;
+  sublabel: string;
+  bookingId?: string;
+  vehicleId?: string;
+  formData: unknown;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppState {
   vehicles: Vehicle[];
   owners: Owner[];
@@ -253,4 +266,8 @@ export interface AppState {
   addManualBooking: (data: Omit<Booking, 'id' | 'createdAt'> & { customerAddress?: string; dailyRateUsed?: number; referralAlreadyPaid?: boolean; commissionAlreadyPaid?: boolean }) => string;
   recomputeStats: () => void;
   settleCredit: (bookingId: string) => void;
+
+  drafts: ProcessDraft[];
+  saveDraft: (d: Omit<ProcessDraft, 'id' | 'createdAt' | 'updatedAt'>) => string;
+  discardDraft: (id: string) => void;
 }

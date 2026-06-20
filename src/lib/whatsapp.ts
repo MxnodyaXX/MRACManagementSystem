@@ -1,5 +1,30 @@
 import { Booking, Vehicle } from '../types';
 
+/** Build a polite credit-reminder WhatsApp message for a customer. */
+export function buildCreditReminderMsg(
+  customerName: string,
+  totalOutstanding: number,
+  bookingCount: number,
+): string {
+  const lines = (parts: Array<string | false | null | undefined>): string =>
+    parts.filter(Boolean).join('\n');
+
+  return lines([
+    `Hello ${customerName},`,
+    ``,
+    `This is a gentle reminder from *${BRAND}* regarding your outstanding balance.`,
+    ``,
+    `*Outstanding Amount:* ${rs(totalOutstanding)}`,
+    `*Booking(s):* ${bookingCount} record${bookingCount !== 1 ? 's' : ''}`,
+    ``,
+    `We kindly request you to settle your account at your earliest convenience.`,
+    `If you have any questions or need to discuss a payment arrangement, please don't hesitate to reach out.`,
+    ``,
+    `Thank you for your understanding. 🙏`,
+    `— ${BRAND}`,
+  ]);
+}
+
 const BRAND = 'MRAC Rent A Car';
 const rs = (n: number) => `Rs ${n.toLocaleString()}`;
 

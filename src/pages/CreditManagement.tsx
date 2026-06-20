@@ -5,10 +5,13 @@ import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
 import {
   CreditCard, Users, Clock, CheckCircle2, Search, ChevronDown,
-  Wallet, Building2, UserRound, HandCoins, AlertTriangle,
+  Wallet, Building2, UserRound, HandCoins, AlertTriangle, MessageSquare, Phone,
 } from 'lucide-react';
 import { creditRecords, type CreditRecord } from '../lib/credit';
 import type { Booking } from '../types';
+import { sendSms, smsTemplates } from '../lib/sms';
+import { openWhatsApp, buildCreditReminderMsg } from '../lib/whatsapp';
+import { toast } from '../store/useToast';
 
 type RespFilter = 'all' | 'self' | 'owner' | 'company';
 type StatusFilter = 'outstanding' | 'settled' | 'all';
@@ -24,6 +27,23 @@ export default function CreditManagement() {
   const [resp, setResp] = useState<RespFilter>('all');
   const [statusF, setStatusF] = useState<StatusFilter>('outstanding');
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [reminderSent, setReminderSent] = useState<Record<string, 'sms' | 'whatsapp' | null>>({});
+
+  const flashSent = (key: string, channel: 'sms' | 'whatsapp') => {
+    setReminderSent((s) => ({ ...s, [key]: channel }));
+    setTimeout(() => setReminderSent((s) => ({ ...s, [key]: null })), 3000);
+  };
+
+  const sendSmsReminder = async (key: string, phone: string, name: string, amount: number, count: number) => {
+    await sendSms(phone, smsTemplates.creditReminder(name, amount, count), { category: 'creditReminder', role: 'customer' });
+    flashSent(key, 'sms');
+    toast.success('SMS sent', `Reminder sent to ${name}.`);
+  };
+
+  const sendWhatsAppReminder = (key: string, phone: string, name: string, amount: number, count: number) => {
+    openWhatsApp(phone, buildCreditReminderMsg(name, amount, count));
+    flashSent(key, 'whatsapp');
+  };
 
   const records = useMemo(() => creditRecords(bookings), [bookings]);
 
@@ -188,6 +208,35 @@ export default function CreditManagement() {
                     {g.outstanding > 0
                       ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg flex-shrink-0"><Clock size={12} /> {money(g.outstanding)}</span>
                       : <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg flex-shrink-0"><CheckCircle2 size={12} /> Settled</span>}
+
+                    {/* Reminder buttons — only for customers with an outstanding balance */}
+                    {g.outstanding > 0 && (
+                      <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {reminderSent[g.key] === 'sms' ? (
+                          <span className="text-[10px] text-emerald-600 font-semibold px-2">SMS sent ✓</span>
+                        ) : (
+                          <button
+                            onClick={() => sendSmsReminder(g.key, g.phone, g.name, g.outstanding, g.records.filter((r) => !r.settled).length)}
+                            className="p-1.5 rounded-lg text-navy-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            title="Send SMS reminder"
+                          >
+                            <Phone size={15} />
+                          </button>
+                        )}
+                        {reminderSent[g.key] === 'whatsapp' ? (
+                          <span className="text-[10px] text-emerald-600 font-semibold px-2">WhatsApp ✓</span>
+                        ) : (
+                          <button
+                            onClick={() => sendWhatsAppReminder(g.key, g.phone, g.name, g.outstanding, g.records.filter((r) => !r.settled).length)}
+                            className="p-1.5 rounded-lg text-navy-400 hover:bg-green-50 hover:text-green-600 transition-colors"
+                            title="Send WhatsApp reminder"
+                          >
+                            <MessageSquare size={15} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <ChevronDown size={16} className={`text-navy-400 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
 

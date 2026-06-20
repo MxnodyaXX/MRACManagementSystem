@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { sendRentalSummary } from '../utils/email';
@@ -26,6 +27,24 @@ const FUEL_COLOR: Record<FuelLevel, string> = {
   Empty:   'text-red-600    bg-red-50',
 };
 
+function StepBadge({ n, active, variant = 'default' }: {
+  n: number;
+  active?: boolean;
+  variant?: 'default' | 'red' | 'purple' | 'amber';
+}) {
+  const cls = {
+    default: 'bg-navy-200 text-navy-700',
+    red:     'bg-red-100 text-red-700',
+    purple:  'bg-purple-100 text-purple-700',
+    amber:   'bg-amber-200 text-amber-800',
+  }[variant];
+  return (
+    <span className={`inline-flex w-4 h-4 rounded-full items-center justify-center font-bold flex-shrink-0 text-[9px] ${active ? 'bg-navy-700 text-white' : cls}`}>
+      {n}
+    </span>
+  );
+}
+
 const emptyHandover = (type: 'delivery' | 'return', bookingId: string, vehicleId: string) => ({
   bookingId,
   vehicleId,
@@ -41,7 +60,7 @@ const emptyHandover = (type: 'delivery' | 'return', bookingId: string, vehicleId
 });
 
 export default function Handovers() {
-  const { bookings, vehicles, owners, commissions, handovers, addHandover, updateBooking, updateCommission } = useStore();
+  const { bookings, vehicles, owners, commissions, handovers, addHandover, updateBooking, updateCommission, saveDraft, discardDraft, drafts } = useStore();
   const { currentUser, isAdmin, can } = useAuthStore();
 
   const [tab,              setTab]              = useState<'active' | 'records'>('active');
@@ -50,6 +69,35 @@ export default function Handovers() {
   const [viewItem,         setViewItem]         = useState<VehicleHandover | null>(null);
   const [paymentBookingId, setPaymentBookingId] = useState<string | null>(null);
   const [invoiceBookingId, setInvoiceBookingId] = useState<string | null>(null);
+  const [payAmountPaid,    setPayAmountPaid]    = useState(0);
+  const [payDiscount,      setPayDiscount]      = useState(0);
+  const [payBadDebt,       setPayBadDebt]       = useState(0);
+  const [referralConfirmed, setReferralConfirmed] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Resume an incomplete process when navigated here with ?resume=draftId
+  useEffect(() => {
+    const resumeId = searchParams.get('resume');
+    if (!resumeId) return;
+    const draft = drafts.find((d) => d.id === resumeId);
+    if (!draft) { setSearchParams({}, { replace: true }); return; }
+
+    if (draft.type === 'return') {
+      const data = draft.formData as ReturnType<typeof emptyHandover>;
+      setForm(data);
+      setModal('return');
+    } else if (draft.type === 'payment') {
+      const data = draft.formData as { bookingId: string; payAmountPaid: number; payDiscount: number; payBadDebt: number };
+      setPaymentBookingId(data.bookingId);
+      setPayAmountPaid(data.payAmountPaid ?? 0);
+      setPayDiscount(data.payDiscount ?? 0);
+      setPayBadDebt(data.payBadDebt ?? 0);
+      setReferralConfirmed(false);
+      setModal('payment');
+    }
+    discardDraft(resumeId);
+    setSearchParams({}, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Owner sees only their vehicle bookings
   const isOwnerRole   = !isAdmin() && currentUser?.role === 'owner';
@@ -110,6 +158,22 @@ export default function Handovers() {
     });
   };
 
+  const handleReturnClose = () => {
+    if (form.type === 'return' && (form.location !== '' || form.mileage !== 0)) {
+      const bk  = bookings.find((b) => b.id === form.bookingId);
+      const veh = vehicles.find((v) => v.id === form.vehicleId);
+      saveDraft({
+        type: 'return',
+        label: veh ? `Return: ${veh.brand} ${veh.model}` : 'Incomplete Return',
+        sublabel: bk ? `${bk.customerName} · ${bk.startDate} → ${bk.endDate}` : '',
+        bookingId: form.bookingId || undefined,
+        vehicleId: form.vehicleId || undefined,
+        formData: { ...form },
+      });
+    }
+    setModal(null);
+  };
+
   const handleSaveDelivery = () => {
     if (!form.location || !form.dateTime || !form.mileage) return;
     addHandover(form);
@@ -122,6 +186,12 @@ export default function Handovers() {
     if (!form.location || !form.dateTime || !form.mileage) return;
     addHandover(form);
     updateBooking(form.bookingId, { status: 'Completed' });
+    const bk  = bookings.find((b) => b.id === form.bookingId);
+    const bal = Math.max(0, form.finalAmount - (bk?.paidAmount ?? 0));
+    setPayAmountPaid(bal);
+    setPayDiscount(0);
+    setPayBadDebt(0);
+    setReferralConfirmed(false);
     setPaymentBookingId(form.bookingId);
     setModal('payment');
   };
@@ -423,7 +493,7 @@ export default function Handovers() {
       </Modal>
 
       {/* ── Return Modal ── */}
-      <Modal open={modal === 'return'} onClose={() => setModal(null)} title="Record Vehicle Return">
+      <Modal open={modal === 'return'} onClose={handleReturnClose} title="Record Vehicle Return">
         {(() => {
           const booking  = bookings.find((b) => b.id === form.bookingId);
           const vehicle  = vehicles.find((v) => v.id === form.vehicleId);
@@ -561,18 +631,23 @@ export default function Handovers() {
           const owner      = owners.find((o) => o.id === commission?.ownerId);
           if (!booking || !vehicle || !commission) return null;
 
-          const finalAmount    = returnH?.finalAmount ?? booking.totalAmount;
-          const referralFee    = resolveReferralFee(booking.referralFeeType, booking.referralFeeValue, finalAmount);
-          const ownerPayout    = Math.max(0, finalAmount - referralFee);
-          const alreadyPaid    = booking.paidAmount;
-          const balance        = finalAmount - alreadyPaid;
-          const totalKmDriven  = delivery && returnH ? returnH.mileage - delivery.mileage : 0;
-          const includedKm     = (vehicle.includedKmPerDay ?? 100) * booking.totalDays;
-          const baseAmount     = vehicle.dailyRent * booking.totalDays;
-          const extraKm        = returnH?.extraKm ?? 0;
-          const referralLabel  = booking.referral && booking.referral !== 'Direct'
-            ? booking.referral
-            : null;
+          const finalAmount   = returnH?.finalAmount ?? booking.totalAmount;
+          const referralFee   = resolveReferralFee(booking.referralFeeType, booking.referralFeeValue, finalAmount);
+          const ownerPayout   = Math.max(0, finalAmount - referralFee);
+          const alreadyPaid   = booking.paidAmount;
+          const balance       = Math.max(0, finalAmount - alreadyPaid);
+          const totalKmDriven = delivery && returnH ? returnH.mileage - delivery.mileage : 0;
+          const includedKm    = (vehicle.includedKmPerDay ?? 100) * booking.totalDays;
+          const baseAmount    = vehicle.dailyRent * booking.totalDays;
+          const extraKm       = returnH?.extraKm ?? 0;
+          const referralLabel = booking.referral && booking.referral !== 'Direct' ? booking.referral : null;
+
+          // Step 4: auto-calculated remaining after payment + discount
+          const remaining        = Math.max(0, balance - payAmountPaid - payDiscount);
+          // Step 6: credit = remaining after bad debt write-off
+          const creditToTransfer = Math.max(0, remaining - payBadDebt);
+          const hasReferral      = !!referralLabel && referralFee > 0;
+          const canConfirm       = !hasReferral || referralConfirmed;
 
           const emailParams = {
             toEmail:          booking.customerEmail ?? '',
@@ -590,7 +665,7 @@ export default function Handovers() {
             extraCharge:      returnH?.extraKmCharge ?? 0,
             finalAmount,
             advancePaid:      alreadyPaid,
-            balanceCollected: balance,
+            balanceCollected: payAmountPaid,
             ownerName:        owner?.name ?? 'Owner',
             ownerPayout,
             referralLabel,
@@ -599,25 +674,17 @@ export default function Handovers() {
 
           const handleConfirmPayment = () => {
             updateCommission(commission.id, {
-              status: 'Paid',
+              status: creditToTransfer > 0 ? 'Credit' : 'Paid',
               totalIncome: finalAmount,
               commissionAmount: 0,
               coordinatorFee: referralFee,
               ownerPayout,
             });
-            updateBooking(paymentBookingId, { paidAmount: finalAmount });
-            sendRentalSummary(emailParams).catch(console.error);
-            setModal(null);
-            setPaymentBookingId(null);
-          };
-
-          const handleMarkCredit = () => {
-            updateCommission(commission.id, {
-              status: 'Credit',
-              totalIncome: finalAmount,
-              commissionAmount: 0,
-              coordinatorFee: referralFee,
-              ownerPayout,
+            updateBooking(paymentBookingId, {
+              paidAmount: alreadyPaid + payAmountPaid,
+              ...(payDiscount > 0       && { discount:      payDiscount }),
+              ...(payBadDebt > 0        && { badDebt:        payBadDebt }),
+              ...(creditToTransfer > 0  && { creditAmount:   creditToTransfer, creditSettled: false }),
             });
             sendRentalSummary(emailParams).catch(console.error);
             setModal(null);
@@ -703,34 +770,180 @@ export default function Handovers() {
                 </div>
               </div>
 
-              {/* Balance summary */}
-              <div className={`grid gap-3 text-center ${alreadyPaid > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                <div className="bg-navy-50/60 rounded-xl p-3">
-                  <p className="text-[10px] text-navy-400 uppercase">Final Total</p>
-                  <p className="text-sm font-bold text-navy-800">Rs {finalAmount.toLocaleString()}</p>
+              {/* ── Payment Settlement Steps ── */}
+              <div className="border border-navy-100 rounded-xl overflow-hidden">
+                <div className="bg-navy-50 px-4 py-2.5 flex items-center gap-2">
+                  <Receipt size={13} className="text-navy-500" />
+                  <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Payment Settlement</p>
                 </div>
-                {alreadyPaid > 0 && (
-                  <div className="bg-emerald-50 rounded-xl p-3">
-                    <p className="text-[10px] text-emerald-500 uppercase">Advance Paid</p>
-                    <p className="text-sm font-bold text-emerald-700">Rs {alreadyPaid.toLocaleString()}</p>
+                <div className="p-4 space-y-3">
+
+                  {/* Step 1 — Total booking amount */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-navy-500">
+                      <StepBadge n={1} />
+                      Total Booking Amount
+                    </span>
+                    <span className="font-bold text-navy-800">Rs {finalAmount.toLocaleString()}</span>
                   </div>
-                )}
-                <div className={`rounded-xl p-3 ${balance > 0 ? 'bg-amber-50' : 'bg-emerald-50'}`}>
-                  <p className={`text-[10px] uppercase ${balance > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                    {alreadyPaid > 0 ? 'Balance Due' : 'Amount Due'}
-                  </p>
-                  <p className={`text-sm font-bold ${balance > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                    Rs {balance.toLocaleString()}
-                  </p>
-                </div>
-                <div className="bg-navy-700 rounded-xl p-3">
-                  <p className="text-[10px] text-navy-300 uppercase">Collecting Now</p>
-                  <p className="text-sm font-bold text-white">Rs {balance.toLocaleString()}</p>
+                  {alreadyPaid > 0 && (
+                    <div className="flex items-center justify-between text-xs ml-[22px] text-navy-500">
+                      <span>Advance already collected</span>
+                      <span className="font-semibold text-emerald-700">− Rs {alreadyPaid.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className={`flex items-center justify-between text-xs rounded-lg px-2.5 py-1.5 ${balance > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                    <span className="font-semibold ml-[22px]">Balance Due at Return</span>
+                    <span className="font-bold">Rs {balance.toLocaleString()}</span>
+                  </div>
+
+                  <div className="border-t border-navy-100 pt-3 space-y-3">
+                    {/* Step 2 — Amount paid by customer */}
+                    <div>
+                      <label className="label flex items-center gap-1.5 mb-1">
+                        <StepBadge n={2} active />
+                        Amount Paid by Customer
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-navy-400 font-medium pointer-events-none">Rs</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={balance}
+                          value={payAmountPaid}
+                          onChange={(e) => {
+                            const v = Math.min(balance, Math.max(0, Number(e.target.value)));
+                            setPayAmountPaid(v);
+                            setPayBadDebt(0);
+                          }}
+                          className="input pl-9"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Step 3 — Discount */}
+                    <div>
+                      <label className="label flex items-center gap-1.5 mb-1">
+                        <StepBadge n={3} />
+                        Discount Amount
+                        <span className="text-navy-400 font-normal text-[10px]">(optional)</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-navy-400 font-medium pointer-events-none">Rs</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={Math.max(0, balance - payAmountPaid)}
+                          value={payDiscount}
+                          onChange={(e) => {
+                            const max = Math.max(0, balance - payAmountPaid);
+                            setPayDiscount(Math.min(max, Math.max(0, Number(e.target.value))));
+                            setPayBadDebt(0);
+                          }}
+                          className="input pl-9"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Step 4 — Remaining balance (auto) */}
+                    <div className={`flex items-center justify-between text-xs rounded-lg px-3 py-2 ${remaining > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                      <span className="flex items-center gap-1.5">
+                        <StepBadge n={4} />
+                        Remaining Balance
+                      </span>
+                      <span className="font-bold">Rs {remaining.toLocaleString()}</span>
+                    </div>
+
+                    {remaining > 0 && (
+                      <>
+                        {/* Step 5 — Bad debt write-off */}
+                        <div>
+                          <label className="label flex items-center gap-1.5 mb-1">
+                            <StepBadge n={5} variant="red" />
+                            Bad Debt Write-off
+                            <span className="text-navy-400 font-normal text-[10px]">(optional)</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-navy-400 font-medium pointer-events-none">Rs</span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={remaining}
+                              value={payBadDebt}
+                              onChange={(e) => setPayBadDebt(Math.min(remaining, Math.max(0, Number(e.target.value))))}
+                              className="input pl-9"
+                            />
+                          </div>
+                          <p className="text-[10px] text-red-500 mt-1">This amount will be written off as unrecoverable.</p>
+                        </div>
+
+                        {/* Step 6 — Credit transfer (auto) */}
+                        {creditToTransfer > 0 ? (
+                          <div className="flex items-center justify-between text-xs bg-purple-50 rounded-lg px-3 py-2 text-purple-700">
+                            <span className="flex items-center gap-1.5">
+                              <StepBadge n={6} variant="purple" />
+                              Auto-transferred to Customer Credit
+                            </span>
+                            <span className="font-bold">Rs {creditToTransfer.toLocaleString()}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                            <CheckCircle2 size={12} />
+                            All remaining balance accounted for — no credit transfer needed
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
+              {/* Step 7 — Referral commission verification */}
+              {hasReferral && (
+                <div className="border border-amber-200 rounded-xl p-4 bg-amber-50/50">
+                  <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
+                    <StepBadge n={7} variant="amber" />
+                    Referral Commission Verification
+                  </p>
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={referralConfirmed}
+                      onChange={(e) => setReferralConfirmed(e.target.checked)}
+                      className="mt-0.5 rounded accent-amber-600"
+                    />
+                    <span className="text-xs text-amber-800">
+                      I confirm that the referral commission of{' '}
+                      <strong>Rs {referralFee.toLocaleString()}</strong> for{' '}
+                      <strong>{referralLabel}</strong> has been reviewed.
+                      {booking.referralPaid && (
+                        <span className="ml-1 text-emerald-700 font-semibold">(Already marked as paid)</span>
+                      )}
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <div className="flex flex-wrap justify-end gap-2 pt-1">
-                <button onClick={() => setModal(null)} className="btn-secondary">Skip for Now</button>
+                <button
+                  onClick={() => {
+                    if (booking && vehicle) {
+                      saveDraft({
+                        type: 'payment',
+                        label: `Payment: ${booking.customerName}`,
+                        sublabel: `${vehicle.brand} ${vehicle.model} · Rs ${finalAmount.toLocaleString()}`,
+                        bookingId: paymentBookingId ?? undefined,
+                        vehicleId: booking.vehicleId,
+                        formData: { bookingId: paymentBookingId, payAmountPaid, payDiscount, payBadDebt },
+                      });
+                    }
+                    setModal(null);
+                    setPaymentBookingId(null);
+                  }}
+                  className="btn-secondary"
+                >
+                  Save &amp; Continue Later
+                </button>
                 <button
                   onClick={() => { setInvoiceBookingId(paymentBookingId); }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-navy-50 text-navy-700 hover:bg-navy-100 transition-colors"
@@ -739,15 +952,12 @@ export default function Handovers() {
                   View Invoice
                 </button>
                 <button
-                  onClick={handleMarkCredit}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                  onClick={handleConfirmPayment}
+                  disabled={!canConfirm}
+                  className="flex items-center gap-2 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CreditCard size={14} />
-                  Mark as Credit
-                </button>
-                <button onClick={handleConfirmPayment} className="flex items-center gap-2 btn-primary">
                   <CheckCircle2 size={14} />
-                  Confirm &amp; Mark Paid
+                  Confirm &amp; Finalize
                 </button>
               </div>
             </div>

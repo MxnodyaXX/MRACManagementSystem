@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover, Customer } from '../types';
+import { AppState, Vehicle, Owner, Booking, Inquiry, Expense, Driver, Notification, Commission, VehicleHandover, Customer, ProcessDraft } from '../types';
 import { sampleData } from '../data/sampleData';
 import { supabaseEnabled } from '../lib/supabase';
 import { db, dbFetchAll } from '../lib/db';
 import { resolveReferralFee } from '../lib/referral';
 import { sendSms, smsTemplates, ADMIN_PHONE } from '../lib/sms';
 import { toast } from './useToast';
+import { useAuthStore } from './useAuthStore';
 import cab1234Img from '../data/CAB-1234.png';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -32,13 +33,18 @@ export const useStore = create<AppState>()(
         : sampleData),
       handovers: [],
       customers: [],
+      drafts: [],
       loaded: false,
 
       // ── Supabase bootstrap ────────────────────────────────────────────────
       loadAll: async () => {
         if (!supabaseEnabled) { set({ loaded: true }); return; }
         try {
-          const data = await dbFetchAll();
+          const timeoutMs = 12_000;
+          const timeoutP = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Database load timed out')), timeoutMs),
+          );
+          const data = await Promise.race([dbFetchAll(), timeoutP]);
           set((s) => {
             // Keep locally-added bookings that haven't made it to Supabase yet (e.g. DB
             // insert still in-flight, or it failed silently). They stay visible to the user
@@ -80,6 +86,8 @@ export const useStore = create<AppState>()(
         const newO: Owner = { ...o, id: uid(), createdAt: now(), totalEarnings: 0, pendingPayout: 0 };
         set((s) => ({ owners: [...s.owners, newO] }));
         sync(() => db.insertOwner(newO));
+        // Auto-create a login account for the new owner so they appear in Permissions
+        useAuthStore.getState().createOwnerAccount(newO.id, newO.name);
         toast.success('Owner added', `${newO.name} has been registered.`);
       },
 
@@ -633,6 +641,31 @@ export const useStore = create<AppState>()(
         set((s) => ({ customers: s.customers.filter((c) => c.id !== id) }));
         sync(() => db.deleteCustomer(id));
         toast.warning('Customer removed', 'The customer has been deleted.');
+      },
+
+      // ── Process Drafts ───────────────────────────────────────────────────
+      saveDraft: (d: Omit<ProcessDraft, 'id' | 'createdAt' | 'updatedAt'>) => {
+        // Dedup: update existing draft if same type + bookingId, or same type + vehicleId (no bookingId)
+        const match = get().drafts.find((x) =>
+          x.type === d.type &&
+          (d.bookingId ? x.bookingId === d.bookingId : d.vehicleId ? x.vehicleId === d.vehicleId : false),
+        );
+        if (match) {
+          set((s) => ({
+            drafts: s.drafts.map((x) =>
+              x.id === match.id ? { ...x, ...d, updatedAt: now() } : x,
+            ),
+          }));
+          return match.id;
+        }
+        const id = uid();
+        set((s) => ({ drafts: [...s.drafts, { ...d, id, createdAt: now(), updatedAt: now() }] }));
+        toast.warning('Draft saved', 'The incomplete process was saved. Continue it from the Incomplete page.');
+        return id;
+      },
+
+      discardDraft: (id: string) => {
+        set((s) => ({ drafts: s.drafts.filter((d) => d.id !== id) }));
       },
 
       // ── Helpers ───────────────────────────────────────────────────────────

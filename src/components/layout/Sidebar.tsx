@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Car, CalendarDays, MessageSquare,
-  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact, HandCoins, CreditCard,
+  Percent, Users, Receipt, UserCheck, Bell, Settings, ShieldCheck, Truck, Contact, HandCoins, CreditCard, AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../store/useStore';
@@ -20,6 +20,7 @@ const links = [
   { to: '/handovers',     icon: Truck,           label: 'Handovers'   },
   { to: '/customers',     icon: Contact,         label: 'Customers'   },
   { to: '/notifications', icon: Bell,            label: 'Alerts'      },
+  { to: '/incomplete',   icon: AlertTriangle,   label: 'Incomplete'  },
 ];
 
 /* 5 primary links shown in the mobile pill */
@@ -38,19 +39,33 @@ function isActive(to: string, pathname: string) {
 export default function Sidebar() {
   const location    = useLocation();
   const isAdmin     = useAuthStore((s) => s.isAdmin);
+  const can         = useAuthStore((s) => s.can);
   const currentUser = useAuthStore((s) => s.currentUser);
   const unread      = useStore((s) =>
     s.notifications.filter((n) =>
       !n.read && (isAdmin() || !n.ownerId || n.ownerId === currentUser?.ownerId),
     ).length,
   );
-
+  const draftCount  = useStore((s) => s.drafts.length);
 
   const allLinks = isAdmin()
     ? [...links,
         { to: '/credit',      icon: CreditCard,  label: 'Credit'      },
         { to: '/permissions', icon: ShieldCheck, label: 'Permissions' }]
-    : links.filter((l) => l.to !== '/inquiries');
+    : links.filter(({ to }) => {
+        // Always visible to owners
+        if (['/','vehicles','/bookings','/commissions','/notifications'].includes(to)) return true;
+        // Permission-gated pages
+        if (to === '/expenses')    return can('canViewExpenses');
+        if (to === '/handovers')   return can('canViewHandovers');
+        if (to === '/drivers')     return can('canViewDrivers');
+        if (to === '/customers')   return can('canViewCustomers');
+        if (to === '/referrals')   return can('canViewReferrals');
+        if (to === '/inquiries')   return can('canViewInquiries');
+        if (to === '/incomplete')  return can('canViewIncomplete');
+        // Admin-only pages never shown to owners
+        return false;
+      });
 
   return (
     <>
@@ -63,14 +78,20 @@ export default function Sidebar() {
 
         <nav className="flex flex-col gap-1 flex-1">
           {allLinks.map(({ to, icon: Icon, label }) => {
-            const active  = isActive(to, location.pathname);
-            const isNotif = to === '/notifications';
+            const active       = isActive(to, location.pathname);
+            const isNotif      = to === '/notifications';
+            const isIncomplete = to === '/incomplete';
             return (
               <NavLink key={to} to={to} title={label}>
                 <div className={clsx('sidebar-icon relative', active && 'active')}>
                   <Icon size={20} />
                   {isNotif && unread > 0 && (
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                  {isIncomplete && draftCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-amber-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
+                      {draftCount}
+                    </span>
                   )}
                 </div>
               </NavLink>

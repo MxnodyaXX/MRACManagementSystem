@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
   X, Car, User, Calendar, DollarSign, Users,
@@ -69,7 +70,7 @@ function Field({ label, children, required }: { label: string; children: React.R
 }
 
 export default function ManualBookingModal({ onClose }: Props) {
-  const { vehicles, owners, drivers, customers, addManualBooking } = useStore();
+  const { vehicles, owners, drivers, customers, addManualBooking, saveDraft, discardDraft, drafts } = useStore();
   const [form, setForm]           = useState(emptyForm());
   const [error, setError]         = useState('');
   const [customerMode, setCustomerMode] = useState<'new' | 'existing'>('new');
@@ -79,6 +80,35 @@ export default function ManualBookingModal({ onClose }: Props) {
   const [creditChoice, setCreditChoice] = useState<'discount' | 'credit'>('credit');
   const [creditAck, setCreditAck] = useState(false);
   const [otp, setOtp] = useState<{ sent: boolean; code: string; input: string; verified: boolean; fallback?: string }>({ sent: false, code: '', input: '', verified: false });
+
+  const savedRef = useRef(false);  // true once handleSave succeeds — suppresses draft on close
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Restore from draft when opened via ?resume=draftId
+  useEffect(() => {
+    const resumeId = searchParams.get('resume');
+    if (!resumeId) return;
+    const draft = drafts.find((d) => d.id === resumeId && d.type === 'booking');
+    if (draft) {
+      setForm(draft.formData as ReturnType<typeof emptyForm>);
+      discardDraft(resumeId);
+    }
+    setSearchParams({}, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDiscardClose = () => {
+    if (!savedRef.current && (form.customerName !== '' || form.vehicleId !== '')) {
+      const veh = vehicles.find((v) => v.id === form.vehicleId);
+      saveDraft({
+        type: 'booking',
+        label: form.customerName ? `Booking: ${form.customerName}` : 'Incomplete Booking',
+        sublabel: veh ? `${veh.brand} ${veh.model}` : 'No vehicle selected yet',
+        vehicleId: form.vehicleId || undefined,
+        formData: { ...form },
+      });
+    }
+    onClose();
+  };
 
   const vehicle     = vehicles.find((v) => v.id === form.vehicleId);
   const vehicleOwner = owners.find((o) => o.id === vehicle?.ownerId);
@@ -173,6 +203,7 @@ export default function ManualBookingModal({ onClose }: Props) {
     const pickupAt = form.startTime ? `${form.startDate}T${form.startTime}` : undefined;
     const returnAt = form.endTime ? `${form.endDate}T${form.endTime}` : undefined;
 
+    savedRef.current = true;
     addManualBooking({ ...form, discount, creditAmount, creditResponsibility, pickupAt, returnAt } as Parameters<typeof addManualBooking>[0]);
     onClose();
   };
@@ -198,7 +229,7 @@ export default function ManualBookingModal({ onClose }: Props) {
               <p className="text-xs text-navy-400">Record a past booking — all related tables will be updated</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+          <button onClick={handleDiscardClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">
             <X size={18} />
           </button>
         </div>

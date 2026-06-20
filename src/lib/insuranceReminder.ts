@@ -49,6 +49,10 @@ export function runInsuranceReminders({
   notifications,
   addNotification,
 }: ReminderParams): void {
+  // Skip SMS (but still create in-app notifications) when running under Playwright.
+  const isPlaywright = navigator.userAgent.includes('Playwright') ||
+    (window as unknown as Record<string, unknown>).__playwright != null;
+
   const now = Date.now();
 
   for (const v of vehicles) {
@@ -77,9 +81,11 @@ export function runInsuranceReminders({
       });
     }
 
-    // SMS to the vehicle's owner (fire-and-forget — never throws)
+    // SMS to the vehicle's owner (fire-and-forget — never throws).
+    // Skipped when running under Playwright so automated test runs don't
+    // send real messages every time freshSession() clears localStorage.
     const owner = owners.find((o) => o.id === v.ownerId);
-    if (owner?.phone) {
+    if (owner?.phone && !isPlaywright) {
       sendSms(
         owner.phone,
         smsTemplates.ownerInsuranceMissing(owner.name, `${v.brand} ${v.model}`, v.vehicleNumber),

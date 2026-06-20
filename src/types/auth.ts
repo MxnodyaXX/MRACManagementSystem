@@ -12,11 +12,21 @@ export interface AppUser {
 }
 
 export interface OwnerPermissions {
-  canBook: boolean;
-  canEditVehicle: boolean;
-  canChangeStatus: boolean;
-  canAddExpenses: boolean;
-  disabled: boolean; // admin can fully lock an owner out
+  // ── Actions ────────────────────────────────────────────────────────────────
+  canBook: boolean;           // create new bookings
+  canEditVehicle: boolean;    // edit their own vehicle details
+  canChangeStatus: boolean;   // change booking / vehicle status
+  canAddExpenses: boolean;    // log vehicle expenses
+  // ── Page visibility ────────────────────────────────────────────────────────
+  canViewExpenses: boolean;   // Expenses page
+  canViewHandovers: boolean;  // Handovers page
+  canViewDrivers: boolean;    // Drivers page
+  canViewCustomers: boolean;  // Customers page
+  canViewReferrals: boolean;  // Referrals page
+  canViewInquiries: boolean;  // Inquiries page
+  canViewIncomplete: boolean; // Incomplete processes page
+  // ── Account ────────────────────────────────────────────────────────────────
+  disabled: boolean;          // admin can fully lock an owner out
 }
 
 export interface AuthState {
@@ -29,6 +39,7 @@ export interface AuthState {
   loadUsers: () => Promise<void>;
   updatePermissions: (ownerId: string, perms: Partial<OwnerPermissions>) => void;
   getOwnerPermissions: (ownerId: string) => OwnerPermissions;
+  createOwnerAccount: (ownerId: string, ownerName: string) => void;
   isAdmin: () => boolean;
   isOwner: () => boolean;
   can: (perm: keyof Omit<OwnerPermissions, 'disabled'>) => boolean;

@@ -23,10 +23,12 @@ import CreditManagement from './pages/CreditManagement';
 import Handovers from './pages/Handovers';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
+import Incomplete from './pages/Incomplete';
 
 export default function App() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const isAdmin     = useAuthStore((s) => s.isAdmin);
+  const can         = useAuthStore((s) => s.can);
   const loadUsers   = useAuthStore((s) => s.loadUsers);
   const loadAll     = useStore((s) => s.loadAll);
   const loaded      = useStore((s) => s.loaded);
@@ -77,24 +79,21 @@ export default function App() {
           <Route path="/"              element={<Dashboard />}     />
           <Route path="/vehicles"      element={<Vehicles />}      />
           <Route path="/bookings"      element={<Bookings />}      />
-          <Route path="/inquiries"     element={<Inquiries />}     />
           <Route path="/commissions"   element={<Commissions />}   />
-          <Route path="/owners"        element={<Owners />}        />
-          <Route path="/expenses"      element={<Expenses />}      />
-          <Route path="/drivers"       element={<Drivers />}       />
           <Route path="/notifications" element={<Notifications />} />
-          <Route path="/handovers"     element={<Handovers />}     />
-          <Route path="/customers"     element={<Customers />}     />
-          {isAdmin() && (
-            <Route path="/permissions" element={<Permissions />} />
-          )}
-          {isAdmin() && (
-            <Route path="/settings" element={<Settings />} />
-          )}
-          {isAdmin() && (
-            <Route path="/credit" element={<CreditManagement />} />
-          )}
-          <Route path="/referrals" element={<Referrals />} />
+          {/* Permission-gated pages — redirect to home if not allowed */}
+          <Route path="/inquiries"  element={isAdmin() || can('canViewInquiries')   ? <Inquiries />  : <Navigate to="/" replace />} />
+          <Route path="/expenses"   element={isAdmin() || can('canViewExpenses')    ? <Expenses />   : <Navigate to="/" replace />} />
+          <Route path="/drivers"    element={isAdmin() || can('canViewDrivers')     ? <Drivers />    : <Navigate to="/" replace />} />
+          <Route path="/handovers"  element={isAdmin() || can('canViewHandovers')   ? <Handovers />  : <Navigate to="/" replace />} />
+          <Route path="/customers"  element={isAdmin() || can('canViewCustomers')   ? <Customers />  : <Navigate to="/" replace />} />
+          <Route path="/referrals"  element={isAdmin() || can('canViewReferrals')   ? <Referrals />  : <Navigate to="/" replace />} />
+          <Route path="/incomplete" element={isAdmin() || can('canViewIncomplete')  ? <Incomplete /> : <Navigate to="/" replace />} />
+          {/* Admin-only pages */}
+          <Route path="/owners"      element={isAdmin() ? <Owners />           : <Navigate to="/" replace />} />
+          <Route path="/permissions" element={isAdmin() ? <Permissions />      : <Navigate to="/" replace />} />
+          <Route path="/settings"    element={isAdmin() ? <Settings />         : <Navigate to="/" replace />} />
+          <Route path="/credit"      element={isAdmin() ? <CreditManagement /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

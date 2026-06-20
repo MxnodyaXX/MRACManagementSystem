@@ -13,11 +13,20 @@ export const USERS: AppUser[] = [
   { id: 'u_o5',    username: 'ruwan',  password: 'owner123',  name: 'Ruwan Bandara',       role: 'owner', ownerId: 'o5' },
 ];
 
-const DEFAULT_PERMS: OwnerPermissions = {
+export const DEFAULT_PERMS: OwnerPermissions = {
+  // Actions — on by default so owners can do the core tasks
   canBook: true,
   canEditVehicle: true,
   canChangeStatus: true,
   canAddExpenses: true,
+  // Pages — common operational pages on, specialist pages off
+  canViewExpenses: true,
+  canViewHandovers: true,
+  canViewDrivers: false,
+  canViewCustomers: false,
+  canViewReferrals: false,
+  canViewInquiries: false,
+  canViewIncomplete: false,
   disabled: false,
 };
 
@@ -74,6 +83,34 @@ export const useAuthStore = create<AuthState>()(
 
       getOwnerPermissions: (ownerId) =>
         get().permissions[ownerId] ?? DEFAULT_PERMS,
+
+      createOwnerAccount: (ownerId, ownerName) => {
+        // No-op if a user for this owner already exists
+        if (get().users.some((u) => u.ownerId === ownerId)) return;
+
+        // Derive a username from the owner's name (lowercase, letters + digits only)
+        const base = ownerName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || 'owner';
+        const taken = new Set(get().users.map((u) => u.username));
+        let username = base;
+        let suffix = 2;
+        while (taken.has(username)) username = base + suffix++;
+
+        // Simple 6-digit PIN — easy to share verbally / by SMS
+        const password = String(Math.floor(100000 + Math.random() * 900000));
+
+        const newUser: AppUser = {
+          id: 'u_' + Math.random().toString(36).slice(2, 8),
+          username,
+          password,
+          name: ownerName,
+          role: 'owner',
+          ownerId,
+        };
+        set((s) => ({ users: [...s.users, newUser] }));
+        if (supabaseEnabled) {
+          Promise.resolve(db.insertUser(newUser)).catch((e) => console.error('[auth] insertUser failed:', e));
+        }
+      },
 
       isAdmin: () => get().currentUser?.role === 'admin',
       isOwner: () => get().currentUser?.role === 'owner',
