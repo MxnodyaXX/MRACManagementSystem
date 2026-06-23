@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import DateInput from '../components/ui/DateInput';
 import { Plus, UserCheck, Phone, AlertTriangle } from 'lucide-react';
+import LocationInput from '../components/ui/LocationInput';
 import { Driver } from '../types';
 
 const DRIVER_STATUSES: Driver['status'][] = ['Available', 'On Duty', 'Off'];
@@ -207,7 +208,7 @@ export default function Drivers() {
             </div>
             <div className="col-span-2">
               <p className="label">Address</p>
-              <input className="input" value={form.address ?? ''} onChange={(e) => set('address', e.target.value)} />
+              <LocationInput value={form.address ?? ''} onChange={(v) => set('address', v)} placeholder="Driver's address…" />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-6">

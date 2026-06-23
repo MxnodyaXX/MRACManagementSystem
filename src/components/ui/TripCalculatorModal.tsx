@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Modal from './Modal';
 import {
   MapPin, Navigation, RotateCcw, AlertTriangle,
@@ -6,25 +6,10 @@ import {
   Share2, MessageCircle, Smartphone, FileDown, Phone,
 } from 'lucide-react';
 import { Vehicle } from '../../types';
+import LocationInput from './LocationInput';
 
 /* ── Google Maps lazy loader ──────────────────────────────────── */
-const MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '') as string;
-
-let _mapsPromise: Promise<void> | null = null;
-function loadGoogleMaps(): Promise<void> {
-  if (!MAPS_KEY) return Promise.reject(new Error('no-key'));
-  if (_mapsPromise) return _mapsPromise;
-  _mapsPromise = new Promise<void>((resolve, reject) => {
-    if ((window as any).google?.maps?.places) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src   = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`;
-    s.async = true;
-    s.onload  = () => resolve();
-    s.onerror = () => { _mapsPromise = null; reject(new Error('load-failed')); };
-    document.head.appendChild(s);
-  });
-  return _mapsPromise;
-}
+import { loadGoogleMaps, MAPS_KEY } from '../../lib/googleMaps';
 
 /* ── Types ────────────────────────────────────────────────────── */
 interface QuotationForm {
@@ -263,8 +248,8 @@ function buildWhatsAppMsg(
 export default function TripCalculatorModal({
   open, onBack, onConfirm, form, vehicle, updateQuotation,
 }: Props) {
-  const originRef = useRef<HTMLInputElement>(null);
-  const destRef   = useRef<HTMLInputElement>(null);
+  const [originValue, setOriginValue] = useState(form.quotation.startLocation);
+  const [destValue,   setDestValue]   = useState(form.quotation.endLocation);
 
   const [mapsReady,   setMapsReady]   = useState(false);
   const [mapsError,   setMapsError]   = useState('');
@@ -285,22 +270,11 @@ export default function TripCalculatorModal({
       setMapsError('VITE_GOOGLE_MAPS_API_KEY not set. Add your key to .env.local to enable auto-distance.');
       return;
     }
-    if ((window as any).google?.maps?.places) { setMapsReady(true); return; }
+    if ((window as any).google?.maps) { setMapsReady(true); return; }
     loadGoogleMaps()
       .then(() => setMapsReady(true))
       .catch(() => setMapsError('Google Maps could not be loaded. Check your API key.'));
   }, [open]);
-
-  /* Attach Places Autocomplete once maps is ready */
-  useEffect(() => {
-    if (!mapsReady || !open) return;
-    const gm = (window as any).google.maps;
-    const opts = { fields: ['formatted_address', 'geometry'], componentRestrictions: { country: 'lk' } };
-    if (originRef.current && !(originRef.current as any).__ac)
-      (originRef.current as any).__ac = new gm.places.Autocomplete(originRef.current, opts);
-    if (destRef.current && !(destRef.current as any).__ac)
-      (destRef.current as any).__ac = new gm.places.Autocomplete(destRef.current, opts);
-  }, [mapsReady, open]);
 
   /* Bill breakdown */
   const breakdown = useMemo(() => {
@@ -316,8 +290,8 @@ export default function TripCalculatorModal({
   }, [vehicle, kmResult, roundTrip, form]);
 
   const handleCalculate = () => {
-    const origin = originRef.current?.value?.trim();
-    const dest   = destRef.current?.value?.trim();
+    const origin = originValue.trim();
+    const dest   = destValue.trim();
     if (!origin || !dest) { setCalcError('Please enter both start and end locations.'); return; }
     setCalculating(true);
     setCalcError('');
@@ -344,8 +318,8 @@ export default function TripCalculatorModal({
   /* Share handlers */
   const handleWhatsApp = () => {
     if (!breakdown || !kmResult) return;
-    const origin = originRef.current?.value?.trim() ?? form.quotation.startLocation;
-    const dest   = destRef.current?.value?.trim()   ?? form.quotation.endLocation;
+    const origin = originValue.trim() || form.quotation.startLocation;
+    const dest   = destValue.trim()   || form.quotation.endLocation;
     const msg    = buildWhatsAppMsg(form, vehicle, breakdown, roundTrip, kmResult, origin, dest);
     const phone  = sharePhone.replace(/[^0-9]/g, '');
     const intl   = phone.startsWith('0') ? '94' + phone.slice(1) : phone;
@@ -359,7 +333,7 @@ export default function TripCalculatorModal({
       `Customer: ${form.customerName}`,
       `Vehicle: ${vehicle?.brand} ${vehicle?.model} (${vehicle?.vehicleNumber})`,
       `Period: ${form.startDate} - ${form.endDate} (${form.totalDays} days)`,
-      `Route: ${originRef.current?.value ?? ''} → ${destRef.current?.value ?? ''} (${breakdown.tripKm} km)`,
+      `Route: ${originValue} → ${destValue} (${breakdown.tripKm} km)`,
       `Base Rent: Rs ${breakdown.baseRent.toLocaleString()}`,
       ...(breakdown.extraKm > 0 ? [`Extra KM (${breakdown.extraKm}km): Rs ${breakdown.extraCharge.toLocaleString()}`] : []),
       `ESTIMATED TOTAL: Rs ${breakdown.total.toLocaleString()}`,
@@ -371,8 +345,8 @@ export default function TripCalculatorModal({
 
   const handlePDF = () => {
     if (!breakdown || !kmResult) return;
-    const origin = originRef.current?.value?.trim() ?? form.quotation.startLocation;
-    const dest   = destRef.current?.value?.trim()   ?? form.quotation.endLocation;
+    const origin = originValue.trim() || form.quotation.startLocation;
+    const dest   = destValue.trim()   || form.quotation.endLocation;
     printEstimate(form, vehicle, breakdown, roundTrip, kmResult, origin, dest);
   };
 
@@ -411,13 +385,13 @@ export default function TripCalculatorModal({
             <p className="text-xs font-semibold text-navy-600 uppercase tracking-wide">Enter Trip Locations</p>
 
             <div className="space-y-2">
-              <div className="relative">
-                <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none" />
-                <input ref={originRef} className="input pl-8" defaultValue={form.quotation.startLocation} placeholder="Start location — e.g. Colombo Fort" />
+              <div className="flex items-center gap-2">
+                <MapPin size={13} className="text-emerald-500 flex-shrink-0" />
+                <div className="flex-1"><LocationInput value={originValue} onChange={setOriginValue} placeholder="Start location — e.g. Colombo Fort" /></div>
               </div>
-              <div className="relative">
-                <Navigation size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none" />
-                <input ref={destRef} className="input pl-8" defaultValue={form.quotation.endLocation} placeholder="Destination — e.g. Katharagama" />
+              <div className="flex items-center gap-2">
+                <Navigation size={13} className="text-red-500 flex-shrink-0" />
+                <div className="flex-1"><LocationInput value={destValue} onChange={setDestValue} placeholder="Destination — e.g. Katharagama" /></div>
               </div>
             </div>
 

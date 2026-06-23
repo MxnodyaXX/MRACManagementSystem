@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import Select from '../components/ui/Select';
 import { Plus, Car, Lock, FileText, Printer } from 'lucide-react';
+import LocationInput from '../components/ui/LocationInput';
 import { Owner } from '../types';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -213,7 +214,7 @@ export default function Owners() {
           </div>
           <div className="col-span-2">
             <p className="label">Address</p>
-            <input className="input" value={form.address ?? ''} onChange={(e) => set('address', e.target.value)} />
+            <LocationInput value={form.address ?? ''} onChange={(v) => set('address', v)} placeholder="Owner's address…" />
           </div>
           <div className="col-span-2 border-t border-navy-100 pt-4 mt-1">
             <p className="text-xs font-semibold text-navy-500 uppercase tracking-wide mb-3">Banking Details</p>

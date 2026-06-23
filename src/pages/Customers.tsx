@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
+import LocationInput from '../components/ui/LocationInput';
 import {
   Plus, Search, User, Phone, Mail, MapPin, CreditCard,
   ChevronDown, Edit2, Trash2, CalendarDays, Car, AlertTriangle, Info,
@@ -437,15 +438,7 @@ export default function Customers() {
           </div>
           <div className="col-span-2">
             <p className="label">Address</p>
-            <div className="relative">
-              <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-300" />
-              <input
-                className="input pl-8"
-                value={form.address}
-                onChange={(e) => set('address', e.target.value)}
-                placeholder="No. 12, Temple Road, Kandy"
-              />
-            </div>
+            <LocationInput value={form.address ?? ''} onChange={(v) => set('address', v)} placeholder="No. 12, Temple Road, Kandy" />
           </div>
           <div className="col-span-2">
             <p className="label">Notes</p>

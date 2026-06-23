@@ -8,6 +8,7 @@ import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import DateTimeInput from '../components/ui/DateTimeInput';
+import LocationInput from '../components/ui/LocationInput';
 import StatusBadge from '../components/ui/StatusBadge';
 import InvoiceModal from '../components/ui/InvoiceModal';
 import {
@@ -444,12 +445,7 @@ export default function Handovers() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <p className="label">Handover Location *</p>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-300" />
-                    <input className="input pl-8" value={form.location}
-                      onChange={(e) => set('location', e.target.value)}
-                      placeholder="e.g. Colombo 03, Galle Road" />
-                  </div>
+                  <LocationInput value={form.location} onChange={(v) => set('location', v)} placeholder="e.g. Colombo 03, Galle Road" />
                 </div>
                 <div>
                   <p className="label">Date & Time *</p>
@@ -525,12 +521,7 @@ export default function Handovers() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <p className="label">Return Location *</p>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-300" />
-                    <input className="input pl-8" value={form.location}
-                      onChange={(e) => setReturn('location', e.target.value)}
-                      placeholder="e.g. Kandy, Temple Road" />
-                  </div>
+                  <LocationInput value={form.location} onChange={(v) => setReturn('location', v)} placeholder="e.g. Kandy, Temple Road" />
                 </div>
                 <div>
                   <p className="label">Date & Time *</p>

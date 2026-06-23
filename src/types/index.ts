@@ -132,6 +132,7 @@ export interface Booking {
   creditSettled?: boolean;    // true once the credit has been collected
   creditResponsibility?: 'self' | 'owner' | 'company'; // who is liable for the credit
   badDebt?: number;           // amount written off as unrecoverable
+  insertedByAdmin?: boolean;  // true when admin entered this booking on behalf of an owner
 }
 
 export interface Inquiry {

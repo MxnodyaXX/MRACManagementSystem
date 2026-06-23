@@ -16,9 +16,11 @@ import 'react-datepicker/dist/react-datepicker.css';
 import {
   Plus, CalendarDays, List, AlertTriangle, CheckCircle,
   XCircle, Calculator, MessageCircle, Shield, PlayCircle,
-  ChevronDown, Search as SearchIcon,
+  ChevronDown, Search as SearchIcon, ClipboardEdit,
 } from 'lucide-react';
 import AvailabilityModal from '../components/ui/AvailabilityModal';
+import AdminBookingModal from '../components/ui/AdminBookingModal';
+import LocationInput from '../components/ui/LocationInput';
 import { buildBookingWhatsAppMsg, openWhatsApp } from '../lib/whatsapp';
 import { blocksAvailability, bookingStartMs, bookingEndMs, rangesOverlap, rentalDays } from '../lib/availability';
 import TimePicker from '../components/ui/TimePicker';
@@ -136,6 +138,7 @@ export default function Bookings() {
   const [customTo,          setCustomTo]          = useState<Date | null>(null);
   const [viewMode,          setViewMode]          = useState<'cards' | 'calendar'>('cards');
   const [modal,             setModal]             = useState<'add' | 'view' | 'calculator' | null>(null);
+  const [adminBookingOpen,  setAdminBookingOpen]  = useState(false);
   const [completedOpen,     setCompletedOpen]     = useState(true);
   const [availabilityOpen,  setAvailabilityOpen]  = useState(false);
   const [selected,     setSelected]     = useState<Booking | null>(null);
@@ -452,6 +455,15 @@ export default function Bookings() {
               <Plus size={15} /> New Booking
             </button>
           )}
+          {isAdmin() && (
+            <button
+              onClick={() => setAdminBookingOpen(true)}
+              className="btn-secondary flex items-center gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+              title="Enter a booking on behalf of an owner"
+            >
+              <ClipboardEdit size={15} /> Owner Entry
+            </button>
+          )}
         </div>
       </div>
 
@@ -614,7 +626,14 @@ export default function Bookings() {
                   <p className="text-sm font-bold text-navy-800">{b.customerName}</p>
                   <p className="text-xs text-navy-400">{b.customerPhone}</p>
                 </div>
-                <StatusBadge status={b.status} />
+                <div className="flex flex-col items-end gap-1.5">
+                  <StatusBadge status={b.status} />
+                  {b.insertedByAdmin && (
+                    <span className="flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">
+                      <ClipboardEdit size={9} /> Inserted By Admin
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="bg-navy-50/60 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
                 <CalendarDays size={13} className="text-navy-400 flex-shrink-0" />
@@ -707,9 +726,10 @@ export default function Bookings() {
               <p className="text-[10px] text-navy-500 truncate">{b.startDate} → {b.endDate}</p>
               <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-navy-50">
                 <span className="text-[11px] font-bold text-navy-800">Rs {b.totalAmount.toLocaleString()}</span>
-                {balance > 0 && (
-                  <span className="text-[10px] font-semibold text-red-500">-{balance.toLocaleString()}</span>
-                )}
+                {b.insertedByAdmin
+                  ? <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">Admin</span>
+                  : balance > 0 && <span className="text-[10px] font-semibold text-red-500">-{balance.toLocaleString()}</span>
+                }
               </div>
             </div>
           );
@@ -1182,11 +1202,11 @@ export default function Bookings() {
 
             <div>
               <p className="label">Pickup Location</p>
-              <input className="input" value={form.pickupLocation} onChange={(e) => set('pickupLocation', e.target.value)} />
+              <LocationInput value={form.pickupLocation} onChange={(v) => set('pickupLocation', v)} placeholder="Pickup location…" />
             </div>
             <div>
               <p className="label">Drop Location</p>
-              <input className="input" value={form.dropLocation} onChange={(e) => set('dropLocation', e.target.value)} />
+              <LocationInput value={form.dropLocation} onChange={(v) => set('dropLocation', v)} placeholder="Drop location…" />
             </div>
             <div>
               <p className="label">Paid Amount (Rs)</p>
@@ -1242,6 +1262,9 @@ export default function Bookings() {
 
       {/* ── Availability Check Modal ── */}
       <AvailabilityModal open={availabilityOpen} onClose={() => setAvailabilityOpen(false)} />
+
+      {/* ── Admin — enter booking on behalf of owner ── */}
+      <AdminBookingModal open={adminBookingOpen} onClose={() => setAdminBookingOpen(false)} />
 
       {/* ── Trip Bill Calculator Modal ── */}
       <TripCalculatorModal

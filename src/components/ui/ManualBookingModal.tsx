@@ -9,6 +9,7 @@ import { useStore } from '../../store/useStore';
 import Select from './Select';
 import DateInput from './DateInput';
 import TimePicker from './TimePicker';
+import LocationInput from './LocationInput';
 import { resolveReferralFee } from '../../lib/referral';
 import { creditResponsibilityOf } from '../../lib/credit';
 import { sendSms } from '../../lib/sms';
@@ -554,10 +555,10 @@ export default function ManualBookingModal({ onClose }: Props) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Pickup Location">
-                    <input className="input" value={form.pickupLocation} onChange={(e) => set('pickupLocation', e.target.value)} />
+                    <LocationInput value={form.pickupLocation} onChange={(v) => set('pickupLocation', v)} placeholder="Pickup location…" />
                   </Field>
                   <Field label="Drop Location">
-                    <input className="input" value={form.dropLocation} onChange={(e) => set('dropLocation', e.target.value)} />
+                    <LocationInput value={form.dropLocation} onChange={(v) => set('dropLocation', v)} placeholder="Drop location…" />
                   </Field>
                   <Field label="Driver (optional)">
                     <Select value={form.driverId} onChange={(v) => set('driverId', v)} placeholder="No driver" nullable

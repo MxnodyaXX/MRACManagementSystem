@@ -10,6 +10,7 @@ import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import Header from '../components/layout/Header';
 import ManualBookingModal from '../components/ui/ManualBookingModal';
+import LocationInput from '../components/ui/LocationInput';
 import { sendSms } from '../lib/sms';
 import type { Owner } from '../types';
 
@@ -265,7 +266,7 @@ function ProfileSetupModal({ owner, onClose, onCreated }: ProfileProps) {
             </div>
             <div>
               <label className="block text-xs font-medium text-navy-500 mb-1">Address <span className="text-red-500">*</span></label>
-              <input className="input" placeholder="Full address" value={address} onChange={(e) => setAddress(e.target.value)} />
+              <LocationInput value={address} onChange={setAddress} placeholder="Full address" />
             </div>
           </div>
 
