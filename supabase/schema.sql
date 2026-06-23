@@ -199,6 +199,10 @@ alter table bookings add column if not exists referral_fee     numeric(10,2);
 alter table bookings add column if not exists referral_paid    boolean not null default false;
 alter table bookings add column if not exists referral_paid_at text;
 
+-- Scheduled pickup / return times on bookings — enable same-day turnaround availability
+alter table bookings add column if not exists start_time            text;
+alter table bookings add column if not exists end_time              text;
+
 -- Return / payment / credit details on bookings (added after initial schema)
 alter table bookings add column if not exists pickup_at             text;
 alter table bookings add column if not exists return_at             text;
@@ -225,15 +229,22 @@ alter table customers     disable row level security;
 alter table users         disable row level security;
 
 -- ── Enable real-time for all tables ──────────────────────────────────────────
+-- Idempotent: only adds a table to the publication if it isn't already a member,
+-- so this whole schema file can be re-run safely (Postgres has no
+-- "alter publication ... add table if not exists").
 
-alter publication supabase_realtime add table owners;
-alter publication supabase_realtime add table vehicles;
-alter publication supabase_realtime add table bookings;
-alter publication supabase_realtime add table inquiries;
-alter publication supabase_realtime add table commissions;
-alter publication supabase_realtime add table expenses;
-alter publication supabase_realtime add table drivers;
-alter publication supabase_realtime add table notifications;
-alter publication supabase_realtime add table handovers;
-alter publication supabase_realtime add table customers;
-alter publication supabase_realtime add table users;
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'owners','vehicles','bookings','inquiries','commissions','expenses',
+    'drivers','notifications','handovers','customers','users'
+  ] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table %I', t);
+    end if;
+  end loop;
+end $$;

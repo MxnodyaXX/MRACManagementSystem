@@ -5,6 +5,7 @@ import { sampleData } from '../data/sampleData';
 import { supabaseEnabled } from '../lib/supabase';
 import { db, dbFetchAll } from '../lib/db';
 import { resolveReferralFee } from '../lib/referral';
+import { blocksAvailability, bookingStartMs, bookingEndMs, rangesOverlap } from '../lib/availability';
 import { sendSms, smsTemplates, ADMIN_PHONE } from '../lib/sms';
 import { toast } from './useToast';
 import { useAuthStore } from './useAuthStore';
@@ -669,17 +670,19 @@ export const useStore = create<AppState>()(
       },
 
       // ── Helpers ───────────────────────────────────────────────────────────
-      isVehicleAvailable: (vehicleId, startDate, endDate, excludeBookingId) => {
+      isVehicleAvailable: (vehicleId, startDate, endDate, excludeBookingId, startTime, endTime) => {
         const { bookings } = get();
-        const start = new Date(startDate).getTime();
-        const end   = new Date(endDate).getTime();
+        // Compare full date-times so a same-day return + re-hire doesn't clash
+        // (e.g. returned 08:00, handed to the next hire from 12:00 the same day).
+        const candStart = bookingStartMs({ startDate, startTime });
+        const candEnd   = bookingEndMs({ endDate, endTime });
         return !bookings.some((b) => {
           if (b.vehicleId !== vehicleId) return false;
-          if (b.status === 'Cancelled') return false;
+          // Only live bookings (Confirmed/Ongoing) hold the vehicle — Completed
+          // and Cancelled bookings release it, so they never block new dates.
+          if (!blocksAvailability(b)) return false;
           if (excludeBookingId && b.id === excludeBookingId) return false;
-          const bStart = new Date(b.startDate).getTime();
-          const bEnd   = new Date(b.endDate).getTime();
-          return start <= bEnd && end >= bStart;
+          return rangesOverlap(candStart, candEnd, bookingStartMs(b), bookingEndMs(b));
         });
       },
     }),

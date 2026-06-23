@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import { CheckCircle, Clock, XCircle, Search } from 'lucide-react';
 import { parseISO, addDays, isValid } from 'date-fns';
 import { Vehicle, Booking, Owner } from '../../types';
+import { blocksAvailability } from '../../lib/availability';
 
 interface AvailabilityResult {
   vehicle:         Vehicle;
@@ -21,7 +22,7 @@ interface Props {
 
 function nextFreeDate(vehicleId: string, requestStart: string, allBookings: Booking[]): string {
   const active = allBookings
-    .filter((b) => b.vehicleId === vehicleId && b.status !== 'Cancelled')
+    .filter((b) => b.vehicleId === vehicleId && blocksAvailability(b))
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
   let nf = requestStart;
@@ -130,7 +131,7 @@ export default function AvailabilityModal({ open, onClose }: Props) {
       const overlapping = bookings.filter(
         (b) =>
           b.vehicleId === vehicle.id &&
-          b.status !== 'Cancelled' &&
+          blocksAvailability(b) &&
           b.startDate <= endDate &&
           b.endDate >= startDate,
       );

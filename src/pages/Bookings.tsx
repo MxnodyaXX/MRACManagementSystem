@@ -20,9 +20,11 @@ import {
 } from 'lucide-react';
 import AvailabilityModal from '../components/ui/AvailabilityModal';
 import { buildBookingWhatsAppMsg, openWhatsApp } from '../lib/whatsapp';
+import { blocksAvailability, bookingStartMs, bookingEndMs, rangesOverlap, rentalDays } from '../lib/availability';
+import TimePicker from '../components/ui/TimePicker';
 import { Booking } from '../types';
 import {
-  differenceInDays, parseISO, addDays, isValid,
+  parseISO, addDays,
   endOfWeek, startOfMonth, endOfMonth,
   startOfQuarter, endOfQuarter, startOfYear, endOfYear,
 } from 'date-fns';
@@ -63,6 +65,30 @@ const LOST_REASONS = [
 // Only owner referrals or a named third party are paid a fee.
 const REFERRAL_SOURCES = ['WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'Google', 'Word of Mouth'];
 
+/** 'HH:mm' (24h) → '8:00 AM' for display; '' when unset/invalid. */
+const fmt12 = (t?: string) => {
+  if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return '';
+  const [hh, mm] = t.split(':').map(Number);
+  const period = hh >= 12 ? 'PM' : 'AM';
+  const h = hh % 12 || 12;
+  return `${h}:${String(mm).padStart(2, '0')} ${period}`;
+};
+
+const isTimeStr = (t?: string) => !!t && /^\d{1,2}:\d{2}$/.test(t);
+
+/** First day the vehicle is free again for a NEW hire: the return day itself
+ *  when a return time is recorded (it comes back that day, e.g. 7am), otherwise
+ *  the day after (it's out for the whole return day). */
+const freeFromDay = (b: Booking) =>
+  isTimeStr(b.endTime) ? b.endDate : addDays(parseISO(b.endDate), 1).toISOString().slice(0, 10);
+
+/** Is a calendar day blocked by this booking? The vehicle is taken from the
+ *  pickup day up to — but not including — the day it's free again. So a
+ *  23 → 24 (with a return time) booking blocks the 23rd but leaves the 24th
+ *  open for the next hire; the exact return/pickup times are then validated
+ *  separately so a same-day handover only goes through if the hours fit. */
+const dayBlocked = (b: Booking, d: string) => d >= b.startDate && d < freeFromDay(b);
+
 const emptyForm = () => ({
   vehicleId: '',
   customerId: 'c_' + Math.random().toString(36).slice(2, 6),
@@ -72,6 +98,8 @@ const emptyForm = () => ({
   customerNIC: '',
   startDate: '',
   endDate: '',
+  startTime: '',
+  endTime: '',
   totalDays: 0,
   totalAmount: 0,
   estimatedAmount: 0,
@@ -138,6 +166,14 @@ export default function Bookings() {
     window.history.replaceState({}, '');
   }, [location.state]);
 
+  // Deep-link from dashboard analytics: /bookings?status=Ongoing focuses that tab
+  useEffect(() => {
+    const status = new URLSearchParams(location.search).get('status');
+    if (status && ['All', 'Confirmed', 'Ongoing', 'Completed', 'Cancelled'].includes(status)) {
+      setTab(status as BookingStatus | 'All');
+    }
+  }, [location.search]);
+
   // Owner sees only their vehicle bookings
   const myVehicleIds = currentUser?.role === 'owner'
     ? vehicles.filter((v) => v.ownerId === currentUser.ownerId).map((v) => v.id)
@@ -181,22 +217,31 @@ export default function Bookings() {
   const isPersonReferral =
     !!form.referral && form.referral !== 'Direct' && !REFERRAL_SOURCES.includes(form.referral);
 
+  // A vehicle's own owner can't be the referrer for their vehicle — they'd be
+  // paying a referral fee to themselves. When that happens the booking is blocked
+  // until the referral is changed to Direct.
+  const bookedVehicleOwner = owners.find((o) => o.id === vehicles.find((v) => v.id === form.vehicleId)?.ownerId);
+  const selfReferral = isPersonReferral && !!bookedVehicleOwner &&
+    form.referral.trim().toLowerCase() === bookedVehicleOwner.name.trim().toLowerCase();
+
   const set = (field: string, value: unknown) => {
     setForm((f) => {
       const updated = { ...f, [field]: value };
-      if (field === 'startDate' || field === 'endDate' || field === 'vehicleId') {
-        const s   = field === 'startDate' ? value as string : updated.startDate;
-        const e   = field === 'endDate'   ? value as string : updated.endDate;
-        const vid = field === 'vehicleId' ? value as string : updated.vehicleId;
+      // Dates, times and the vehicle all affect both the billed duration and
+      // availability — recompute on any of them. Times change the cost because
+      // billing is by actual hours held (24h = 1 day), not inclusive calendar days.
+      const affects = field === 'startDate' || field === 'endDate' || field === 'vehicleId'
+        || field === 'startTime' || field === 'endTime';
+      if (affects) {
+        const { startDate: s, endDate: e, vehicleId: vid } = updated;
         if (s && e && s <= e) {
-          const days    = differenceInDays(parseISO(e as string), parseISO(s as string)) + 1;
+          const days    = rentalDays(s, e, updated.startTime, updated.endTime);
           const vehicle = vehicles.find((v) => v.id === vid);
-          const amount  = days * (vehicle?.dailyRent ?? 0);
           updated.totalDays   = days;
-          updated.totalAmount = amount;
+          updated.totalAmount = days * (vehicle?.dailyRent ?? 0);
           recalcEstimate(updated);
         }
-        if (s && e && vid) setAvailability(isVehicleAvailable(vid, s as string, e as string));
+        if (s && e && vid) setAvailability(isVehicleAvailable(vid, s, e, undefined, updated.startTime, updated.endTime));
       }
       return updated;
     });
@@ -225,10 +270,8 @@ export default function Bookings() {
     const dateStr = format(date, 'yyyy-MM-dd');
     return !bookings.some(
       (b) => b.vehicleId === form.vehicleId &&
-             b.status !== 'Cancelled' &&
-             b.status !== 'Completed' &&
-             dateStr >= b.startDate &&
-             dateStr <= b.endDate
+             blocksAvailability(b) &&
+             dayBlocked(b, dateStr)
     );
   };
 
@@ -275,8 +318,12 @@ export default function Bookings() {
       setError('Please fill in all required fields.');
       return;
     }
-    if (!isVehicleAvailable(form.vehicleId, form.startDate, form.endDate)) {
-      setError('Vehicle is not available for selected dates.');
+    if (!isVehicleAvailable(form.vehicleId, form.startDate, form.endDate, undefined, form.startTime, form.endTime)) {
+      setError('Vehicle is not available for the selected dates and times.');
+      return;
+    }
+    if (selfReferral) {
+      setError(`${bookedVehicleOwner!.name} owns this vehicle and can't be its own referrer. Change the referral to Direct to continue.`);
       return;
     }
     addBooking(form);
@@ -291,7 +338,7 @@ export default function Bookings() {
     try {
       const today = new Date().toISOString().slice(0, 10);
       const vBookings = bookings
-        .filter((b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled' && b.status !== 'Completed')
+        .filter((b) => b.vehicleId === form.vehicleId && blocksAvailability(b))
         .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
 
       const currentHire   = vBookings.find((b) => b.startDate && b.endDate && b.startDate <= today && b.endDate >= today);
@@ -304,12 +351,9 @@ export default function Bookings() {
       while (changed && iterations++ < 200) {
         changed = false;
         for (const b of vBookings) {
-          if (b.startDate && b.endDate && b.startDate <= nextFree && b.endDate >= nextFree) {
-            const parsed = parseISO(b.endDate);
-            if (isValid(parsed)) {
-              nextFree = addDays(parsed, 1).toISOString().slice(0, 10);
-              changed = true;
-            }
+          if (b.startDate && b.endDate && b.startDate <= nextFree && nextFree < freeFromDay(b)) {
+            nextFree = freeFromDay(b);
+            changed = true;
             break;
           }
         }
@@ -586,7 +630,9 @@ export default function Bookings() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-navy-500">{b.startDate} → {b.endDate} ({b.totalDays}d)</p>
+                  <p className="text-xs text-navy-500">
+                    {b.startDate}{b.startTime ? ` ${fmt12(b.startTime)}` : ''} → {b.endDate}{b.endTime ? ` ${fmt12(b.endTime)}` : ''} ({b.totalDays}d)
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 mb-3">
@@ -873,6 +919,19 @@ export default function Bookings() {
             </div>
           </div>
 
+          {/* Pickup / return times — recorded per booking so a vehicle returned
+              in the morning can be re-hired later the same day */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="label">Pickup Time</p>
+              <TimePicker value={form.startTime} onChange={(v) => set('startTime', v)} placeholder="Pickup time" />
+            </div>
+            <div>
+              <p className="label">Return Time</p>
+              <TimePicker value={form.endTime} onChange={(v) => set('endTime', v)} placeholder="Return time" />
+            </div>
+          </div>
+
           {/* Full date-range conflict banner — shown after both dates are picked */}
           {form.vehicleId && form.startDate && form.endDate && availability !== null && (
             availability ? (
@@ -884,32 +943,28 @@ export default function Bookings() {
                 </span>
               </div>
             ) : (() => {
+              const candS = bookingStartMs({ startDate: form.startDate, startTime: form.startTime });
+              const candE = bookingEndMs({ endDate: form.endDate, endTime: form.endTime });
               const conflict = bookings.find(
-                (b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled'
-                  && form.startDate <= b.endDate && form.endDate >= b.startDate
+                (b) => b.vehicleId === form.vehicleId && blocksAvailability(b)
+                  && rangesOverlap(candS, candE, bookingStartMs(b), bookingEndMs(b))
               );
               const allVB = bookings
-                .filter((b) => b.vehicleId === form.vehicleId && b.status !== 'Cancelled' && b.status !== 'Completed')
+                .filter((b) => b.vehicleId === form.vehicleId && blocksAvailability(b))
                 .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
               let nextFree: string | null = null;
               try {
                 if (conflict?.endDate) {
-                  const parsed = parseISO(conflict.endDate);
-                  if (isValid(parsed)) {
-                    nextFree = addDays(parsed, 1).toISOString().slice(0, 10);
-                    let changed = true;
-                    let iter = 0;
-                    while (changed && iter++ < 200) {
-                      changed = false;
-                      for (const b of allVB) {
-                        if (b.startDate && b.endDate && b.startDate <= nextFree! && b.endDate >= nextFree!) {
-                          const d = parseISO(b.endDate);
-                          if (isValid(d)) {
-                            nextFree = addDays(d, 1).toISOString().slice(0, 10);
-                            changed = true;
-                          }
-                          break;
-                        }
+                  nextFree = freeFromDay(conflict);
+                  let changed = true;
+                  let iter = 0;
+                  while (changed && iter++ < 200) {
+                    changed = false;
+                    for (const b of allVB) {
+                      if (b.startDate && b.endDate && b.startDate <= nextFree! && nextFree! < freeFromDay(b)) {
+                        nextFree = freeFromDay(b);
+                        changed = true;
+                        break;
                       }
                     }
                   }
@@ -924,7 +979,7 @@ export default function Bookings() {
                   {conflict && (
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs pl-1">
                       <span className="text-red-400">Booked by</span><span className="font-semibold text-red-800">{conflict.customerName}</span>
-                      <span className="text-red-400">Booked period</span><span className="font-semibold text-red-800">{conflict.startDate} → {conflict.endDate}</span>
+                      <span className="text-red-400">Booked period</span><span className="font-semibold text-red-800">{conflict.startDate}{conflict.startTime ? ` ${fmt12(conflict.startTime)}` : ''} → {conflict.endDate}{conflict.endTime ? ` ${fmt12(conflict.endTime)}` : ''}</span>
                       {nextFree && <><span className="text-red-400">Next free date</span><span className="font-bold text-emerald-700">{nextFree}</span></>}
                     </div>
                   )}
@@ -1058,8 +1113,31 @@ export default function Bookings() {
               )}
             </div>
 
+            {/* Self-referral block — the vehicle owner can't refer their own vehicle */}
+            {selfReferral && (
+              <div className="col-span-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-red-700">{bookedVehicleOwner?.name} owns this vehicle</p>
+                    <p className="text-xs text-red-600 mt-0.5">
+                      A vehicle owner can't be the referrer for their own vehicle — they'd be paying a fee to themselves.
+                      Change the referral to Direct to continue.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setReferralCustom(false); setForm((f) => ({ ...f, referral: 'Direct', referralFeeValue: 0 })); }}
+                      className="mt-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1.5 transition-colors"
+                    >
+                      Set referral to Direct
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Referral fee — only owner / third-party referrals are paid; deducted from the owner payout */}
-            {isPersonReferral && (
+            {isPersonReferral && !selfReferral && (
               <div className="col-span-2 bg-navy-50/60 rounded-xl p-3">
                 <p className="label">Referral Fee for {form.referral}</p>
                 <div className="flex gap-2 items-center">
@@ -1151,7 +1229,14 @@ export default function Bookings() {
           >
             <Calculator size={14} /> Calculate Total Bill
           </button>
-          <button onClick={handleCreate} className="btn-primary">Confirm Booking</button>
+          <button
+            onClick={handleCreate}
+            disabled={selfReferral}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            title={selfReferral ? "The vehicle owner can't refer their own vehicle — set the referral to Direct." : undefined}
+          >
+            Confirm Booking
+          </button>
         </div>
       </Modal>
 

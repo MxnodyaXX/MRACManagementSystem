@@ -96,6 +96,8 @@ export interface Booking {
   customerNIC?: string;
   startDate: string;
   endDate: string;
+  startTime?: string;        // 'HH:mm' scheduled pickup time (for same-day turnaround availability)
+  endTime?: string;          // 'HH:mm' scheduled return time
   totalDays: number;
   totalAmount: number;
   estimatedAmount?: number;  // from quotation calculator
@@ -261,7 +263,7 @@ export interface AppState {
   markAllRead: () => void;
   addNotification: (n: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
 
-  isVehicleAvailable: (vehicleId: string, startDate: string, endDate: string, excludeBookingId?: string) => boolean;
+  isVehicleAvailable: (vehicleId: string, startDate: string, endDate: string, excludeBookingId?: string, startTime?: string, endTime?: string) => boolean;
   updateCommission: (id: string, updates: Partial<Commission>) => void;
   addManualBooking: (data: Omit<Booking, 'id' | 'createdAt'> & { customerAddress?: string; dailyRateUsed?: number; referralAlreadyPaid?: boolean; commissionAlreadyPaid?: boolean }) => string;
   recomputeStats: () => void;

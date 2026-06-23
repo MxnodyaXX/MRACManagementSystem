@@ -7,6 +7,10 @@ import Header from '../components/layout/Header';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import VehicleImage from '../components/ui/VehicleImage';
+import {
+  OperationalAlerts, MoneyInsights, VehiclePerformance,
+  DistributionCharts, CustomerInsights,
+} from '../components/dashboard/AnalyticsSection';
 import { vehicleBodyColor } from '../components/ui/CarSVG';
 import {
   AreaChart, Area, BarChart, Bar,
@@ -205,6 +209,9 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* ── Operational Alerts (overdue · upcoming · insurance) ───── */}
+      <OperationalAlerts vehicles={scopedVehicles} bookings={scopedBookings} />
+
       {/* ── Business KPI Row ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
@@ -275,6 +282,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Money Insights (growth · deposits · bad debt) ────────── */}
+      <MoneyInsights bookings={scopedBookings} />
 
       {/* ── Leaderboard ─────────────────────────────────────────── */}
       <div className="card anim-fade-up" style={{ animationDelay: '180ms' }}>
@@ -423,6 +433,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Vehicle Performance (utilization · profit per vehicle) ── */}
+      <VehiclePerformance vehicles={scopedVehicles} bookings={scopedBookings} expenses={scopedExpenses} />
+
       {/* ── Charts Card ─────────────────────────────────────────── */}
       <div className="card anim-fade-up" style={{ animationDelay: '320ms' }}>
         <div className="flex items-center justify-between mb-5 gap-2">
@@ -481,6 +494,9 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
+      {/* ── Distribution (lead sources · expenses · payment mix) ──── */}
+      <DistributionCharts bookings={scopedBookings} expenses={scopedExpenses} />
+
       {/* ── Fleet Section ────────────────────────────────────────── */}
       <div className="card overflow-hidden p-0 anim-fade-up" style={{ animationDelay: '420ms' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-navy-50">
@@ -509,6 +525,9 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* ── Customer Insights (averages · conversion · top customers) ── */}
+      <CustomerInsights bookings={scopedBookings} inquiries={inquiries} showInquiries={!isOwnerRole} />
 
       {/* ── Outstanding Balances breakdown ── */}
       <Modal open={infoModal === 'outstanding'} onClose={() => setInfoModal(null)} title="Outstanding Balances" width="max-w-lg">

@@ -67,6 +67,14 @@
 .anim-loader-bar  { animation: loader-bar  1.3s cubic-bezier(0.65,0,0.35,1) infinite; }
 .anim-loader-ring { animation: loader-ring 0.9s linear infinite; }
 
+/* Skeleton shimmer — shown while dashboard analytics settle */
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.anim-shimmer {
+  background: linear-gradient(90deg, #EDF1F8 25%, #E0E8F4 37%, #EDF1F8 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
 /* Accordion height reveal — animates from 0fr to 1fr (auto) smoothly */
 .acc-grid       { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s cubic-bezier(0.16,1,0.3,1); }
 .acc-grid.open  { grid-template-rows: 1fr; }

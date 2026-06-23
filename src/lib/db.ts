@@ -84,6 +84,8 @@ function bFromDb(r: Record<string, unknown>): Booking {
     customerEmail: (r.customer_email as string) ?? undefined,
     customerNIC: (r.customer_nic as string) ?? undefined,
     startDate: r.start_date as string, endDate: r.end_date as string,
+    startTime: (r.start_time as string) ?? undefined,
+    endTime: (r.end_time as string) ?? undefined,
     totalDays: num(r.total_days), totalAmount: num(r.total_amount),
     estimatedAmount: numOpt(r.estimated_amount),
     paidAmount: num(r.paid_amount),
@@ -125,6 +127,8 @@ function bToDb(b: Booking) {
   // Optional columns: only included when they carry a real value so that rows
   // inserted into an older schema (missing these columns) don't throw an error.
   // Supabase uses the column's DEFAULT when the key is absent.
+  if (b.startTime          != null) row.start_time          = b.startTime;
+  if (b.endTime            != null) row.end_time            = b.endTime;
   if (b.customerEmail      != null) row.customer_email      = b.customerEmail;
   if (b.customerNIC        != null) row.customer_nic        = b.customerNIC;
   if (b.estimatedAmount    != null) row.estimated_amount    = b.estimatedAmount;
@@ -421,6 +425,8 @@ export const db = {
     if (u.depositNotes !== undefined) row.deposit_notes = u.depositNotes
     if (u.referralPaid !== undefined) row.referral_paid = u.referralPaid
     if (u.referralPaidAt !== undefined) row.referral_paid_at = u.referralPaidAt
+    if (u.startTime !== undefined) row.start_time = u.startTime
+    if (u.endTime !== undefined) row.end_time = u.endTime
     if (u.pickupAt !== undefined) row.pickup_at = u.pickupAt
     if (u.returnAt !== undefined) row.return_at = u.returnAt
     if (u.advanceAmount !== undefined) row.advance_amount = u.advanceAmount

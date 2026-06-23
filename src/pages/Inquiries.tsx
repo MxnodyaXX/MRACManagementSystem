@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import Header from '../components/layout/Header';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -49,8 +49,17 @@ const emptyForm = (): Omit<Inquiry, 'id' | 'createdAt'> => ({
 
 export default function Inquiries() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { inquiries, owners, addInquiry, updateInquiry } = useStore();
   const [tab, setTab] = useState<'All' | IStatus>('All');
+
+  // Deep-link from dashboard analytics: /inquiries?status=Lost focuses that tab
+  useEffect(() => {
+    const status = new URLSearchParams(location.search).get('status');
+    if (status && ['All', 'Pending', 'Converted', 'Lost'].includes(status)) {
+      setTab(status as 'All' | IStatus);
+    }
+  }, [location.search]);
   const [modal, setModal] = useState<'add' | 'view' | 'lost' | null>(null);
   const [selected, setSelected] = useState<Inquiry | null>(null);
   const [form, setForm] = useState(emptyForm());
