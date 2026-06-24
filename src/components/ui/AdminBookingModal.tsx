@@ -22,9 +22,10 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format, parseISO, addDays } from 'date-fns';
 import {
   AlertTriangle, ChevronLeft, CheckCircle, XCircle, Shield,
-  Car, ArrowRight,
+  Car, ArrowRight, Printer,
 } from 'lucide-react';
 import { blocksAvailability, bookingStartMs, bookingEndMs, rangesOverlap, rentalDays } from '../../lib/availability';
+import { printBookingConfirmation, sendBookingReceipt } from '../../lib/printReceipt';
 import { Booking, Owner, Vehicle } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -68,6 +69,11 @@ const emptyForm = (vehicleId = '') => ({
   pickupLocation: '',
   dropLocation: '',
   driverId: '',
+  depositType: undefined as 'cash' | 'vehicle' | 'other' | undefined,
+  depositVehicleModel: '',
+  depositVehicleColor: '',
+  depositVehicleNumber: '',
+  depositAssetDescription: '',
   depositAmount: 0,
   insertedByAdmin: true as const,
 });
@@ -165,12 +171,13 @@ interface Props {
   onClose: () => void;
 }
 
-type Step = 'owner' | 'vehicle' | 'form';
+type Step = 'owner' | 'vehicle' | 'form' | 'confirmed';
 
 export default function AdminBookingModal({ open, onClose }: Props) {
   const { vehicles, bookings, owners, drivers, customers, addBooking, isVehicleAvailable } = useStore();
 
-  const [step,            setStep]            = useState<Step>('owner');
+  const [step,               setStep]               = useState<Step>('owner');
+  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
   const [selectedOwner,   setSelectedOwner]   = useState<Owner | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [form,            setForm]            = useState(emptyForm());
@@ -195,6 +202,7 @@ export default function AdminBookingModal({ open, onClose }: Props) {
     setCustomerMode('new');
     setSelectedCustomer('');
     setReferralCustom(false);
+    setConfirmedBookingId(null);
     onClose();
   };
 
@@ -305,8 +313,20 @@ export default function AdminBookingModal({ open, onClose }: Props) {
       setError(`${selectedOwner!.name} owns this vehicle and can't also be the referrer.`);
       return;
     }
-    addBooking(form);
-    handleClose();
+    const { depositVehicleModel, depositVehicleColor, depositVehicleNumber, ...bookingData } = form;
+    const bookingId = addBooking({
+      ...bookingData,
+      depositAssetDescription: form.depositType === 'vehicle'
+        ? [depositVehicleModel, depositVehicleColor, depositVehicleNumber].filter(Boolean).join(' | ')
+        : form.depositAssetDescription,
+    });
+    setConfirmedBookingId(bookingId);
+    setStep('confirmed');
+    // Send SMS + email receipt automatically on confirmation
+    const newBooking = useStore.getState().bookings.find((b) => b.id === bookingId);
+    const receiptVehicle = vehicles.find((v) => v.id === form.vehicleId);
+    const receiptDriver  = drivers.find((d) => d.id === form.driverId) ?? undefined;
+    if (newBooking) sendBookingReceipt(newBooking, receiptVehicle, receiptDriver).catch(console.error);
   };
 
   // ── Step titles ─────────────────────────────────────────────────────────────
@@ -650,10 +670,6 @@ export default function AdminBookingModal({ open, onClose }: Props) {
                 <input className="input" type="number" value={form.paidAmount} onChange={(e) => set('paidAmount', +e.target.value)} />
               </div>
               <div>
-                <p className="label flex items-center gap-1"><Shield size={11} className="text-amber-500" /> Security Deposit (Rs)</p>
-                <input className="input" type="number" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="0" />
-              </div>
-              <div>
                 <p className="label">Assign Driver</p>
                 <Select
                   value={form.driverId}
@@ -663,6 +679,45 @@ export default function AdminBookingModal({ open, onClose }: Props) {
                     value: d.id, label: d.name, sub: `Rs ${d.dailyRate.toLocaleString()} / day`,
                   }))}
                 />
+              </div>
+              <div className="col-span-2">
+                <p className="label flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block flex-shrink-0" />
+                  Security Deposit
+                </p>
+                <div className="flex items-center gap-2">
+                  <Select
+                    className="w-36 flex-shrink-0"
+                    value={form.depositType ?? ''}
+                    nullable
+                    placeholder="None"
+                    options={[
+                      { value: 'cash',    label: 'Cash' },
+                      { value: 'vehicle', label: 'Vehicle' },
+                      { value: 'other',   label: 'Other' },
+                    ]}
+                    onChange={(val) => {
+                      const v = val as 'cash' | 'vehicle' | 'other' | '';
+                      set('depositType', v || undefined);
+                      if (v !== 'cash')    set('depositAmount', 0);
+                      if (v !== 'vehicle') { set('depositVehicleModel', ''); set('depositVehicleColor', ''); set('depositVehicleNumber', ''); }
+                      if (v !== 'other')   set('depositAssetDescription', '');
+                    }}
+                  />
+                  {form.depositType === 'cash' && (
+                    <input className="input flex-1" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="Amount (Rs)" />
+                  )}
+                  {form.depositType === 'vehicle' && (
+                    <>
+                      <input className="input flex-1" type="text" value={form.depositVehicleModel}  onChange={(e) => set('depositVehicleModel', e.target.value)}  placeholder="Model (e.g. Honda CB150R)" />
+                      <input className="input w-28"  type="text" value={form.depositVehicleColor}  onChange={(e) => set('depositVehicleColor', e.target.value)}  placeholder="Color" />
+                      <input className="input w-32"  type="text" value={form.depositVehicleNumber} onChange={(e) => set('depositVehicleNumber', e.target.value)} placeholder="Vehicle No." />
+                    </>
+                  )}
+                  {form.depositType === 'other' && (
+                    <input className="input flex-1" type="text" value={form.depositAssetDescription} onChange={(e) => set('depositAssetDescription', e.target.value)} placeholder="Describe the item held as deposit" />
+                  )}
+                </div>
               </div>
               <div className="col-span-2">
                 <p className="label">Notes</p>
@@ -689,6 +744,62 @@ export default function AdminBookingModal({ open, onClose }: Props) {
           </div>
         </>
       )}
+
+      {/* ── Step 4: Confirmed ─────────────────────────────────────────── */}
+      {step === 'confirmed' && (() => {
+        const confirmedBooking = bookings.find((b) => b.id === confirmedBookingId);
+        const assignedDriver   = drivers.find((d) => d.id === form.driverId);
+        return (
+          <div className="py-6 flex flex-col items-center gap-6 text-center">
+            {/* Success icon */}
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+              <CheckCircle size={32} className="text-emerald-600" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-navy-800 mb-1">Booking Confirmed!</h3>
+              <p className="text-sm text-navy-500">
+                Ref: <span className="font-mono font-semibold text-navy-700">MRAC-{confirmedBookingId?.slice(0, 8).toUpperCase()}</span>
+              </p>
+            </div>
+
+            {/* Summary card */}
+            {confirmedBooking && (
+              <div className="w-full bg-navy-50/60 rounded-2xl p-4 text-left grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div><span className="text-navy-400 text-xs">Customer</span><p className="font-semibold text-navy-800">{confirmedBooking.customerName}</p></div>
+                <div><span className="text-navy-400 text-xs">Vehicle</span><p className="font-semibold text-navy-800">{selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : '—'}</p></div>
+                <div><span className="text-navy-400 text-xs">Period</span><p className="font-semibold text-navy-800">{confirmedBooking.startDate} → {confirmedBooking.endDate}</p></div>
+                <div><span className="text-navy-400 text-xs">Total</span><p className="font-semibold text-navy-800">Rs {confirmedBooking.totalAmount.toLocaleString()}</p></div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={handleClose}
+                className="btn-secondary flex-1"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmedBooking)
+                    printBookingConfirmation(confirmedBooking, selectedVehicle ?? undefined, assignedDriver);
+                }}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                <Printer size={15} /> Print Confirmation
+              </button>
+            </div>
+            <button
+              onClick={() => { setConfirmedBookingId(null); setStep('owner'); setSelectedOwner(null); setSelectedVehicle(null); setForm(emptyForm()); }}
+              className="text-xs text-navy-400 hover:text-navy-600 transition-colors"
+            >
+              + Add another booking
+            </button>
+          </div>
+        );
+      })()}
     </Modal>
   );
 }

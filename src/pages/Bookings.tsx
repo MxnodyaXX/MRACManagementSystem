@@ -16,8 +16,9 @@ import 'react-datepicker/dist/react-datepicker.css';
 import {
   Plus, CalendarDays, List, AlertTriangle, CheckCircle,
   XCircle, Calculator, MessageCircle, Shield, PlayCircle,
-  ChevronDown, Search as SearchIcon, ClipboardEdit,
+  ChevronDown, Search as SearchIcon, ClipboardEdit, Printer,
 } from 'lucide-react';
+import { printBookingConfirmation, sendBookingReceipt } from '../lib/printReceipt';
 import AvailabilityModal from '../components/ui/AvailabilityModal';
 import AdminBookingModal from '../components/ui/AdminBookingModal';
 import LocationInput from '../components/ui/LocationInput';
@@ -114,6 +115,11 @@ const emptyForm = () => ({
   pickupLocation: '',
   dropLocation: '',
   driverId: '',
+  depositType: undefined as 'cash' | 'vehicle' | 'other' | undefined,
+  depositVehicleModel: '',
+  depositVehicleColor: '',
+  depositVehicleNumber: '',
+  depositAssetDescription: '',
   depositAmount: 0,
   depositReturned: 0,
   depositDeduction: 0,
@@ -329,7 +335,18 @@ export default function Bookings() {
       setError(`${bookedVehicleOwner!.name} owns this vehicle and can't be its own referrer. Change the referral to Direct to continue.`);
       return;
     }
-    addBooking(form);
+    const { depositVehicleModel, depositVehicleColor, depositVehicleNumber, ...bookingData } = form;
+    const bookingId = addBooking({
+      ...bookingData,
+      depositAssetDescription: form.depositType === 'vehicle'
+        ? [depositVehicleModel, depositVehicleColor, depositVehicleNumber].filter(Boolean).join(' | ')
+        : form.depositAssetDescription,
+    });
+    // Send SMS + email receipt automatically on confirmation
+    const newBooking = useStore.getState().bookings.find((b) => b.id === bookingId);
+    const receiptVehicle = vehicles.find((v) => v.id === form.vehicleId);
+    const receiptDriver  = drivers.find((d) => d.id === form.driverId) ?? undefined;
+    if (newBooking) sendBookingReceipt(newBooking, receiptVehicle, receiptDriver).catch(console.error);
     setModal(null);
     setForm(emptyForm());
     setAvailability(null);
@@ -1212,13 +1229,6 @@ export default function Bookings() {
               <p className="label">Paid Amount (Rs)</p>
               <input className="input" type="number" value={form.paidAmount} onChange={(e) => set('paidAmount', +e.target.value)} />
             </div>
-
-            {/* Security Deposit row */}
-            <div>
-              <p className="label flex items-center gap-1"><Shield size={11} className="text-amber-500" /> Security Deposit (Rs)</p>
-              <input className="input" type="number" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="0" />
-            </div>
-
             <div>
               <p className="label">Assign Driver</p>
               <Select
@@ -1227,13 +1237,51 @@ export default function Bookings() {
                 placeholder="No driver"
                 options={drivers
                   .filter((d) => d.status === 'Available')
-                  .map((d) => ({
-                    value: d.id,
-                    label: d.name,
-                    sub: `Rs ${d.dailyRate.toLocaleString()} / day`,
-                  }))}
+                  .map((d) => ({ value: d.id, label: d.name, sub: `Rs ${d.dailyRate.toLocaleString()} / day` }))}
               />
             </div>
+
+            {/* Security Deposit */}
+            <div className="col-span-2">
+              <p className="label flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block flex-shrink-0" />
+                Security Deposit
+              </p>
+              <div className="flex items-center gap-2">
+                  <Select
+                    className="w-36 flex-shrink-0"
+                    value={form.depositType ?? ''}
+                    nullable
+                    placeholder="None"
+                    options={[
+                      { value: 'cash',    label: 'Cash' },
+                      { value: 'vehicle', label: 'Vehicle' },
+                      { value: 'other',   label: 'Other' },
+                    ]}
+                    onChange={(val) => {
+                      const v = val as 'cash' | 'vehicle' | 'other' | '';
+                      set('depositType', v || undefined);
+                      if (v !== 'cash')    set('depositAmount', 0);
+                      if (v !== 'vehicle') { set('depositVehicleModel', ''); set('depositVehicleColor', ''); set('depositVehicleNumber', ''); }
+                      if (v !== 'other')   set('depositAssetDescription', '');
+                    }}
+                  />
+                {form.depositType === 'cash' && (
+                  <input className="input flex-1" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="Amount (Rs)" />
+                )}
+                {form.depositType === 'vehicle' && (
+                  <>
+                    <input className="input flex-1" type="text" value={form.depositVehicleModel}  onChange={(e) => set('depositVehicleModel', e.target.value)}  placeholder="Model (e.g. Honda CB150R)" />
+                    <input className="input w-28"   type="text" value={form.depositVehicleColor}  onChange={(e) => set('depositVehicleColor', e.target.value)}  placeholder="Color" />
+                    <input className="input w-32"   type="text" value={form.depositVehicleNumber} onChange={(e) => set('depositVehicleNumber', e.target.value)} placeholder="Vehicle No." />
+                  </>
+                )}
+                {form.depositType === 'other' && (
+                  <input className="input flex-1" type="text" value={form.depositAssetDescription} onChange={(e) => set('depositAssetDescription', e.target.value)} placeholder="Describe the item held as deposit" />
+                )}
+              </div>
+            </div>
+
             <div className="col-span-2">
               <p className="label">Notes</p>
               <textarea className="input resize-none" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Additional notes..." />
@@ -1345,52 +1393,86 @@ export default function Bookings() {
               </div>
 
               {/* Security Deposit section */}
-              {(selected.depositAmount ?? 0) > 0 && (
+              {(selected.depositType || (selected.depositAmount ?? 0) > 0) && (
                 <div className="border border-amber-200 rounded-xl p-3 space-y-2">
                   <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5">
                     <Shield size={12} /> Security Deposit
                   </p>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="bg-amber-50 rounded-lg p-2">
-                      <p className="text-amber-500">Collected</p>
-                      <p className="font-bold text-amber-800">Rs {(selected.depositAmount ?? 0).toLocaleString()}</p>
+
+                  {/* Deposit type badge + details */}
+                  {selected.depositType && (
+                    <div className="space-y-1.5">
+                      <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        selected.depositType === 'cash'    ? 'bg-amber-100 text-amber-800' :
+                        selected.depositType === 'vehicle' ? 'bg-blue-100 text-blue-800' :
+                                                             'bg-navy-100 text-navy-700'
+                      }`}>
+                        {selected.depositType === 'cash' ? 'Cash' : selected.depositType === 'vehicle' ? 'Vehicle' : 'Other'}
+                      </span>
+                      {selected.depositType === 'vehicle' && selected.depositAssetDescription && (() => {
+                        const [vModel, vColor, vNumber] = selected.depositAssetDescription.split(' | ');
+                        return (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {vModel  && <div className="bg-navy-50 rounded-lg p-2"><p className="text-navy-400">Model</p><p className="font-semibold text-navy-800">{vModel}</p></div>}
+                            {vColor  && <div className="bg-navy-50 rounded-lg p-2"><p className="text-navy-400">Color</p><p className="font-semibold text-navy-800">{vColor}</p></div>}
+                            {vNumber && <div className="bg-navy-50 rounded-lg p-2"><p className="text-navy-400">Vehicle No.</p><p className="font-semibold text-navy-800">{vNumber}</p></div>}
+                          </div>
+                        );
+                      })()}
+                      {selected.depositType === 'other' && selected.depositAssetDescription && (
+                        <p className="text-xs text-navy-700">{selected.depositAssetDescription}</p>
+                      )}
                     </div>
-                    <div className="bg-emerald-50 rounded-lg p-2">
-                      <p className="text-emerald-500">Returned</p>
-                      <p className="font-bold text-emerald-700">Rs {(selected.depositReturned ?? 0).toLocaleString()}</p>
+                  )}
+
+                  {/* Cash amounts grid — only when cash deposit */}
+                  {selected.depositType === 'cash' && (
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-amber-50 rounded-lg p-2">
+                        <p className="text-amber-500">Collected</p>
+                        <p className="font-bold text-amber-800">Rs {(selected.depositAmount ?? 0).toLocaleString()}</p>
+                      </div>
+                      <div className="bg-emerald-50 rounded-lg p-2">
+                        <p className="text-emerald-500">Returned</p>
+                        <p className="font-bold text-emerald-700">Rs {(selected.depositReturned ?? 0).toLocaleString()}</p>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-2">
+                        <p className="text-red-400">Deducted</p>
+                        <p className="font-bold text-red-700">Rs {(selected.depositDeduction ?? 0).toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div className="bg-red-50 rounded-lg p-2">
-                      <p className="text-red-400">Deducted</p>
-                      <p className="font-bold text-red-700">Rs {(selected.depositDeduction ?? 0).toLocaleString()}</p>
-                    </div>
-                  </div>
+                  )}
                   {selected.depositNotes && (
                     <p className="text-xs text-amber-600 pl-1">{selected.depositNotes}</p>
                   )}
                   {(selected.status === 'Completed' || selected.status === 'Ongoing') && (
                     <div className="grid grid-cols-2 gap-2 pt-1">
-                      <div>
-                        <p className="label text-[11px]">Return Amount</p>
-                        <input className="input text-xs py-1" type="number"
-                          defaultValue={selected.depositReturned ?? ''}
-                          onBlur={(e) => updateBooking(selected.id, { depositReturned: +e.target.value })}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <p className="label text-[11px]">Deduction</p>
-                        <input className="input text-xs py-1" type="number"
-                          defaultValue={selected.depositDeduction ?? ''}
-                          onBlur={(e) => updateBooking(selected.id, { depositDeduction: +e.target.value })}
-                          placeholder="0"
-                        />
-                      </div>
+                      {selected.depositType === 'cash' && (
+                        <>
+                          <div>
+                            <p className="label text-[11px]">Return Amount</p>
+                            <input className="input text-xs py-1" type="number"
+                              defaultValue={selected.depositReturned ?? ''}
+                              onBlur={(e) => updateBooking(selected.id, { depositReturned: +e.target.value })}
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <p className="label text-[11px]">Deduction</p>
+                            <input className="input text-xs py-1" type="number"
+                              defaultValue={selected.depositDeduction ?? ''}
+                              onBlur={(e) => updateBooking(selected.id, { depositDeduction: +e.target.value })}
+                              placeholder="0"
+                            />
+                          </div>
+                        </>
+                      )}
                       <div className="col-span-2">
-                        <p className="label text-[11px]">Deduction Notes</p>
+                        <p className="label text-[11px]">{selected.depositType === 'vehicle' || selected.depositType === 'other' ? 'Return / Condition Notes' : 'Deduction Notes'}</p>
                         <input className="input text-xs py-1"
                           defaultValue={selected.depositNotes ?? ''}
                           onBlur={(e) => updateBooking(selected.id, { depositNotes: e.target.value })}
-                          placeholder="Damage, cleaning fee, etc."
+                          placeholder={selected.depositType === 'vehicle' || selected.depositType === 'other' ? 'Item returned, scratched, missing, etc.' : 'Damage, cleaning fee, etc.'}
                         />
                       </div>
                     </div>
@@ -1422,6 +1504,18 @@ export default function Bookings() {
                   }}
                 >
                   <MessageCircle size={13} /> WhatsApp
+                </button>
+
+                {/* Print confirmation */}
+                <button
+                  className="flex items-center gap-1.5 text-xs bg-navy-100 hover:bg-navy-200 text-navy-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  onClick={() => {
+                    const v = vehicles.find((vv) => vv.id === selected.vehicleId);
+                    const d = drivers.find((dr) => dr.id === selected.driverId);
+                    printBookingConfirmation(selected, v, d);
+                  }}
+                >
+                  <Printer size={13} /> Print
                 </button>
 
                 <div className="flex-1" />

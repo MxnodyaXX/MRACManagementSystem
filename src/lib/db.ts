@@ -99,6 +99,8 @@ function bFromDb(r: Record<string, unknown>): Booking {
     dropLocation: (r.drop_location as string) ?? undefined,
     driverId: (r.driver_id as string) ?? undefined,
     quotation: (r.quotation as Booking['quotation']) ?? undefined,
+    depositType: (r.deposit_type as Booking['depositType']) ?? undefined,
+    depositAssetDescription: (r.deposit_asset_description as string) ?? undefined,
     depositAmount: numOpt(r.deposit_amount),
     depositReturned: numOpt(r.deposit_returned),
     depositDeduction: numOpt(r.deposit_deduction),
@@ -141,10 +143,12 @@ function bToDb(b: Booking) {
   if (b.dropLocation       != null) row.drop_location       = b.dropLocation;
   if (b.driverId           != null && b.driverId !== '') row.driver_id = b.driverId;
   if (b.quotation          != null) row.quotation           = b.quotation;
-  if (b.depositAmount      != null) row.deposit_amount      = b.depositAmount;
-  if (b.depositReturned    != null) row.deposit_returned    = b.depositReturned;
-  if (b.depositDeduction   != null) row.deposit_deduction   = b.depositDeduction;
-  if (b.depositNotes       != null) row.deposit_notes       = b.depositNotes;
+  if (b.depositType             != null) row.deposit_type              = b.depositType;
+  if (b.depositAssetDescription != null) row.deposit_asset_description = b.depositAssetDescription;
+  if (b.depositAmount           != null) row.deposit_amount             = b.depositAmount;
+  if (b.depositReturned         != null) row.deposit_returned           = b.depositReturned;
+  if (b.depositDeduction        != null) row.deposit_deduction          = b.depositDeduction;
+  if (b.depositNotes            != null) row.deposit_notes              = b.depositNotes;
   if (b.pickupAt           != null) row.pickup_at           = b.pickupAt;
   if (b.returnAt           != null) row.return_at           = b.returnAt;
   if (b.advanceAmount      != null) row.advance_amount      = b.advanceAmount;
@@ -419,10 +423,12 @@ export const db = {
     if (u.pickupLocation !== undefined) row.pickup_location = u.pickupLocation
     if (u.dropLocation !== undefined) row.drop_location = u.dropLocation
     if (u.quotation !== undefined) row.quotation = u.quotation
-    if (u.depositAmount !== undefined) row.deposit_amount = u.depositAmount
-    if (u.depositReturned !== undefined) row.deposit_returned = u.depositReturned
-    if (u.depositDeduction !== undefined) row.deposit_deduction = u.depositDeduction
-    if (u.depositNotes !== undefined) row.deposit_notes = u.depositNotes
+    if (u.depositType             !== undefined) row.deposit_type              = u.depositType
+    if (u.depositAssetDescription !== undefined) row.deposit_asset_description = u.depositAssetDescription
+    if (u.depositAmount           !== undefined) row.deposit_amount             = u.depositAmount
+    if (u.depositReturned         !== undefined) row.deposit_returned           = u.depositReturned
+    if (u.depositDeduction        !== undefined) row.deposit_deduction          = u.depositDeduction
+    if (u.depositNotes            !== undefined) row.deposit_notes              = u.depositNotes
     if (u.referralPaid !== undefined) row.referral_paid = u.referralPaid
     if (u.referralPaidAt !== undefined) row.referral_paid_at = u.referralPaidAt
     if (u.startTime !== undefined) row.start_time = u.startTime

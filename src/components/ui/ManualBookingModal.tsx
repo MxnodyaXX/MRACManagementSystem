@@ -13,6 +13,7 @@ import LocationInput from './LocationInput';
 import { resolveReferralFee } from '../../lib/referral';
 import { creditResponsibilityOf } from '../../lib/credit';
 import { sendSms } from '../../lib/sms';
+import { sendBookingReceipt } from '../../lib/printReceipt';
 
 const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -50,6 +51,11 @@ const emptyForm = () => ({
   pickupLocation: '',
   dropLocation: '',
   driverId: '',
+  depositType: undefined as 'cash' | 'vehicle' | 'other' | undefined,
+  depositVehicleModel: '',
+  depositVehicleColor: '',
+  depositVehicleNumber: '',
+  depositAssetDescription: '',
   depositAmount: 0,
   depositReturned: 0,
   depositDeduction: 0,
@@ -205,7 +211,21 @@ export default function ManualBookingModal({ onClose }: Props) {
     const returnAt = form.endTime ? `${form.endDate}T${form.endTime}` : undefined;
 
     savedRef.current = true;
-    addManualBooking({ ...form, discount, creditAmount, creditResponsibility, pickupAt, returnAt } as Parameters<typeof addManualBooking>[0]);
+    const { depositVehicleModel, depositVehicleColor, depositVehicleNumber, ...formData } = form;
+    const bookingId = addManualBooking({
+      ...formData,
+      discount, creditAmount, creditResponsibility, pickupAt, returnAt,
+      depositAssetDescription: form.depositType === 'vehicle'
+        ? [depositVehicleModel, depositVehicleColor, depositVehicleNumber].filter(Boolean).join(' | ')
+        : form.depositAssetDescription,
+    } as Parameters<typeof addManualBooking>[0]);
+    // Send SMS + email receipt automatically (only for Confirmed bookings)
+    if (form.status === 'Confirmed' || !form.status) {
+      const newBooking = useStore.getState().bookings.find((b) => b.id === bookingId);
+      const receiptVehicle = useStore.getState().vehicles.find((v) => v.id === form.vehicleId);
+      const receiptDriver  = useStore.getState().drivers.find((d) => d.id === form.driverId) ?? undefined;
+      if (newBooking) sendBookingReceipt(newBooking, receiptVehicle, receiptDriver).catch(console.error);
+    }
     onClose();
   };
 
@@ -390,9 +410,46 @@ export default function ManualBookingModal({ onClose }: Props) {
                   <Field label="Advance (Rs)">
                     <input className="input" type="number" min="0" value={form.advanceAmount || ''} onChange={(e) => set('advanceAmount', +e.target.value)} />
                   </Field>
-                  <Field label="Deposit (Rs)">
-                    <input className="input" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} />
-                  </Field>
+                </div>
+                {/* Security Deposit — spans full width */}
+                <div className="mt-3">
+                  <p className="label mb-1 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 inline-block flex-shrink-0" />
+                    Security Deposit
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      className="w-36 flex-shrink-0"
+                      value={form.depositType ?? ''}
+                      nullable
+                      placeholder="None"
+                      options={[
+                        { value: 'cash',    label: 'Cash' },
+                        { value: 'vehicle', label: 'Vehicle' },
+                        { value: 'other',   label: 'Other' },
+                      ]}
+                      onChange={(val) => {
+                        const v = val as 'cash' | 'vehicle' | 'other' | '';
+                        set('depositType', v || undefined);
+                        if (v !== 'cash')    set('depositAmount', 0);
+                        if (v !== 'vehicle') { set('depositVehicleModel', ''); set('depositVehicleColor', ''); set('depositVehicleNumber', ''); }
+                        if (v !== 'other')   set('depositAssetDescription', '');
+                      }}
+                    />
+                    {form.depositType === 'cash' && (
+                      <input className="input flex-1" type="number" min="0" value={form.depositAmount || ''} onChange={(e) => set('depositAmount', +e.target.value)} placeholder="Amount (Rs)" />
+                    )}
+                    {form.depositType === 'vehicle' && (
+                      <>
+                        <input className="input flex-1" type="text" value={form.depositVehicleModel}  onChange={(e) => set('depositVehicleModel', e.target.value)}  placeholder="Model (e.g. Honda CB150R)" />
+                        <input className="input w-28"   type="text" value={form.depositVehicleColor}  onChange={(e) => set('depositVehicleColor', e.target.value)}  placeholder="Color" />
+                        <input className="input w-32"   type="text" value={form.depositVehicleNumber} onChange={(e) => set('depositVehicleNumber', e.target.value)} placeholder="Vehicle No." />
+                      </>
+                    )}
+                    {form.depositType === 'other' && (
+                      <input className="input flex-1" type="text" value={form.depositAssetDescription} onChange={(e) => set('depositAssetDescription', e.target.value)} placeholder="Describe the item held as deposit" />
+                    )}
+                  </div>
                 </div>
 
                 {/* Remaining balance → discount or credit */}

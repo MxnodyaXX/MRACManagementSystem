@@ -3,6 +3,10 @@
 -- Run this entire file in the Supabase SQL Editor before starting the app.
 -- =============================================================================
 
+-- ── Migration: add deposit type columns (run once on existing databases) ─────
+alter table if exists bookings add column if not exists deposit_type              text;
+alter table if exists bookings add column if not exists deposit_asset_description text;
+
 -- ── Tables ───────────────────────────────────────────────────────────────────
 
 create table if not exists owners (
@@ -65,10 +69,12 @@ create table if not exists bookings (
   drop_location     text,
   driver_id         text,
   quotation         jsonb,
-  deposit_amount    numeric(12,2),
-  deposit_returned  numeric(12,2),
-  deposit_deduction numeric(12,2),
-  deposit_notes     text,
+  deposit_type              text,
+  deposit_asset_description text,
+  deposit_amount            numeric(12,2),
+  deposit_returned           numeric(12,2),
+  deposit_deduction          numeric(12,2),
+  deposit_notes              text,
   referral_fee      numeric(10,2),
   referral_paid     boolean not null default false,
   referral_paid_at  text,

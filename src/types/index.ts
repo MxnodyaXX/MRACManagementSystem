@@ -115,6 +115,8 @@ export interface Booking {
   dropLocation?: string;
   driverId?: string;
   quotation?: BookingQuotation;
+  depositType?: 'cash' | 'vehicle' | 'other';
+  depositAssetDescription?: string;        // vehicle: "Model | Color | VehicleNo"; other: free text
   depositAmount?: number;
   depositReturned?: number;
   depositDeduction?: number;

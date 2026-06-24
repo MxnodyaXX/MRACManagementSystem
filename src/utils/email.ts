@@ -4,6 +4,162 @@ const SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  ?? '';
 const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? '';
 const PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  ?? '';
 
+// ── Booking Confirmation Email ────────────────────────────────────────────────
+
+export interface BookingConfirmationEmailParams {
+  toEmail: string;
+  toName: string;
+  ref: string;
+  vehicleName: string;
+  vehicleReg?: string;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  totalAmount: number;
+  paidAmount: number;
+  balance: number;
+  receiptUrl: string | null;
+}
+
+export async function sendBookingConfirmationEmail(p: BookingConfirmationEmailParams): Promise<void> {
+  if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+    console.warn('[EmailJS] Credentials not configured — skipping booking confirmation email.');
+    return;
+  }
+  if (!p.toEmail) return;
+  await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    to_email:     p.toEmail,
+    to_name:      p.toName,
+    subject:      `Booking Confirmed — ${p.ref} | MRAC Rent A Car`,
+    html_content: buildBookingConfirmationHtml(p),
+  }, PUBLIC_KEY);
+}
+
+const rs = (n: number) => `Rs ${n.toLocaleString()}`;
+
+function buildBookingConfirmationHtml(p: BookingConfirmationEmailParams): string {
+  const receiptSection = p.receiptUrl
+    ? `<tr><td style="padding:0 32px 28px;text-align:center">
+        <p style="margin:0 0 14px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Booking Confirmation Receipt</p>
+        <a href="${p.receiptUrl}" target="_blank"
+           style="display:inline-block;background:#1B2B6B;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 36px;border-radius:10px;letter-spacing:.5px">
+          &#x1F4C4;&nbsp; View Full Receipt (PDF)
+        </a>
+        <p style="margin:10px 0 0;font-size:11px;color:#94a3b8">Tap to open, view and save your booking confirmation as a PDF document.</p>
+      </td></tr>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%">
+
+  <!-- Header -->
+  <tr>
+    <td style="background:linear-gradient(135deg,#1B2B6B 0%,#4B7BE5 100%);padding:28px 32px">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:3px">MRAC</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:3px;letter-spacing:2px">CAR RENTAL MANAGEMENT</div>
+          </td>
+          <td align="right">
+            <div style="font-size:13px;font-weight:700;color:#fff">BOOKING CONFIRMED</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:3px">${p.ref}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Greeting -->
+  <tr>
+    <td style="padding:28px 32px 16px">
+      <p style="margin:0;font-size:15px;color:#1e293b">Dear <strong>${p.toName}</strong>,</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#64748b;line-height:1.6">
+        Your booking with <strong>MRAC Rent A Car</strong> has been confirmed. Here is a summary of your reservation.
+      </p>
+    </td>
+  </tr>
+
+  <!-- Booking Summary -->
+  <tr>
+    <td style="padding:0 32px 20px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:12px;overflow:hidden">
+        <tr><td style="padding:12px 16px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em" colspan="2">Booking Details</td></tr>
+        <tr>
+          <td style="padding:6px 16px;font-size:12px;color:#64748b;width:40%">Reference</td>
+          <td style="padding:6px 16px;font-size:12px;font-weight:700;color:#1B2B6B">${p.ref}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px;font-size:12px;color:#64748b">Vehicle</td>
+          <td style="padding:6px 16px;font-size:12px;font-weight:600;color:#1e293b">${p.vehicleName}${p.vehicleReg ? ` · ${p.vehicleReg}` : ''}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px;font-size:12px;color:#64748b">Pick-up</td>
+          <td style="padding:6px 16px;font-size:12px;font-weight:600;color:#1e293b">${p.startDate}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px;font-size:12px;color:#64748b">Return</td>
+          <td style="padding:6px 16px;font-size:12px;font-weight:600;color:#1e293b">${p.endDate}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px 12px;font-size:12px;color:#64748b">Duration</td>
+          <td style="padding:6px 16px 12px;font-size:12px;font-weight:600;color:#1e293b">${p.totalDays} day${p.totalDays !== 1 ? 's' : ''}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Payment summary -->
+  <tr>
+    <td style="padding:0 32px 20px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;font-size:13px">
+        <tr style="background:#f8fafc">
+          <th style="padding:10px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase">Payment</th>
+          <th style="padding:10px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase">Amount</th>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;color:#334155;border-top:1px solid #f1f5f9">Total Rental</td>
+          <td style="padding:10px 16px;text-align:right;font-weight:600;color:#1e293b;border-top:1px solid #f1f5f9">${rs(p.totalAmount)}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;color:#059669;border-top:1px solid #f1f5f9">Paid Amount</td>
+          <td style="padding:10px 16px;text-align:right;font-weight:700;color:#059669;border-top:1px solid #f1f5f9">${rs(p.paidAmount)}</td>
+        </tr>
+        <tr style="background:${p.balance > 0 ? '#fffbeb' : '#f0fdf4'}">
+          <td style="padding:12px 16px;font-weight:700;color:${p.balance > 0 ? '#92400e' : '#065f46'};border-top:1px solid #f1f5f9">
+            ${p.balance > 0 ? 'Balance Due' : '✓ Fully Paid'}
+          </td>
+          <td style="padding:12px 16px;text-align:right;font-weight:900;color:${p.balance > 0 ? '#d97706' : '#059669'};border-top:1px solid #f1f5f9">
+            ${p.balance > 0 ? rs(p.balance) : 'Cleared'}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Receipt image -->
+  ${receiptSection}
+
+  <!-- Footer -->
+  <tr>
+    <td style="padding:20px 32px 28px;border-top:1px solid #f1f5f9;text-align:center">
+      <p style="margin:0;font-size:12px;color:#94a3b8">Thank you for choosing <strong>MRAC Rent A Car</strong></p>
+      <p style="margin:6px 0 0;font-size:11px;color:#cbd5e1">Please present this email at vehicle pick-up. Contact us if you have any questions.</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
 export interface RentalSummaryParams {
   toEmail: string;
   toName: string;
