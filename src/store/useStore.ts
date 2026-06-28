@@ -688,7 +688,14 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'emrac-store-v7',
-      version: 1,
+      version: 2,
+      // When Supabase is the source of truth, only persist local-only state
+      // (drafts). Persisting DB-backed data caused stale sample/demo data to
+      // survive in localStorage and appear as "pending" bookings after the DB
+      // was cleared, because loadAll() merges local-only records with DB data.
+      partialize: supabaseEnabled
+        ? (state: AppState) => ({ drafts: state.drafts })
+        : (state: AppState) => state,
     }
   )
 );
