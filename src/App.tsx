@@ -92,7 +92,7 @@ export default function App() {
           {/* Admin-only pages */}
           <Route path="/owners"      element={isAdmin() ? <Owners />           : <Navigate to="/" replace />} />
           <Route path="/permissions" element={isAdmin() ? <Permissions />      : <Navigate to="/" replace />} />
-          <Route path="/settings"    element={isAdmin() ? <Settings />         : <Navigate to="/" replace />} />
+          <Route path="/settings"    element={isAdmin() || currentUser?.role === 'owner' ? <Settings /> : <Navigate to="/" replace />} />
           <Route path="/credit"      element={isAdmin() ? <CreditManagement /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

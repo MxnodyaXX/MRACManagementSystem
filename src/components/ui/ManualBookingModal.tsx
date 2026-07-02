@@ -6,6 +6,7 @@ import {
   MapPin, FileText, AlertCircle, CheckCircle2, Search, UserCheck, Lock,
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import Select from './Select';
 import DateInput from './DateInput';
 import TimePicker from './TimePicker';
@@ -78,6 +79,11 @@ function Field({ label, children, required }: { label: string; children: React.R
 
 export default function ManualBookingModal({ onClose }: Props) {
   const { vehicles, owners, drivers, customers, addManualBooking, saveDraft, discardDraft, drafts } = useStore();
+  const currentUser = useAuthStore((s) => s.currentUser);
+  // Owners can only record bookings against their own vehicles; admins see the full fleet.
+  const selectableVehicles = currentUser?.role === 'owner'
+    ? vehicles.filter((v) => v.ownerId === currentUser.ownerId)
+    : vehicles;
   const [form, setForm]           = useState(emptyForm());
   const [error, setError]         = useState('');
   const [customerMode, setCustomerMode] = useState<'new' | 'existing'>('new');
@@ -272,7 +278,7 @@ export default function ManualBookingModal({ onClose }: Props) {
                   <div className="col-span-2">
                     <Field label="Vehicle" required>
                       <Select value={form.vehicleId} onChange={(v) => set('vehicleId', v)} placeholder="Select vehicle…" nullable
-                        options={vehicles.map((v) => ({ value: v.id, label: `${v.vehicleNumber} — ${v.brand} ${v.model}`, sub: `Rs ${v.dailyRent.toLocaleString()}/day` }))} />
+                        options={selectableVehicles.map((v) => ({ value: v.id, label: `${v.vehicleNumber} — ${v.brand} ${v.model}`, sub: `Rs ${v.dailyRent.toLocaleString()}/day` }))} />
                     </Field>
                   </div>
                   <Field label="Start Date" required>

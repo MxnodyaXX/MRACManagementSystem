@@ -334,7 +334,8 @@ function ProfileSetupModal({ owner, onClose, onCreated }: ProfileProps) {
 
 export default function Settings() {
   const { owners, recomputeStats } = useStore();
-  const { users }     = useAuthStore();
+  const { users, isAdmin }     = useAuthStore();
+  const admin = isAdmin();
   const [manualOpen,  setManualOpen]  = useState(false);
   const [searchParams] = useSearchParams();
 
@@ -351,7 +352,10 @@ export default function Settings() {
 
   return (
     <div>
-      <Header title="Settings" subtitle="System configuration and user management" />
+      <Header
+        title="Settings"
+        subtitle={admin ? 'System configuration and user management' : 'Record past bookings for your vehicles'}
+      />
 
       {/* ── Data Management ── */}
       <section className="mb-10">
@@ -370,22 +374,25 @@ export default function Settings() {
             </div>
           </button>
 
-          <button
-            onClick={recomputeStats}
-            className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-card border border-gray-100 hover:border-navy-200 hover:shadow-md text-left transition-all"
-          >
-            <div className="w-11 h-11 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
-              <RefreshCw size={20} className="text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-navy-800 text-sm">Recalculate Statistics</p>
-              <p className="text-xs text-navy-400 mt-1 leading-relaxed">Rebuild every vehicle's revenue/rent count and owner earnings from the actual bookings. Fixes any inflated or incorrect totals.</p>
-            </div>
-          </button>
+          {admin && (
+            <button
+              onClick={recomputeStats}
+              className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-card border border-gray-100 hover:border-navy-200 hover:shadow-md text-left transition-all"
+            >
+              <div className="w-11 h-11 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+                <RefreshCw size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-navy-800 text-sm">Recalculate Statistics</p>
+                <p className="text-xs text-navy-400 mt-1 leading-relaxed">Rebuild every vehicle's revenue/rent count and owner earnings from the actual bookings. Fixes any inflated or incorrect totals.</p>
+              </div>
+            </button>
+          )}
         </div>
       </section>
 
-      {/* ── User Profiles ── */}
+      {/* ── User Profiles (admin only) ── */}
+      {admin && (
       <section>
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold text-navy-400 uppercase tracking-wider">Owner User Profiles</p>
@@ -449,6 +456,7 @@ export default function Settings() {
           </div>
         )}
       </section>
+      )}
 
       {/* Modals */}
       {manualOpen && <ManualBookingModal onClose={() => setManualOpen(false)} />}

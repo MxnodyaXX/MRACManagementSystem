@@ -1,11 +1,11 @@
 {
-  "lastUpdated": 1782210788806,
+  "lastUpdated": 1782986807272,
   "current": {
-    "ts": 1782210788806,
-    "startTime": 1782189787718,
-    "endTime": 1782210788806,
-    "layer": "api",
-    "activeFile": "supabase\\schema.sql",
+    "ts": 1782986807272,
+    "startTime": 1782961006754,
+    "endTime": 1782986807272,
+    "layer": "unknown",
+    "activeFile": null,
     "openTabs": [
       ".env.local",
       "src\\lib\\db.ts",
@@ -15,74 +15,870 @@
     ],
     "editedFiles": [
       {
-        "file": "src\\index.css",
+        "file": "src\\App.tsx",
         "editCount": 0,
-        "firstEdit": 1782190213421,
-        "lastEdit": 1782190213421
+        "firstEdit": 1782986782112,
+        "lastEdit": 1782986782112
       },
       {
-        "file": "src\\pages\\Dashboard.tsx",
+        "file": "src\\components\\ui\\ManualBookingModal.tsx",
         "editCount": 0,
-        "firstEdit": 1782190313761,
-        "lastEdit": 1782190871309
-      },
-      {
-        "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-        "editCount": 0,
-        "firstEdit": 1782190831341,
-        "lastEdit": 1782192716887
-      },
-      {
-        "file": "src\\pages\\Bookings.tsx",
-        "editCount": 0,
-        "firstEdit": 1782192538758,
-        "lastEdit": 1782207589769
-      },
-      {
-        "file": "src\\pages\\Inquiries.tsx",
-        "editCount": 0,
-        "firstEdit": 1782192543431,
-        "lastEdit": 1782192551411
-      },
-      {
-        "file": "src\\store\\useStore.ts",
-        "editCount": 0,
-        "firstEdit": 1782202654466,
-        "lastEdit": 1782203297456
-      },
-      {
-        "file": "src\\components\\ui\\AvailabilityModal.tsx",
-        "editCount": 0,
-        "firstEdit": 1782202689909,
-        "lastEdit": 1782202700519
-      },
-      {
-        "file": "src\\types\\index.ts",
-        "editCount": 0,
-        "firstEdit": 1782203262067,
-        "lastEdit": 1782203268421
-      },
-      {
-        "file": "src\\lib\\availability.ts",
-        "editCount": 0,
-        "firstEdit": 1782203279153,
-        "lastEdit": 1782205277527
-      },
-      {
-        "file": "src\\lib\\db.ts",
-        "editCount": 0,
-        "firstEdit": 1782203304585,
-        "lastEdit": 1782203315433
+        "firstEdit": 1782986791169,
+        "lastEdit": 1782986805942
       }
     ],
     "saveCount": 0,
-    "topFile": "src\\index.css"
+    "topFile": "src\\App.tsx"
   },
   "history": [
     {
-      "ts": 1782210788806,
+      "ts": 1782986807272,
+      "startTime": 1782961006754,
+      "endTime": 1782986807272,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\App.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986782112,
+          "lastEdit": 1782986782112
+        },
+        {
+          "file": "src\\components\\ui\\ManualBookingModal.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986791169,
+          "lastEdit": 1782986805942
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "src\\App.tsx"
+    },
+    {
+      "ts": 1782961066668,
+      "startTime": 1782961006754,
+      "endTime": 1782961066668,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [],
+      "saveCount": 0,
+      "topFile": null
+    },
+    {
+      "ts": 1782961016081,
+      "startTime": 1782961006754,
+      "endTime": 1782961016081,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [],
+      "saveCount": 0,
+      "topFile": null
+    },
+    {
+      "ts": 1782893970922,
+      "startTime": 1782389234814,
+      "endTime": 1782893970922,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782395835027,
+      "startTime": 1782389234814,
+      "endTime": 1782395835027,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782395535020,
+      "startTime": 1782389234814,
+      "endTime": 1782395535020,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782395235009,
+      "startTime": 1782389234814,
+      "endTime": 1782395235009,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782394934994,
+      "startTime": 1782389234814,
+      "endTime": 1782394934994,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782394634986,
+      "startTime": 1782389234814,
+      "endTime": 1782394634986,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782394334970,
+      "startTime": 1782389234814,
+      "endTime": 1782394334970,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782394034965,
+      "startTime": 1782389234814,
+      "endTime": 1782394034965,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782393734957,
+      "startTime": 1782389234814,
+      "endTime": 1782393734957,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782393434940,
+      "startTime": 1782389234814,
+      "endTime": 1782393434940,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782393134931,
+      "startTime": 1782389234814,
+      "endTime": 1782393134931,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782392834918,
+      "startTime": 1782389234814,
+      "endTime": 1782392834918,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782392534912,
+      "startTime": 1782389234814,
+      "endTime": 1782392534912,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782392234895,
+      "startTime": 1782389234814,
+      "endTime": 1782392234895,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782391934887,
+      "startTime": 1782389234814,
+      "endTime": 1782391934887,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782391634876,
+      "startTime": 1782389234814,
+      "endTime": 1782391634876,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782391334869,
+      "startTime": 1782389234814,
+      "endTime": 1782391334869,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782391034853,
+      "startTime": 1782389234814,
+      "endTime": 1782391034853,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782390734847,
+      "startTime": 1782389234814,
+      "endTime": 1782390734847,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782390434844,
+      "startTime": 1782389234814,
+      "endTime": 1782390434844,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782390225014,
+      "startTime": 1782389234814,
+      "endTime": 1782390225014,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782390134840,
+      "startTime": 1782389234814,
+      "endTime": 1782390134840,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782390046928
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782389834836,
+      "startTime": 1782389234814,
+      "endTime": 1782389834836,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782389567536
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782389801833,
+      "startTime": 1782389234814,
+      "endTime": 1782389801833,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782389567536
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782389738422,
+      "startTime": 1782389234814,
+      "endTime": 1782389738422,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782389567536
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782389534824,
+      "startTime": 1782389234814,
+      "endTime": 1782389534824,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "package.json",
+          "editCount": 0,
+          "firstEdit": 1782389265724,
+          "lastEdit": 1782389265724
+        },
+        {
+          "file": "src\\pages\\Bookings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782389425138,
+          "lastEdit": 1782389431995
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "package.json"
+    },
+    {
+      "ts": 1782213788910,
       "startTime": 1782189787718,
-      "endTime": 1782210788806,
+      "endTime": 1782213788910,
       "layer": "api",
       "activeFile": "supabase\\schema.sql",
       "openTabs": [
@@ -146,2268 +942,6 @@
           "editCount": 0,
           "firstEdit": 1782203279153,
           "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782210488801,
-      "startTime": 1782189787718,
-      "endTime": 1782210488801,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782210188789,
-      "startTime": 1782189787718,
-      "endTime": 1782210188789,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782209888773,
-      "startTime": 1782189787718,
-      "endTime": 1782209888773,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782209588760,
-      "startTime": 1782189787718,
-      "endTime": 1782209588760,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782209288743,
-      "startTime": 1782189787718,
-      "endTime": 1782209288743,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782208988734,
-      "startTime": 1782189787718,
-      "endTime": 1782208988734,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782208688722,
-      "startTime": 1782189787718,
-      "endTime": 1782208688722,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782208388706,
-      "startTime": 1782189787718,
-      "endTime": 1782208388706,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782208306172,
-      "startTime": 1782189787718,
-      "endTime": 1782208306172,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782208088695,
-      "startTime": 1782189787718,
-      "endTime": 1782208088695,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782207788676,
-      "startTime": 1782189787718,
-      "endTime": 1782207788676,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782207488664,
-      "startTime": 1782189787718,
-      "endTime": 1782207488664,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782207188651,
-      "startTime": 1782189787718,
-      "endTime": 1782207188651,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782206888643,
-      "startTime": 1782189787718,
-      "endTime": 1782206888643,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782206745424,
-      "startTime": 1782189787718,
-      "endTime": 1782206745424,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782206588619,
-      "startTime": 1782189787718,
-      "endTime": 1782206588619,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782206288606,
-      "startTime": 1782189787718,
-      "endTime": 1782206288606,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205988586,
-      "startTime": 1782189787718,
-      "endTime": 1782205988586,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205779974
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205688563,
-      "startTime": 1782189787718,
-      "endTime": 1782205688563,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205300540
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205404250,
-      "startTime": 1782189787718,
-      "endTime": 1782205404250,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205300540
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205388547,
-      "startTime": 1782189787718,
-      "endTime": 1782205388547,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205300540
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205329060,
-      "startTime": 1782189787718,
-      "endTime": 1782205329060,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782205300540
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205116648,
-      "startTime": 1782189787718,
-      "endTime": 1782205116648,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782204176998
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782205088524,
-      "startTime": 1782189787718,
-      "endTime": 1782205088524,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782204176998
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782204788511,
-      "startTime": 1782189787718,
-      "endTime": 1782204788511,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782204176998
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782204488486,
-      "startTime": 1782189787718,
-      "endTime": 1782204488486,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782204176998
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782204188461,
-      "startTime": 1782189787718,
-      "endTime": 1782204188461,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782204176998
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782203888444,
-      "startTime": 1782189787718,
-      "endTime": 1782203888444,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782203411874
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
-    },
-    {
-      "ts": 1782203795865,
-      "startTime": 1782189787718,
-      "endTime": 1782203795865,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782203411874
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782203279153
         },
         {
           "file": "src\\lib\\db.ts",
