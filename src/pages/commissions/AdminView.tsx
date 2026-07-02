@@ -7,11 +7,16 @@ import Modal from '../../components/ui/Modal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { TrendingUp, DollarSign, Users, Percent, Search, X, FileSpreadsheet, FileText, Maximize2, ChevronDown } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { bookingDiscount } from '../../lib/revenue';
 
 export default function AdminView() {
   const { commissions, bookings, vehicles, owners } = useStore();
 
-  const totalIncome      = commissions.reduce((s, c) => s + c.totalIncome, 0);
+  // Net of discounts granted on the underlying bookings.
+  const totalIncome      = commissions.reduce((s, c) => {
+    const bk = bookings.find((b) => b.id === c.bookingId);
+    return s + c.totalIncome - (bk ? bookingDiscount(bk) : 0);
+  }, 0);
   const totalReferralFee = commissions.reduce((s, c) => s + (c.coordinatorFee ?? 0), 0);
   const totalOwnerPayout = commissions.reduce((s, c) => s + c.ownerPayout, 0);
   const pendingCount     = commissions.filter((c) => c.status === 'Pending').length;

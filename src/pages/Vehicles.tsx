@@ -13,6 +13,7 @@ import DateInput from '../components/ui/DateInput';
 import { Plus, Car, Pencil, Trash2, Shield, CalendarDays, Wrench, TrendingUp, Hash, Camera, Upload, X, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Vehicle, VehicleStatus } from '../types';
 import { isInsuranceComplete, clearInsuranceReminder } from '../lib/insuranceReminder';
+import { vehicleNetRevenue } from '../lib/revenue';
 
 const STATUS_OPTIONS: VehicleStatus[] = ['Available', 'Reserved', 'Ongoing', 'Maintenance'];
 const FUEL_TYPES    = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
@@ -380,7 +381,7 @@ export default function Vehicles() {
           <div className="flex items-center gap-3">
             <div>
               <p className="text-xs text-navy-400">Revenue</p>
-              <p className="text-sm font-bold text-navy-700">Rs {v.revenue.toLocaleString()}</p>
+              <p className="text-sm font-bold text-navy-700">Rs {vehicleNetRevenue(v, bookings).toLocaleString()}</p>
             </div>
             <div className="flex items-center gap-1 text-navy-400">
               <Hash size={11} />
@@ -772,7 +773,10 @@ export default function Vehicles() {
                   ['Transmission',  selected.transmission ?? '—'],
                   ['Seats',         selected.seats ?? '—'],
                   ['Mileage',       selected.mileage ? `${selected.mileage.toLocaleString()} km` : '—'],
-                  ['Revenue',       `Rs ${selected.revenue.toLocaleString()}`],
+                  ['Revenue',       `Rs ${vehicleNetRevenue(selected, bookings).toLocaleString()}`],
+                  ...(selected.revenue !== vehicleNetRevenue(selected, bookings)
+                    ? [['Gross Revenue', `Rs ${selected.revenue.toLocaleString()} (before discounts)`] as [string, string]]
+                    : []),
                   ['Total Rentals', selected.rentCount ?? 0],
                 ].map(([label, val]) => (
                   <div key={String(label)} className="bg-navy-50/60 rounded-xl p-3">

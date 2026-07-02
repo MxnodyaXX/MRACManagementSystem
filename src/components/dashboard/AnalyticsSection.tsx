@@ -6,6 +6,7 @@ import {
   Gauge, TrendingUp, TrendingDown, Repeat, AlertTriangle,
   CalendarClock, ShieldAlert, Users, Receipt, CreditCard,
   Banknote, Target, ArrowDownRight, ArrowUpRight, Car,
+  DollarSign, Scissors,
 } from 'lucide-react';
 import { Vehicle, Booking, Expense, Inquiry } from '../../types';
 import {
@@ -13,6 +14,7 @@ import {
   expensesByCategory, overdueReturns, upcoming, insuranceExpiring,
   customerStats, rentalAverages, momGrowth, paymentMethods, depositAndDebt,
 } from '../../lib/analytics';
+import { grossRevenue, netRevenue, totalDiscount } from '../../lib/revenue';
 
 const PIE = ['#4B7BE5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#EC4899', '#64748B'];
 
@@ -118,27 +120,38 @@ export function OperationalAlerts({ vehicles, bookings }: { vehicles: Vehicle[];
 export function MoneyInsights({ bookings }: { bookings: Booking[] }) {
   const navigate = useNavigate();
   const ready = useReveal();
-  const { mom, dd } = useMemo(() => ({
+  const { mom, dd, gross, net, discounts } = useMemo(() => ({
     mom: momGrowth(bookings),
     dd: depositAndDebt(bookings),
+    gross: grossRevenue(bookings),
+    net: netRevenue(bookings),
+    discounts: totalDiscount(bookings),
   }), [bookings]);
 
-  if (!ready) return <SkelGrid count={3} h={86} cols="grid-cols-2 lg:grid-cols-3" />;
+  if (!ready) return <SkelGrid count={5} h={86} cols="grid-cols-2 lg:grid-cols-3" />;
 
   const down = mom.growth !== null && mom.growth < 0;
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-      <StatTile delay={0}
+      {/* Gross vs discounts — the "before discounts" figures live here so the
+          Net Revenue shown everywhere else stays discount-adjusted. */}
+      <StatTile delay={0} icon={<DollarSign size={18} />} color="bg-navy-700"
+        label="Gross Revenue" value={rs(gross)} sub="before discounts"
+        onClick={() => navigate('/commissions')} />
+      <StatTile delay={80} icon={<Scissors size={18} />} color="bg-amber-500"
+        label="Discounts Given" value={rs(discounts)} sub={`net Rs ${Math.round(net).toLocaleString()} earned`}
+        tone={discounts > 0 ? 'red' : undefined} onClick={() => navigate('/bookings')} />
+      <StatTile delay={160}
         icon={down ? <TrendingDown size={18} /> : <TrendingUp size={18} />}
         color={down ? 'bg-red-500' : 'bg-emerald-500'}
         label="Revenue Growth"
         value={mom.growth === null ? '—' : `${mom.growth >= 0 ? '+' : ''}${pct(mom.growth)}`}
         sub="this month vs last" tone={down ? 'red' : 'emerald'}
         onClick={() => navigate('/commissions')} />
-      <StatTile delay={80} icon={<Banknote size={18} />} color="bg-blue-500"
+      <StatTile delay={240} icon={<Banknote size={18} />} color="bg-blue-500"
         label="Deposits Held" value={rs(dd.depositsHeld)} sub="refundable on return"
         onClick={() => navigate('/bookings')} />
-      <StatTile delay={160} icon={<ArrowDownRight size={18} />} color="bg-red-500"
+      <StatTile delay={320} icon={<ArrowDownRight size={18} />} color="bg-red-500"
         label="Bad Debt" value={rs(dd.badDebt)} sub="written off" tone={dd.badDebt > 0 ? 'red' : undefined}
         onClick={() => navigate('/credit')} />
     </div>
@@ -156,7 +169,7 @@ export function VehiclePerformance({ vehicles, bookings, expenses }: {
   const ready = useReveal();
   const { util, profit, maxAbsProfit } = useMemo(() => {
     const u = fleetUtilization(vehicles, bookings, 30);
-    const p = vehicleProfit(vehicles, expenses);
+    const p = vehicleProfit(vehicles, expenses, bookings);
     return { util: u, profit: p, maxAbsProfit: Math.max(1, ...p.map((x) => Math.abs(x.profit))) };
   }, [vehicles, bookings, expenses]);
 

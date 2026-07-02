@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Vehicle, Booking } from '../types';
 import { creditTotals } from '../lib/credit';
+import { vehicleNetRevenue, totalDiscount } from '../lib/revenue';
 
 function useIsMobile() {
   const [v, setV] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
@@ -100,9 +101,13 @@ export default function Dashboard() {
   const scopedBookings = myVehicleIdSet ? bookings.filter((b) => myVehicleIdSet.has(b.vehicleId)) : bookings;
   const scopedExpenses = myVehicleIdSet ? expenses.filter((e) => myVehicleIdSet.has(e.vehicleId)) : expenses;
 
-  /* derived from scoped data */
-  const byRevenue      = [...scopedVehicles].sort((a, b) => b.revenue - a.revenue);
-  const totalRevenue   = scopedVehicles.reduce((s, v) => s + v.revenue, 0);
+  /* derived from scoped data — revenue is NET of discounts everywhere; the
+     gross (before-discount) figure is surfaced separately in the KPI sub-line. */
+  const netRev         = (v: Vehicle) => vehicleNetRevenue(v, scopedBookings);
+  const byRevenue      = [...scopedVehicles].sort((a, b) => netRev(b) - netRev(a));
+  const grossRevenue   = scopedVehicles.reduce((s, v) => s + v.revenue, 0);
+  const totalDiscounts = totalDiscount(scopedBookings);
+  const totalRevenue   = grossRevenue - totalDiscounts;
   const totalExpenses  = scopedExpenses.reduce((s, e) => s + e.amount, 0);
   const activeBookings = scopedBookings.filter((b) => b.status === 'Confirmed' || b.status === 'Ongoing');
   const unread         = notifications.filter((n) => !n.read).length;
@@ -185,7 +190,7 @@ export default function Dashboard() {
   const kpiCards = [
     { label: 'Total Fleet',     value: scopedVehicles.length,                     sub: `${scopedAvailable.length} available`, icon: <Car size={18}/>,          color: 'bg-navy-700',    path: '/vehicles'      },
     { label: 'Active Bookings', value: activeBookings.length,                     sub: 'confirmed + ongoing',                icon: <CalendarDays size={18}/>, color: 'bg-blue-500',    path: '/bookings'      },
-    { label: 'Total Revenue',   value: `Rs ${totalRevenue.toLocaleString()}`,   sub: `Net Rs ${(totalRevenue - totalExpenses).toLocaleString()}`, icon: <DollarSign size={18}/>, color: 'bg-emerald-500', path: '/commissions' },
+    { label: 'Net Revenue',     value: `Rs ${totalRevenue.toLocaleString()}`,   sub: totalDiscounts > 0 ? `Gross Rs ${grossRevenue.toLocaleString()} · −Rs ${totalDiscounts.toLocaleString()} disc.` : `Gross Rs ${grossRevenue.toLocaleString()}`, icon: <DollarSign size={18}/>, color: 'bg-emerald-500', path: '/commissions' },
     { label: 'Alerts',          value: unread,                                    sub: 'unread notifications',               icon: <AlertCircle size={18}/>,  color: 'bg-amber-500',   path: '/notifications' },
   ];
 
@@ -385,7 +390,7 @@ export default function Dashboard() {
                     {v.brand} {v.model}
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 600, marginTop: 1 }}>
-                    Rs {v.revenue.toLocaleString()}
+                    Rs {netRev(v).toLocaleString()}
                   </p>
                 </div>
 

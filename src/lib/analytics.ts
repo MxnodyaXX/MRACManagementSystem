@@ -1,4 +1,5 @@
 import { Booking, Vehicle, Expense, Inquiry } from '../types';
+import { bookingNet, vehicleNetRevenue } from './revenue';
 
 /* ─────────────────────────────────────────────────────────────────────────
    Dashboard analytics — pure, side-effect-free derivations.
@@ -45,13 +46,14 @@ export function fleetUtilization(
    Revenue (already rolled up on the vehicle) minus every expense logged
    against it. Surfaces cars that earn well but bleed on maintenance. */
 export interface VehicleProfit { vehicle: Vehicle; revenue: number; expenses: number; profit: number; }
-export function vehicleProfit(vehicles: Vehicle[], expenses: Expense[]): VehicleProfit[] {
+export function vehicleProfit(vehicles: Vehicle[], expenses: Expense[], bookings: Booking[]): VehicleProfit[] {
   const expByV = new Map<string, number>();
   expenses.forEach((e) => expByV.set(e.vehicleId, (expByV.get(e.vehicleId) ?? 0) + e.amount));
   return vehicles
     .map((v) => {
       const ex = expByV.get(v.id) ?? 0;
-      return { vehicle: v, revenue: v.revenue, expenses: ex, profit: v.revenue - ex };
+      const revenue = vehicleNetRevenue(v, bookings); // net of discounts
+      return { vehicle: v, revenue, expenses: ex, profit: revenue - ex };
     })
     .sort((a, b) => b.profit - a.profit);
 }
@@ -93,7 +95,7 @@ export function leadSources(bookings: Booking[]): LeadSource[] {
     const key = b.referral?.trim() || 'Direct';
     const cur = m.get(key) ?? { bookings: 0, revenue: 0 };
     cur.bookings += 1;
-    cur.revenue += b.totalAmount;
+    cur.revenue += bookingNet(b); // net of discounts
     m.set(key, cur);
   });
   return [...m.entries()]

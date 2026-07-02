@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { Booking, VehicleHandover } from '../../types';
+import { bookingDiscount } from '../../lib/revenue';
 
 const BAR_COLORS = ['#4B7BE5', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#EC4899'];
 type PeriodKey = 'all' | 'week' | 'month' | 'year' | 'custom';
@@ -262,7 +263,11 @@ export default function OwnerView() {
   );
 
   /* ── KPIs ──────────────────────────────────────────────────────── */
-  const totalRevenue     = myCommissions.reduce((s, c) => s + c.totalIncome, 0);
+  // Net of any discount granted on the underlying booking.
+  const totalRevenue     = myCommissions.reduce((s, c) => {
+    const bk = bookings.find((b) => b.id === c.bookingId);
+    return s + c.totalIncome - (bk ? bookingDiscount(bk) : 0);
+  }, 0);
   const totalReferralFee = myCommissions.reduce((s, c) => s + (c.coordinatorFee ?? 0), 0);
   const totalEarnings    = myCommissions.reduce((s, c) => s + c.ownerPayout, 0);
   const pendingAmount    = pendingPayouts.reduce((s, c) => s + c.ownerPayout, 0);

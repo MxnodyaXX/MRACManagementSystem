@@ -7,6 +7,7 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Select from '../components/ui/Select';
 import { Plus, Car, Lock, FileText, Printer } from 'lucide-react';
 import LocationInput from '../components/ui/LocationInput';
+import { vehicleNetRevenue } from '../lib/revenue';
 import { Owner } from '../types';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -52,7 +53,7 @@ export default function Owners() {
   const OwnerCard = ({ o, clickable = true }: { o: Owner; clickable?: boolean }) => {
     const ownerVehicles = vehicles.filter((v) => v.ownerId === o.id);
     const ownerBookings = bookings.filter((b) => ownerVehicles.some((v) => v.id === b.vehicleId));
-    const ownerRevenue  = ownerVehicles.reduce((s, v) => s + v.revenue, 0);
+    const ownerRevenue  = ownerVehicles.reduce((s, v) => s + vehicleNetRevenue(v, ownerBookings), 0); // net of discounts
     const ownerComms    = commissions.filter((c) => c.ownerId === o.id);
     const pendingPayout = ownerComms.filter((c) => c.status === 'Pending').reduce((s, c) => s + c.ownerPayout, 0);
     const isMine        = o.id === myOwnerId;
