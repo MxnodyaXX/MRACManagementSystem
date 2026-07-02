@@ -1,9 +1,9 @@
 {
-  "lastUpdated": 1782986807272,
+  "lastUpdated": 1782987107283,
   "current": {
-    "ts": 1782986807272,
+    "ts": 1782987107283,
     "startTime": 1782961006754,
-    "endTime": 1782986807272,
+    "endTime": 1782987107283,
     "layer": "unknown",
     "activeFile": null,
     "openTabs": [
@@ -25,12 +25,90 @@
         "editCount": 0,
         "firstEdit": 1782986791169,
         "lastEdit": 1782986805942
+      },
+      {
+        "file": "src\\pages\\Settings.tsx",
+        "editCount": 0,
+        "firstEdit": 1782986814843,
+        "lastEdit": 1782986843768
       }
     ],
     "saveCount": 0,
     "topFile": "src\\App.tsx"
   },
   "history": [
+    {
+      "ts": 1782987107283,
+      "startTime": 1782961006754,
+      "endTime": 1782987107283,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\App.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986782112,
+          "lastEdit": 1782986782112
+        },
+        {
+          "file": "src\\components\\ui\\ManualBookingModal.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986791169,
+          "lastEdit": 1782986805942
+        },
+        {
+          "file": "src\\pages\\Settings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986814843,
+          "lastEdit": 1782986843768
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "src\\App.tsx"
+    },
+    {
+      "ts": 1782987082895,
+      "startTime": 1782961006754,
+      "endTime": 1782987082895,
+      "layer": "unknown",
+      "activeFile": null,
+      "openTabs": [
+        ".env.local",
+        "src\\lib\\db.ts",
+        "supabase\\schema.sql",
+        "src\\store\\useStore.ts",
+        "src\\types\\index.ts"
+      ],
+      "editedFiles": [
+        {
+          "file": "src\\App.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986782112,
+          "lastEdit": 1782986782112
+        },
+        {
+          "file": "src\\components\\ui\\ManualBookingModal.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986791169,
+          "lastEdit": 1782986805942
+        },
+        {
+          "file": "src\\pages\\Settings.tsx",
+          "editCount": 0,
+          "firstEdit": 1782986814843,
+          "lastEdit": 1782986843768
+        }
+      ],
+      "saveCount": 0,
+      "topFile": "src\\App.tsx"
+    },
     {
       "ts": 1782986807272,
       "startTime": 1782961006754,
@@ -844,114 +922,6 @@
       ],
       "saveCount": 0,
       "topFile": "package.json"
-    },
-    {
-      "ts": 1782389534824,
-      "startTime": 1782389234814,
-      "endTime": 1782389534824,
-      "layer": "unknown",
-      "activeFile": null,
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "package.json",
-          "editCount": 0,
-          "firstEdit": 1782389265724,
-          "lastEdit": 1782389265724
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782389425138,
-          "lastEdit": 1782389431995
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "package.json"
-    },
-    {
-      "ts": 1782213788910,
-      "startTime": 1782189787718,
-      "endTime": 1782213788910,
-      "layer": "api",
-      "activeFile": "supabase\\schema.sql",
-      "openTabs": [
-        ".env.local",
-        "src\\lib\\db.ts",
-        "supabase\\schema.sql",
-        "src\\store\\useStore.ts",
-        "src\\types\\index.ts"
-      ],
-      "editedFiles": [
-        {
-          "file": "src\\index.css",
-          "editCount": 0,
-          "firstEdit": 1782190213421,
-          "lastEdit": 1782190213421
-        },
-        {
-          "file": "src\\pages\\Dashboard.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190313761,
-          "lastEdit": 1782190871309
-        },
-        {
-          "file": "src\\components\\dashboard\\AnalyticsSection.tsx",
-          "editCount": 0,
-          "firstEdit": 1782190831341,
-          "lastEdit": 1782192716887
-        },
-        {
-          "file": "src\\pages\\Bookings.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192538758,
-          "lastEdit": 1782207589769
-        },
-        {
-          "file": "src\\pages\\Inquiries.tsx",
-          "editCount": 0,
-          "firstEdit": 1782192543431,
-          "lastEdit": 1782192551411
-        },
-        {
-          "file": "src\\store\\useStore.ts",
-          "editCount": 0,
-          "firstEdit": 1782202654466,
-          "lastEdit": 1782203297456
-        },
-        {
-          "file": "src\\components\\ui\\AvailabilityModal.tsx",
-          "editCount": 0,
-          "firstEdit": 1782202689909,
-          "lastEdit": 1782202700519
-        },
-        {
-          "file": "src\\types\\index.ts",
-          "editCount": 0,
-          "firstEdit": 1782203262067,
-          "lastEdit": 1782203268421
-        },
-        {
-          "file": "src\\lib\\availability.ts",
-          "editCount": 0,
-          "firstEdit": 1782203279153,
-          "lastEdit": 1782205277527
-        },
-        {
-          "file": "src\\lib\\db.ts",
-          "editCount": 0,
-          "firstEdit": 1782203304585,
-          "lastEdit": 1782203315433
-        }
-      ],
-      "saveCount": 0,
-      "topFile": "src\\index.css"
     }
   ]
 }
